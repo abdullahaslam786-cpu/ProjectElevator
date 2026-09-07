@@ -234,6 +234,7 @@ const CabInspiration = () => {
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
+              <Link to="/profile">
               <button
                 className="
                   group relative inline-flex items-center gap-2 rounded-sm
@@ -246,6 +247,7 @@ const CabInspiration = () => {
               >
                 Start Designing
               </button>
+              </Link>
 <Link to="/login">
                 <button
                   className="

@@ -58,7 +58,7 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
     if (previewContainerRef.current) {
       if (previewUrl) {
         gsap.to(previewContainerRef.current, {
-          height: 300,
+          height: 250,
           duration: 0.5,
           ease: "power3.out"
         });
@@ -109,14 +109,14 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 18px 24px;
+          padding: 6px 24px;
           background: linear-gradient(180deg, #423516 0%, #29200B 100%); /* Deep Satin Gold-Onyx */
           border-bottom: 1px solid #C9A245; /* Polished Golden Hairline Separator */
         }
         
         .hrc-header-title {
           font-family: 'Cormorant Garamond', serif;
-          font-size: 20px;
+          font-size: 12px;
           font-weight: 300;
           letter-spacing: 0.15em;
           color: #FFF3CD; /* Radiant White-Gold Tint */
@@ -134,8 +134,7 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
           height: 100%;
           object-fit: cover;
           transform: scale(1.15);
-          opacity: 0.8;
-          filter: sepia(0.2) saturate(1.1) brightness(0.95);
+       
         }
         
         .hrc-preview-overlay {
@@ -168,7 +167,7 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
           display: flex;
           align-items: center;
           gap: 12px;
-          padding: 24px 24px 14px;
+          padding: 6px  14px;
         }
         
         .hrc-section-label span {
@@ -189,9 +188,9 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
         /* ── Special Luxury Grid Microinteractions ── */
         .hrc-grid {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: repeat(8, 1fr);
           gap: 12px;
-          padding: 0 24px 24px;
+          padding: 0px;
         }
         
         .hrc-swatch-premium {
@@ -271,7 +270,7 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
         /* ── Special Fluid Expansion Action Buttons ── */
         .hrc-luxury-btn {
           position: relative;
-          height: 48px;
+          height: 35px;
           background: #FAEDC8; /* Soft Amber-Cream Matte Base */
           border: 1px solid #D6C394;
           border-radius: 4px;
@@ -433,7 +432,7 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
             <span>SECONDARY PERIMETER GUARD</span>
           </div>
 
-          <div className="px-6 pb-10">
+          <div className="px-6 pb-14">
             <div className="grid grid-cols-2 gap-4">
               
               {/* Sub Handrails Toggle Slider */}

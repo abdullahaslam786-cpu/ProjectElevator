@@ -236,19 +236,19 @@ const WallpanelController = ({
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 14px 20px;
+          padding: 6px 20px;
           background: linear-gradient(180deg, #3A2E14 0%, #251D0C 100%); /* Deep Metallic Gold-Black */
           color: #F3E5AB; /* Soft Muted Gold Text */
           border-bottom: 1px solid #8C7335; /* Polished Gold Divider */
         }
         .wpc-header-model {
           font-family: 'Cormorant Garamond', serif;
-          font-size: 18px;
+          font-size: 12px;
           font-weight: 300;
           letter-spacing: 0.12em;
         }
         .wpc-header-zone {
-          font-size: 10px;
+          font-size: 8px;
           font-weight: 300;
           letter-spacing: 0.3em;
           text-transform: uppercase;
@@ -258,9 +258,9 @@ const WallpanelController = ({
         /* ── Zone rail ── */
         .wpc-zone-rail {
           display: flex;
-          gap: 8px;
+          gap: 6px;
           background: linear-gradient(180deg, #4A3B1B, #2D240F); /* Deep Gold Tinted Base */
-          padding: 12px 20px;
+          padding: 6px 20px;
           border-bottom: 1px solid #8C7335;
           overflow-x: auto;
           scrollbar-width: none;
@@ -273,7 +273,7 @@ const WallpanelController = ({
           perspective-origin: 50% 50%;
           flex: 1;
           min-width: 50px;
-          height: 40px;
+          height: 30px;
          }
 
         .cube {
@@ -332,7 +332,7 @@ const WallpanelController = ({
           display: flex;
           align-items: center;
           gap: 12px;
-          padding: 16px 20px;
+          padding: 6px 20px;
           background: #F4EED4; /* Muted Champagne Cream */
           border-bottom: 1px solid #D0C39A; /* Soft Warm Gold Border */
           flex-wrap: wrap;
@@ -350,8 +350,8 @@ const WallpanelController = ({
         .panel-cube-wrap {
           perspective: 1000px;
           perspective-origin: 50% 50%;
-          width: 36px;
-          height: 36px;
+          width: 26px;
+          height: 26px;
         }
 
         /* Panel Cube Front/Bottom Faces */
@@ -385,7 +385,7 @@ const WallpanelController = ({
           align-items: center;
           gap: 12px;
           padding: 0 24px;
-          height: 48px;
+          height: 38px;
           background: linear-gradient(90deg, #4A3B1B, #5A4822); /* Radiant Bronze-Gold Bar */
           border-bottom: 1px solid #8C7335;
           position: relative;
@@ -463,7 +463,7 @@ const WallpanelController = ({
           background: #251D0C; /* Golden Midnight Dark Base */
           border-bottom: 0px solid #8C7335;
         }
-        .wpc-preview[style*="height: 180px"] {
+        .wpc-preview[style*="height: 120px"] {
           border-bottom: 1px solid #8C7335;
         }
         .wpc-preview-img {
@@ -477,7 +477,7 @@ const WallpanelController = ({
           transition: transform 8s cubic-bezier(0.1, 1, 0.1, 1);
         }
         .wpc-preview:hover .wpc-preview-img {
-          transform: scale(1.7);
+          transform: scale(1.8);
         }
         .wpc-preview-overlay {
           position: absolute;
@@ -561,8 +561,8 @@ const WallpanelController = ({
         .wpc-section-label {
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding: 14px 20px 10px;
+          gap: 6px;
+          padding: 6px 20px 4px;
         }
         .wpc-section-label span {
           font-size: 9px;
@@ -582,9 +582,9 @@ const WallpanelController = ({
         /* ── 3D Material Grid & Swatches ── */
         .wpc-grid {
           display: grid;
-          grid-template-columns: repeat(6, 1fr);
-          gap: 16px; 
-          padding: 10px 20px 20px;
+          grid-template-columns: repeat(8, 1fr);
+          gap: 8px; 
+          padding: 6px 20px;
         }
 
         .swatch-wrap {
@@ -774,7 +774,7 @@ const WallpanelController = ({
 
         {/* ── Header ── */}
         <div className="wpc-header">
-          <div>
+          <div className="flex items-center justify-center gap-6">
             <div className="wpc-header-model">{selectedModelId}</div>
             <div className="wpc-header-zone" style={{ marginTop: 2 }}>
               Zone {activeZone} &nbsp;·&nbsp; Design Selection

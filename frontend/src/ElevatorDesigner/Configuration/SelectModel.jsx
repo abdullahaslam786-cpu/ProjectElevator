@@ -272,7 +272,7 @@ const SelectModel = ({
           font-family: 'Jost', sans-serif;
           color: #5C4A26;
           background: linear-gradient(180deg, #FFFDF6, #F7EFCF);
-          height: 70vh;
+          height: 73vh;
           max-height: 100vh;
           border: 1px solid #D6C394;
           display: flex;
@@ -285,15 +285,15 @@ const SelectModel = ({
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 14px 24px;
+          padding: 6px 24px;
           background: linear-gradient(180deg, #423516 0%, #29200B 100%);
           color: #FFF3CD;
           border-bottom: 2px solid #C9A245;
         }
 
         .smc-header-title {
-          font-size: 13px;
-          font-weight: 700;
+          font-size: 11px;
+          font-weight: 600;
           letter-spacing: 0.15em;
           color: #E6C262;
         }
@@ -363,7 +363,7 @@ const SelectModel = ({
 
         .smc-grid {
           display: grid;
-          grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: repeat(3, 1fr);
           gap: 14px;
           transform-style: preserve-3d;
         }
@@ -426,7 +426,7 @@ const SelectModel = ({
         }
 
         .smc-image-container {
-          padding: 10px;
+          padding: 2px 0px;
           background: #FFFFFF;
           display: flex;
           justify-content: center;

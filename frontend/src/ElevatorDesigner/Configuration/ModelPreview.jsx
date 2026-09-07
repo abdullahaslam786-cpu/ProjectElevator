@@ -393,8 +393,8 @@ const ModelPreview = forwardRef((props, ref) => {
         {/* Main Render Canvas Area */}
         <div
           ref={stageRef}
-          className={`relative flex-1 flex items-center justify-center p-8 ${
-            showThumbnails ? "md:w-[67%]" : "w-full"
+          className={`relative flex-1 flex items-center justify-center px-0 pt-6 pb-0 ${
+            showThumbnails ? "md:w-[57%]" : "w-full"
           }`}
 style={{
   backgroundImage: "url('/openmodelbg/simplebg1.png')",

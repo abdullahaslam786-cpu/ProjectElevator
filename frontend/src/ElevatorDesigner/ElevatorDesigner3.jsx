@@ -274,25 +274,57 @@ export default function ElevatorDesigner3() {
         {`
         @import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;700&display=swap');
         
-        .ed3-root {
+       .ed3-root {
           font-family: 'Jost', sans-serif;
-          background: linear-gradient(180deg, #FFFDF6, #F7EFCF); /* Soft Cream to Light Golden Veil */
-          min-height: 100vh;
-          width: 100%;
-          color: #5C4A26; /* Deep Bronze-Gold text */
+          background: linear-gradient(180deg, #FFFDF6, #F7EFCF);
+          height: 100vh;
+          width: 100vw;
+          overflow: hidden;
+          color: #5C4A26;
+          
         }
 
         /* ── Desktop-Only Custom Hexagon Component Layouts ────────────────── */
         @media (min-width: 1024px) {
-          .ed3-navbar-wrapper { perspective: 1000px; width: 100%; margin-bottom: 20px; margin-top:58px; }
+          .ed3-navbar-wrapper { 
+    perspective: 1000px; 
+    width: 100%; 
+    margin-bottom: 6px; 
+    margin-top: 24px; /* Reduced from 58px to save vertical space */
+  }
           .ed3-navbar { display: flex; flex-direction: row; align-items: center; justify-content: start; width: 100%; }
-          .ed3-step-button-container { position: relative; flex: 1; min-height: 74px; margin-right: -38px; filter: drop-shadow(0 6px 12px rgba(92,74,38,0.12)); transform-style: preserve-3d; }
+         .ed3-step-button-container { 
+    position: relative; 
+    flex: 1; 
+    min-height: 60px; /* Reduced from 74px */
+    margin-right: -2.2rem; /* Replaced -38px with relative rem unit */
+    filter: drop-shadow(0 4px 8px rgba(92,74,38,0.12)); 
+    transform-style: preserve-3d; 
+  }
           .ed3-step-button-container:last-child { margin-right: 0; }
-          .ed3-step-button {
-            position: relative; width: 100%; height: 100%; min-height: 74px; display: flex; align-items: center; justify-content: space-between;
-            padding: 12px 40px 12px 60px; background: linear-gradient(180deg, #423516 0%, #29200B 100%); color: #E6C262; border: none; outline: none; cursor: pointer; user-select: none;
-            clip-path: polygon(88% 0%, 100% 50%, 88% 100%, 0% 100%, 12% 50%, 0% 0%); transform-style: preserve-3d; transition: color 0.3s ease;
-          }
+         .ed3-step-button {
+    position: relative; 
+    width: 100%; 
+    height: 100%; 
+    min-height: 60px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between;
+    padding: 8px 1.8rem 8px 2.5rem; /* Reduced rigid horizontal padding */
+    background: linear-gradient(180deg, #423516 0%, #29200B 100%); 
+    color: #E6C262; 
+    border: none; 
+    outline: none; 
+    cursor: pointer; 
+    user-select: none;
+    clip-path: polygon(88% 0%, 100% 50%, 88% 100%, 0% 100%, 12% 50%, 0% 0%); 
+    transform-style: preserve-3d; 
+    transition: color 0.3s ease;
+  }
+    .ed3-step-button span {
+    font-size: 10px; /* Scaled down slightly from 11px so labels don't wrap */
+    letter-spacing: 0.1em;
+  }
           .ed3-step-button::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, #FFF2CC, #C9A245); clip-path: polygon(88% 0%, 100% 50%, 88% 100%, 0% 100%, 12% 50%, 0% 0%); z-index: -1; }
           .ed3-step-inner-face { position: absolute; inset: 2px 3px 2px 3px; background: #29200B; clip-path: polygon(88% 0%, 100% 50%, 88% 100%, 0% 100%, 12% 50%, 0% 0%); z-index: 1; pointer-events: none; transition: background 0.3s ease; }
           .ed3-step-button:hover { color: #FFFFFF; }
@@ -315,9 +347,9 @@ export default function ElevatorDesigner3() {
       `}
       </style>
 
-      <div className="ed3-root">
+      <div className="ed3-root w-full flex justify-center ">
         {/* Responsive Box Frame: Zero mobile paddings */}
-        <div className="w-full max-w-[1500px] mx-auto p-0 sm:p-4 lg:px-8 lg:py-4">
+        <div className="w-full min-h-screen max-w-7xl mx-auto p-2 sm:p-4 lg:px-6 lg:pt-12 lg:pb-20">
 
           {saveStatus && (
             <div className={`ed3-save-badge ${saveStatus}`}>
@@ -406,11 +438,11 @@ export default function ElevatorDesigner3() {
           </div>
 
           {/* Master View Grid Layout Workspace Stack Matrix */}
-  <div className="grid grid-cols-1 lg:grid-cols-11 gap-0 sm:gap-4 lg:gap-5 w-full items-stretch">
+  <div className="grid grid-cols-1 lg:grid-cols-11 gap-0 sm:gap-4 lg:gap-2 w-full items-stretch">
   
   {/* Right Controls Panel Sidebar */}
   {/* INCREASED FROM lg:col-span-8 TO lg:col-span-9 */}
-  <div className="col-span-1 lg:col-span-7 bg-white border-b lg:border border-[#e0dcd6] sm:rounded-xl shadow-sm overflow-hidden order-1 lg:order-2 w-full flex flex-col justify-between">
+  <div className="col-span-1 lg:col-span-7 bg-white border-b lg:border border-[#e0dcd6] sm:rounded-xl shadow-sm overflow-hidden order-1 lg:order-2 w-full flex flex-col justify-between h-90vh lg:h-[560px]">
     <div className="w-full h-full">
       {activeStep === "Configurations" && (
         <SelectModel
@@ -467,7 +499,7 @@ export default function ElevatorDesigner3() {
 
   {/* Left 3D Interactive Viewport Area (OpenModel) */}
   {/* REDUCED FROM lg:col-span-4 TO lg:col-span-3 */}
-  <div className="col-span-1 lg:col-span-4 bg-white lg:border border-[#e0dcd6] sm:rounded-xl overflow-hidden shadow-sm min-h-[82vw] sm:min-h-[500px] lg:min-h-[620px] w-full order-2 lg:order-1 flex flex-col">
+  <div className="col-span-1 lg:col-span-4 bg-white lg:border border-[#e0dcd6] sm:rounded-xl overflow-hidden shadow-sm min-h-[70vw] sm:min-h-[500px] lg:min-h-[530px] w-full order-2 lg:order-1 flex flex-col">
     <div className="w-full h-full flex-1 relative openModel-container">
       <OpenModel
         ref={openModelRef}
