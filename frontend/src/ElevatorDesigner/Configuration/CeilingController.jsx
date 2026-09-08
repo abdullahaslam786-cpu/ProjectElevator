@@ -134,14 +134,14 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 18px 24px;
+          padding: 6px 24px;
           background: linear-gradient(180deg, #423516 0%, #29200B 100%); /* Deep Satin Gold-Onyx */
           border-bottom: 1px solid #C9A245; /* Polished Golden Hairline Separator */
         }
 
         .cec-header-title {
           font-family: 'Cormorant Garamond', serif;
-          font-size: 20px;
+          font-size: 12px;
           font-weight: 300;
           letter-spacing: 0.15em;
           color: #FFF3CD; /* Radiant White-Gold Tint */
@@ -184,7 +184,7 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
           display: flex;
           align-items: center;
           gap: 12px;
-          padding: 24px 24px 10px;
+          padding: 6px 14px;
         }
 
         .cec-section-label span {
@@ -204,7 +204,7 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
 
         .cec-grid {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: repeat(6, 1fr);
           gap: 12px;
           padding: 0 24px 20px;
         }

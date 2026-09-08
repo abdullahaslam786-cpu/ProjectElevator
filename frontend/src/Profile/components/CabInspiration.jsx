@@ -28,13 +28,13 @@ import { SiPerforce } from "react-icons/si";
 import { AiOutlineDeliveredProcedure } from "react-icons/ai";
 import { SiMaterialdesignicons } from "react-icons/si";
 import { SiCssdesignawards } from "react-icons/si";
-import { FaRegLightbulb } from "react-icons/fa";
-import { FaDribbbleSquare } from "react-icons/fa";
-import { HiMiniPencilSquare } from "react-icons/hi2";
-import { RiVoiceRecognitionFill } from "react-icons/ri";
+// import { FaRegLightbulb } from "react-icons/fa";
+// import { FaDribbbleSquare } from "react-icons/fa";
+// import { HiMiniPencilSquare } from "react-icons/hi2";
+// import { RiVoiceRecognitionFill } from "react-icons/ri";
 import { FiShare2 } from "react-icons/fi";
-import { PiBuildingOffice } from "react-icons/pi";
-import { TbScreenShare } from "react-icons/tb";
+// import { PiBuildingOffice } from "react-icons/pi";
+// import { TbScreenShare } from "react-icons/tb";
 import { FaArrowRight } from "react-icons/fa6";
 import { HiOutlineCube } from "react-icons/hi2";
 import { HiOutlineDocumentText } from "react-icons/hi2";
@@ -44,6 +44,7 @@ import { PiDeviceMobileCameraLight } from "react-icons/pi";
 import { PiHeadsetLight } from "react-icons/pi";
 import { Link } from "react-router-dom";  
 import InspirationGallery from "./Inspirationgallery";
+
 
 const CabInspiration = () => {
   const containerRef = useRef(null);
@@ -133,7 +134,7 @@ const CabInspiration = () => {
   ];
 
   // Category Filter Pills (also doubles as the 5-button set referenced in the design)
-  const categories = ["ALL STYLES", "INDUSTRIAL", "HEALTHCARE", "HOSPITALITY", "CORPORATE"];
+ 
 
   // ---- Sidebar "design journey" quick-facts (the 3x2 icon grid) ----
   const journeyPerks = [
@@ -147,14 +148,14 @@ const CabInspiration = () => {
 
   // Elevator Concepts Cards Data (8 cards, 4 per row)
   const concepts = [
-    { id: 1, title: "Silver Mesh", image: "Cab Inspiration/1.png", swatches: ["#C9C9C9", "#B99B72", "#5C5C5C", "#1E1E1E"] },
-    { id: 2, title: "Urban Bronze", image: "Cab Inspiration/2.png", swatches: ["#B08A54", "#8C6239", "#3A332B", "#1E1E1E"] },
-    { id: 3, title: "Marble Elegance", image: "Cab Inspiration/3.png", swatches: ["#F5F2EC", "#D8CBB4", "#C7C3BB", "#4A463F"] },
-    { id: 4, title: "Graphite Edge", image: "Cab Inspiration/4.png", swatches: ["#6E6E6E", "#4A4A4A", "#9A9A9A", "#1A1A1A"] },
-    { id: 5, title: "Natural Oak", image: "Cab Inspiration/5.png", swatches: ["#B9793B", "#D9A24B", "#8C6239", "#3A2E22"] },
-    { id: 6, title: "Linear Grey", image: "Cab Inspiration/6.png", swatches: ["#B7B2A8", "#8C877C", "#5C574D", "#2A2822"] },
-    { id: 7, title: "Midnight Blue", image: "Cab Inspiration/7.png", swatches: ["#3C4E60", "#2C3A47", "#D8CFC0", "#1A1A1A"] },
-    { id: 8, title: "Onyx Luxe", image: "Cab Inspiration/8.png", swatches: ["#1E1B18", "#4A433A", "#D8CBB4", "#EAD9B8"] },
+    { id: 1, title: "Silver Mesh", image: "Cab Inspiration/gallarey/1.jpg", swatches: ["#C9C9C9", "#B99B72", "#5C5C5C", "#1E1E1E"] },
+    { id: 2, title: "Urban Bronze", image: "Cab Inspiration/gallarey/2.jpg", swatches: ["#B08A54", "#8C6239", "#3A332B", "#1E1E1E"] },
+    { id: 3, title: "Marble Elegance", image: "Cab Inspiration/gallarey/3.jpg", swatches: ["#F5F2EC", "#D8CBB4", "#C7C3BB", "#4A463F"] },
+    { id: 4, title: "Graphite Edge", image: "Cab Inspiration/gallarey/4.jpg", swatches: ["#6E6E6E", "#4A4A4A", "#9A9A9A", "#1A1A1A"] },
+    { id: 5, title: "Natural Oak", image: "Cab Inspiration/gallarey/5.jpg", swatches: ["#B9793B", "#D9A24B", "#8C6239", "#3A2E22"] },
+    { id: 6, title: "Linear Grey", image: "Cab Inspiration/gallarey/6.jpg", swatches: ["#B7B2A8", "#8C877C", "#5C574D", "#2A2822"] },
+    { id: 7, title: "Midnight Blue", image: "Cab Inspiration/gallarey/7.jpg", swatches: ["#3C4E60", "#2C3A47", "#D8CFC0","#1A1A1A"] },
+    { id: 8, title: "Onyx Luxe", image: "Cab Inspiration/gallarey/1.jpg", swatches: ["#1E1B18", "#4A433A", "#D8CBB4", "#EAD9B8"] },
   ];
 
   // Stat Highlights
@@ -272,19 +273,19 @@ const CabInspiration = () => {
       </div>
 
       {/* ----------------- SECTIONS 2, 1.5, 3+4 extracted into InspirationGallery ----------------- */}
-      <InspirationGallery
-        features={features}
-        steps={steps}
-        activeStep={activeStep}
-        handleNavClick={handleNavClick}
-        journeyPerks={journeyPerks}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        activeCategory={activeCategory}
-        setActiveCategory={setActiveCategory}
-        categories={categories}
-        concepts={concepts}
-      />
+<InspirationGallery
+  features={features}
+  steps={steps}
+  activeStep={activeStep}
+  handleNavClick={handleNavClick}
+  journeyPerks={journeyPerks}
+  viewMode={viewMode}
+  setViewMode={setViewMode}
+  activeCategory={activeCategory}
+  setActiveCategory={setActiveCategory}
+  // categories={categories}
+  concepts={concepts}
+/>
 
       {/* SECTION Create a Custom Design */}
       <div className="w-full max-w-7xl mx-auto mb-4">

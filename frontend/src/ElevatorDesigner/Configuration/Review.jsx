@@ -295,22 +295,22 @@ const Review = ({
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 18px 24px;
+          padding: 6px 12px;
           background: linear-gradient(180deg, #423516 0%, #29200B 100%); /* Deep Satin Gold-Onyx */
           border-bottom: 1px solid #C9A245; /* Polished Golden Hairline Separator */
         }
         .review-header-title {
           font-family: 'Cormorant Garamond', serif;
-          font-size: 20px;
+          font-size: 12px;
           font-weight: 300;
           letter-spacing: 0.15em;
           color: #FFF3CD; /* Radiant White-Gold Tint */
         }
 
         .review-content {
-          height: 580px;
+          height: 540px;
           overflow-y: auto;
-          padding: 24px;
+          padding: 12px;
           background: linear-gradient(180deg, #FFFDF6, #F7EFCF);
           scrollbar-width: thin;
           scrollbar-color: #D4AF37 #F7EFCF;
@@ -320,7 +320,7 @@ const Review = ({
           background: #FFFBF0; /* Warm Alabaster Gold Base */
           border: 1px solid #D6C394; /* Soft Brushed Gold Border */
           border-radius: 4px;
-          margin-bottom: 24px;
+          margin-bottom: 12px;
           box-shadow: 0 10px 30px rgba(184, 142, 47, 0.1);
         }
 
@@ -328,7 +328,7 @@ const Review = ({
           display: flex;
           align-items: center;
           gap: 12px;
-          padding: 16px 20px;
+          padding: 6px 20px;
           background: #FAEDC8; /* Soft Amber-Cream Matte Surface */
           border-bottom: 1px solid #D6C394;
         }
@@ -350,7 +350,7 @@ const Review = ({
 
         .review-input {
           width: 100%;
-          padding: 14px 18px;
+          padding: 4px 18px;
           background: #FFFFFF; /* Pure Bright Chalk White for contrast and readability */
           border: 1px solid #D6C394;
           border-radius: 4px;
@@ -403,7 +403,7 @@ const Review = ({
           justify-content: space-between;
           gap: 14px;
           flex-wrap: wrap;
-          padding: 4px 0;
+          padding: 0px 0;
         }
 
         .review-select-row .review-plus-label {
@@ -414,7 +414,7 @@ const Review = ({
         .review-select {
           flex: 1;
           min-width: 160px;
-          padding: 12px 14px;
+          padding: 4px 14px;
           background: #FFFFFF;
           border: 1px solid #D6C394;
           border-radius: 4px;
@@ -460,7 +460,7 @@ const Review = ({
           display: flex;
           align-items: center;
           gap: 12px;
-          padding: 12px 0;
+          padding: 2px 0;
           border-bottom: 1px solid #E8D8A7;
         }
 
@@ -518,7 +518,7 @@ const Review = ({
         .review-luxury-btn {
           position: relative;
           width: 100%;
-          height: 50px;
+          height: 30px;
           background: #FAEDC8;
           border: 1px solid #D6C394;
           border-radius: 4px;
@@ -572,12 +572,12 @@ const Review = ({
         .review-cta-btn {
           position: relative;
           width: 100%;
-          padding: 16px 0;
+          padding: 12px 0;
           background: linear-gradient(135deg, #E6C262 0%, #B88E2F 100%); /* Bold Golden Base */
           color: #FFFFFF; /* High Bright Contrast white text for luxury impact */
           border: none;
           border-radius: 4px;
-          font-size: 14px;
+          font-size: 11px;
           font-weight: 600;
           letter-spacing: 0.15em;
           text-transform: uppercase;
@@ -612,14 +612,14 @@ const Review = ({
         </div>
 
         <div className="review-content">
-          <div className="mb-8 text-xs tracking-wide text-[#8a8680] leading-relaxed uppercase">
+          <div className="mb-2 text-[11px] tracking-wide text-[#8a8680] leading-relaxed uppercase">
             Your elevator configuration is complete. Please review selections, specify optional constraints, and render the design specification sheet.
           </div>
 
           {/* PROJECT NAME */}
           <div className="review-section">
             <div className="review-section-label"><span>PROJECT / JOB NAME</span></div>
-            <div className="p-6">
+            <div className="p-2">
               <input
                 type="text"
                 value={projectName}
@@ -636,7 +636,7 @@ const Review = ({
           {/* DIMENSIONS */}
           <div className="review-section">
             <div className="review-section-label"><span>DIMENSIONS</span></div>
-            <div className="p-6 space-y-4">
+            <div className="p-2 space-y-4">
               <p className="text-xs text-[#B88E2F] italic">
                 Dimensions are not mandatory at this stage to complete your design. However, you will need to provide them to request an 'Advanced Download'. You can do this now or in the future.
               </p>
@@ -677,19 +677,19 @@ const Review = ({
           </div>
 
           {/* QUANTITY */}
-          <div className="mb-6">
+          <div className="mb-2">
             <label className="review-plus-label mb-2">+ QUANTITY:</label>
             <input
               type="number"
               min={1}
               value={quantity}
               onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
-              className="review-input mt-2"
+              className="review-input "
             />
           </div>
 
           {/* COMMENTS */}
-          <div className="mb-6">
+          <div className="mb-0">
             <textarea
               rows={5}
               value={comments}
@@ -702,14 +702,14 @@ const Review = ({
           {/* DETAILS TOGGLE */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="review-collapse-toggle mb-6"
+            className="review-collapse-toggle mb-2"
           >
             {isOpen ? "+LESS DETAILS (click to collapse)" : "+MORE DETAILS (click to expand)"}
           </button>
 
           {isOpen && (
             <div className="review-section">
-              <div className="p-6 space-y-5">
+              <div className="p-2 space-y-2">
                 <div className="review-select-row">
                   <label className="review-plus-label">+ JOB TYPE:</label>
                   <select
@@ -771,10 +771,10 @@ const Review = ({
           )}
 
           {/* WRAP-UP */}
-          <div className="review-section mt-8">
+          <div className="review-section mt-2">
             <div className="review-section-label"><span>SPECIFICATION VERIFICATION</span></div>
-            <div className="p-8 text-center">
-              <p className="text-xs text-[#8a8680] mb-8 leading-relaxed tracking-wider uppercase">
+            <div className="p-2 text-center">
+              <p className="text-[9px] text-[#8a8680] mb-2 leading-relaxed tracking-wider uppercase">
                 All parameters auto-saved to cloud repository.<br />
                 Compile configuration layouts into production-ready blueprint document.
               </p>

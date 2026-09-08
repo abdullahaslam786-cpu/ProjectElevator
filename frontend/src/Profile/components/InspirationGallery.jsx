@@ -9,7 +9,7 @@ import {
   Scale,
   RotateCw,
 } from "lucide-react";
-
+ const categories = ["ALL STYLES", "INDUSTRIAL", "HEALTHCARE", "HOSPITALITY", "CORPORATE"];
 /**
  * InspirationGallery
  * Extracted from CabInspiration.jsx — renders:
@@ -44,7 +44,7 @@ const InspirationGallery = ({
   setViewMode,
   activeCategory,
   setActiveCategory,
-  categories,
+//   categories,
   concepts,
 }) => {
   return (
@@ -72,70 +72,70 @@ const InspirationGallery = ({
       {/* ----------------- SECTION 1.5: WIZARD STEPPER (Configurations / Wall Panels / Handrails / Ceilings / Review) ----------------- */}
       <div className="w-full max-w-7xl mx-auto mb-6">
         {/* Desktop: 5 chevron buttons */}
-        <nav className="hidden lg:flex w-full bg-[#f9f6f0]/80 backdrop-blur-sm rounded-xl overflow-hidden border border-[#e5dfd5] p-1 shadow-sm">
-          {steps.map((step, idx) => {
-            const isFirst = idx === 0;
-            const isLast = idx === steps.length - 1;
+      <nav className="hidden lg:flex w-full bg-[#f9f6f0]/80 backdrop-blur-sm rounded-xl overflow-hidden border border-[#e5dfd5] p-1 shadow-sm">
+  {steps.map((step, idx) => {
+    const isFirst = idx === 0;
+    const isLast = idx === steps.length - 1;
 
-            // Define clipPath for flat left/right edges on container ends vs inner chevrons
-            let clipPathStyle = "polygon(18px 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 18px 100%, 0 50%)";
-            if (isFirst) {
-              clipPathStyle = "polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%)";
-            } else if (isLast) {
-              clipPathStyle = "polygon(18px 0, 100% 0, 100% 100%, 18px 100%, 0 50%)";
-            }
+    // Define clipPath for flat left/right edges on container ends vs inner chevrons
+    let clipPathStyle =
+      "polygon(18px 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 18px 100%, 0 50%)";
+    if (isFirst) {
+      clipPathStyle =
+        "polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%)";
+    } else if (isLast) {
+      clipPathStyle = "polygon(18px 0, 100% 0, 100% 100%, 18px 100%, 0 50%)";
+    }
 
-            return (
-              <button
-                key={step.label}
-                type="button"
-                onClick={() => handleNavClick(idx)}
-                className={`relative flex-1 flex items-center gap-3 px-6 py-3.5 text-left transition-all duration-300 ${
-                  step.active
-                    ? "text-white bg-gradient-to-r from-[#b37a28] via-[#a36c1e] to-[#8c5914] shadow-md rounded-l-lg"
-                    : "text-[#2b2120] hover:bg-black/5"
-                }`}
-                style={{
-                  clipPath: clipPathStyle,
-                  marginLeft: isFirst ? 0 : "-14px",
-                  zIndex: step.active ? 20 : steps.length - idx,
-                }}
-              >
-                <span
-                  className={`shrink-0 w-9 h-9 rounded-md flex items-center justify-center transition-colors ${
-                    step.active ? "bg-white/20" : "bg-transparent"
-                  }`}
-                >
-                  <img
-                    src={step.icon}
-                    alt={step.shortLabel || step.label}
-                    className={`object-contain w-6 h-6 transition-all ${
-                      step.active ? "brightness-200" : "opacity-70"
-                    }`}
-                  />
-                </span>
-                <span className="flex flex-col leading-tight">
-                  <span
-                    className={`text-xs font-bold tracking-wider uppercase ${
-                      step.active ? "text-white" : "text-[#1f1918]"
-                    }`}
-                  >
-                    {step.label}
-                  </span>
-                  {step.description && (
-                    <span
-                      className={`text-[10px] font-normal line-clamp-1 mt-0.5 ${
-                        step.active ? "text-white/80" : "text-[#7a6e65]"
-                      }`}
-                    >
-                      {step.description}
-                    </span>
-                  )}
-                </span>
-              </button>
-            );
-          })}
-        </nav>
+    return (
+      <div
+        key={step.label}
+        className={`relative flex-1 flex items-center gap-3 px-6 py-3.5 text-left ${
+          step.active
+            ? "text-white bg-gradient-to-r from-[#b37a28] via-[#a36c1e] to-[#8c5914] shadow-md"
+            : "text-[#2b2120]"
+        }`}
+        style={{
+          clipPath: clipPathStyle,
+          marginLeft: isFirst ? 0 : "-14px",
+          zIndex: step.active ? 20 : steps.length - idx,
+        }}
+      >
+        <span
+          className={`shrink-0 w-9 h-9 rounded-md flex items-center justify-center ${
+            step.active ? "bg-white/20" : "bg-transparent"
+          }`}
+        >
+          <img
+            src={step.icon}
+            alt={step.shortLabel || step.label}
+            className={`object-contain w-6 h-6 ${
+              step.active ? "brightness-200" : "opacity-70"
+            }`}
+          />
+        </span>
+        <span className="flex flex-col leading-tight">
+          <span
+            className={`text-xs font-bold tracking-wider uppercase ${
+              step.active ? "text-white" : "text-[#1f1918]"
+            }`}
+          >
+            {step.label}
+          </span>
+          {step.description && (
+            <span
+              className={`text-[10px] font-normal line-clamp-1 mt-0.5 ${
+                step.active ? "text-white/80" : "text-[#7a6e65]"
+              }`}
+            >
+              {step.description}
+            </span>
+          )}
+        </span>
+      </div>
+    );
+  })}
+</nav>
 
         {/* Mobile: compact icon nav */}
         <nav className="flex lg:hidden w-full items-center justify-between pt-18">
@@ -319,65 +319,76 @@ const InspirationGallery = ({
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E6E0D6] pb-3">
-            <div className="flex flex-wrap items-center gap-2">
-              {categories.map((cat, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`px-3.5 py-1.5 rounded-full text-[10px] sm:text-[11px] font-bold tracking-wider transition-all ${
-                    activeCategory === cat
-                      ? "bg-[#2C2822] text-white shadow-sm"
-                      : "text-[#6B6355] hover:bg-[#EADBCE]/50"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-            <button className="inline-flex items-center gap-1.5 rounded-full border border-[#E6E0D6] px-3.5 py-1.5 text-[10px] sm:text-[11px] font-bold tracking-wider text-[#7F5A34] hover:bg-[#EADBCE]/50 transition-colors">
-              <Heart className="w-3.5 h-3.5" /> My Favorites
-            </button>
-          </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E6E0D6] pb-3.5">
+  {/* Category Labels */}
+  <div className="flex flex-wrap items-center gap-2">
+    <span className="text-[11px] font-bold tracking-widest text-[#2C2822] uppercase mr-1">
+      Categories:
+    </span>
+    {categories.map((cat, idx) => (
+      <span
+        key={idx}
+        className="px-3 py-1 bg-[#F5F2EC] border border-[#E6E0D6] text-[10px] sm:text-[11px] font-semibold tracking-wider text-[#6B6355] uppercase"
+      >
+        {cat}
+      </span>
+    ))}
+  </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-            {concepts.map((concept) => (
-              <div
-                key={concept.id}
-                className="bg-white border border-[#E6E0D6] rounded-xl overflow-hidden shadow-sm flex flex-col justify-between group hover:shadow-md transition-shadow"
-              >
-                <div className="bg-[#F3ECE0] aspect-[4/3] overflow-hidden relative">
-                  <img
-                    src={concept.image}
-                    alt={concept.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <button
-                    aria-label="Save concept"
-                    className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 flex items-center justify-center text-[#A17C50] hover:text-[#8C6239] transition-colors shadow-sm"
-                  >
-                    <Heart className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+  {/* Saved Badge */}
+  <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#F5F2EC] border border-[#E6E0D6] text-[10px] sm:text-[11px] font-semibold tracking-wider text-[#7F5A34] uppercase">
+    <Heart className="w-3.5 h-3.5 text-[#A17C50]" /> Saved Styles
+  </div>
+</div>
 
-                <div className="p-2.5 sm:p-3.5 bg-white flex flex-col gap-2">
-                  <div className="flex items-center gap-1.5">
-                    {concept.swatches.map((color, i) => (
-                      <span
-                        key={i}
-                        className="w-3.5 h-3.5 rounded-full border border-black/10"
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
-                  <h3 className="text-xs font-bold text-[#2C2822] uppercase tracking-wide">{concept.title}</h3>
-                  <button className="inline-flex items-center justify-center gap-1 rounded-sm border border-[#E6E0D6] px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#7F5A34] hover:bg-[#F3ECE0] transition-colors">
-                    Customize <ChevronRight className="w-3 h-3" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+  {concepts.map((concept) => (
+    <div
+      key={concept.id}
+      className="bg-white rounded-none overflow-hidden shadow-sm flex flex-col justify-between group hover:shadow-md transition-shadow"
+    >
+      {/* Image container made taller (3/4) with overlay elements inside */}
+      <div className="bg-[#F3ECE0] aspect-[3/4] overflow-hidden relative">
+        <img
+          src={concept.image}
+          alt={concept.title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        />
+
+        {/* Save button overlaid top right */}
+        <button
+          aria-label="Save concept"
+          className="absolute top-2 right-2 w-7 h-7 rounded-none bg-white/90 flex items-center justify-center text-[#A17C50] hover:text-[#8C6239] transition-colors shadow-sm"
+        >
+          <Heart className="w-3.5 h-3.5" />
+        </button>
+
+        {/* Customize button overlaid at the bottom of the image */}
+        <div className="absolute bottom-2 left-2 right-2">
+          <button className="w-full inline-flex items-center justify-center gap-1 rounded-none bg-white/90 hover:bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#7F5A34] transition-colors shadow-sm">
+            Customize <ChevronRight className="w-3 h-3" />
+          </button>
+        </div>
+      </div>
+
+      {/* Details section under the image */}
+      {/* <div className="p-2.5 sm:p-3.5 bg-white flex flex-col gap-2">
+        <div className="flex items-center gap-1.5">
+          {concept.swatches.map((color, i) => (
+            <span
+              key={i}
+              className="w-3.5 h-3.5 rounded-none border border-black/10"
+              style={{ backgroundColor: color }}
+            />
+          ))}
+        </div>
+        <h3 className="text-xs font-bold text-[#2C2822] uppercase tracking-wide">
+          {concept.title}
+        </h3>
+      </div> */}
+    </div>
+  ))}
+</div>
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-[#E6E0D6] bg-[#FAF6EF] px-4 sm:px-5 py-4">
             <div className="flex items-start gap-2.5">
