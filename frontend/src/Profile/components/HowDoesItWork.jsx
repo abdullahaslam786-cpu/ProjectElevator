@@ -141,18 +141,18 @@ const howItWorksSteps = [
           <div className="absolute -top-3 left-0 w-full lg:w-[70%] h-full bg-gradient-to-r from-[#FBF9F5] via-[#FBF9F5] to-transparent p-6 sm:p-10 flex flex-col justify-center">
             <div className="pl-6 flex flex-col gap-2 border-l-2 border-[#A17C50]">
               <h1
-                className="text-3xl sm:text-4xl lg:text-6xl font-medium tracking-tight mb-1 text-[#2C2822]"
+                className="text-3xl sm:text-4xl lg:text-4xl font-medium tracking-tight mb-1 text-[#2C2822]"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
                 How It Works
               </h1>
               <p
-                className="text-lg sm:text-3xl italic text-[#A17C50] mb-3"
+                className="text-lg sm:text-2xl italic text-[#A17C50] mb-3"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
                 From Inspiration to Installation.
               </p>
-              <p className="text-xs sm:text-xl text-[#6B6355] max-w-md leading-relaxed">
+              <p className="text-xs sm:text-md text-[#6B6355] max-w-md leading-relaxed">
                 Our patented platform makes it simple to design, visualize, and bring
                 exceptional elevator interiors to life.
               </p>

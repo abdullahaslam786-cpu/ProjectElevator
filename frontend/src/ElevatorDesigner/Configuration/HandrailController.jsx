@@ -190,7 +190,7 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
           display: grid;
           grid-template-columns: repeat(8, 1fr);
           gap: 12px;
-          padding: 0px;
+          padding: 0px 12px;
         }
         
         .hrc-swatch-premium {

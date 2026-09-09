@@ -315,7 +315,7 @@ const WallpanelController = ({
           background: linear-gradient(135deg, #FFF1C5, #D4AF37, #8C7335); /* Pure Gold Metallic Spectrum */
           color: #1F190A; /* Deep Charcoal Contrast text */
           font-weight: 600;
-          transform: rotateX(-90deg) translateZ(20px);
+          transform: rotateX(-90deg) translateZ(9px);
         }
 
         /* Dynamic Hover/Active transformations */
@@ -360,14 +360,14 @@ const WallpanelController = ({
           color: #F7E7B4; /* Warm Cream Text */
           border: 1px solid #BA9E59; /* Soft Metallic Border */
           font-weight: 500;
-          transform: translateZ(18px);
+          transform: translateZ(20px);
         }
 
         .wpc-panel-cube .face.bottom {
           background: linear-gradient(135deg, #FFFFFF, #E6CA73, #A6873B); /* Shimmering Light Gold */
           color: #4A3B1B;
           font-weight: 700;
-          transform: rotateX(-90deg) translateZ(18px);
+          transform: rotateX(-90deg) translateZ(9px);
           box-shadow: inset 0 0 8px rgba(0,0,0,0.12);
         }
 
@@ -547,7 +547,7 @@ const WallpanelController = ({
 
         /* ── Scrollable content ── */
         .wpc-content {
-          height: 340px;
+          height: 390px;
           overflow-y: auto;
           background: linear-gradient(180deg, #FFFDF9, #FAF3E0);
           scrollbar-width: thin;

@@ -289,9 +289,9 @@ const CabInspiration = () => {
 
       {/* SECTION Create a Custom Design */}
       <div className="w-full max-w-7xl mx-auto mb-4">
-        <div className="bg-[#FAF8F5] rounded-2xl overflow-hidden">
+        <div className="bg-transparent rounded-2xl overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-12 w-full items-stretch">
-            <div className="lg:col-span-5 p-5 sm:p-8 lg:p-10 flex flex-col justify-between bg-gradient-to-b from-[#FAF8F5] to-[#F5EFE6]">
+            <div className="lg:col-span-5 p-5 sm:p-8 lg:p-10 flex flex-col justify-between bg-gradient-to-b from-[#FAF8F5] to-transparent">
               <div>
                 <h1
                   className="text-xl sm:text-2xl lg:text-3xl font-medium tracking-tight text-[#2C2822] leading-tight mb-3"
@@ -310,7 +310,7 @@ const CabInspiration = () => {
                       key={idx}
                       className="flex flex-col items-center text-center p-2.5 rounded-lg transition-all hover:bg-white/60"
                     >
-                      <div className="w-9 h-9 rounded-lg bg-[#F3ECE0] flex items-center justify-center text-[#8C6239] mb-1.5 shrink-0">
+                      <div className="w-9 h-9 rounded-lg  flex items-center justify-center text-[#8C6239] mb-1.5 shrink-0">
                         {design.icon}
                       </div>
                       <h3 className="text-[10px] font-bold text-[#2C2822] leading-tight mb-1">
@@ -336,7 +336,7 @@ const CabInspiration = () => {
               </button>
             </div>
 
-            <div className="lg:col-span-7 bg-[#EFE9DF] relative overflow-hidden min-h-[220px] sm:min-h-[280px] lg:min-h-full flex items-center justify-center">
+            <div className="lg:col-span-7 bg-transparent relative overflow-hidden min-h-[220px] sm:min-h-[280px] lg:min-h-full flex items-center justify-center">
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-[#C79A63]/15 rounded-full blur-3xl pointer-events-none" />
               <div className="relative z-10 w-full h-full max-h-[380px] rounded-2xl overflow-hidden border border-white/60 shadow-[0_20px_40px_rgba(44,40,34,0.12)] bg-white">
                 <img

@@ -386,7 +386,7 @@ function ProjectCard({ project, onOpen, onEdit, onDuplicate, onDelete, layout = 
         <span className="absolute top-1.5 left-1.5 w-1.5 h-1.5 rounded-full" style={{ background: ACCENT }} />
       </div>
 
-      <div className={`p-2.5 flex flex-col gap-0.5 flex-1 min-w-0 ${isList ? "flex-row items-center justify-between" : ""}`}>
+      <div className={`p-2 flex flex-col gap-0.5 flex-1 min-w-0 ${isList ? "flex-row items-center justify-between" : ""}`}>
         <div className="min-w-0">
           <h4 onClick={onOpen} className="text-xs font-bold cursor-pointer truncate" style={{ color: "#2C2822" }}>
             {project.name}
@@ -416,7 +416,7 @@ function ProjectCard({ project, onOpen, onEdit, onDuplicate, onDelete, layout = 
 function StatPill({ value, label }) {
   return (
     <div
-      className="flex-1 min-w-[70px] rounded-lg bg-[#F1EAE2] px-3 py-2 text-center border border-[#E6E0D6]"
+      className="flex-1 min-w-[70px] rounded-md bg-[#F1EAE2] px-3 py-1 text-center border border-[#E6E0D6]"
       style={{ boxShadow: "0 6px 16px -8px rgba(36,31,25,0.12)" }}
     >
       <p className="text-sm font-bold leading-none" style={{ color: "#2C2822" }}>{value}</p>
@@ -600,7 +600,7 @@ const Profile = () => {
           <div className="lg:w-[320px] w-full flex-shrink-0 flex flex-col gap-2 min-h-0">
 
             {/* My Account — dark card, matches the reference image */}
-            <div className="bg-[#1B1B1B] text-white p-3 relative overflow-hidden flex flex-col rounded-xl border border-white/10 flex-shrink-0" style={{ boxShadow: tileShadow }}>
+            <div className="bg-[#1B1B1B] text-white p-3 relative overflow-hidden flex flex-col rounded-lg border border-white/10 flex-shrink-0" style={{ boxShadow: tileShadow }}>
               <div className="absolute -right-10 -bottom-10 w-44 h-14 rounded-full pointer-events-none" style={{ background: "radial-gradient(circle, rgba(161,124,80,0.14) 0%, transparent 70%)" }} />
 
               <div className="relative z-10 flex flex-col">
@@ -674,7 +674,7 @@ const Profile = () => {
 
             {/* Create New Project — sits below My Account, same column */}
             <div
-              className="bg-white border border-[#E6E0D6] p-4 flex flex-col items-center justify-center gap-1 text-center cursor-pointer transition-transform hover:scale-[1.01] rounded-xl flex-1 min-h-0"
+              className="bg-white border border-[#E6E0D6] p-4 flex flex-col items-center justify-center gap-1 text-center cursor-pointer transition-transform hover:scale-[1.01] rounded-lg flex-1 min-h-0"
               onClick={() => setShowCreateModal(true)}
               role="button"
               tabIndex={0}
@@ -752,7 +752,7 @@ const Profile = () => {
       </div>
 
       {/* Icon Container with subtle background tile */}
-      <div className="w-12 h-12 rounded-xl bg-white/40 border border-[#A47C45]/20 flex items-center justify-center mb-2 text-[#A47C45] shadow-xs backdrop-blur-xs">
+      <div className="w-12 h-12 rounded-lg bg-white/40 border border-[#A47C45]/20 flex items-center justify-center mb-2 text-[#A47C45] shadow-xs backdrop-blur-xs">
         <step.icon size={24} strokeWidth={1.8} />
       </div>
 
@@ -800,7 +800,7 @@ const Profile = () => {
             </div>
 
             {/* My Projects — header (fixed) + scrollable card area */}
-            <div className="bg-[#F8F5F0] border border-[#E6E0D6] rounded-xl flex-1 min-h-0 flex flex-col overflow-hidden" style={{ boxShadow: tileShadow }}>
+            <div className="bg-[#F8F5F0] border border-[#E6E0D6] rounded-lg flex-1 min-h-0 flex flex-col overflow-hidden" style={{ boxShadow: tileShadow }}>
 
   {/* Fixed Header Container */}
   <div className="px-4 py-2 sm:px-4  flex-shrink-0" >
