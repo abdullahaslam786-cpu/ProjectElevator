@@ -6,6 +6,11 @@ import gsap from "gsap";
 // Ceiling numbers that ALLOW lights
 const CEILINGS_WITH_LIGHT = [1, 5, 6, 7];
 
+// Fixed local icons shown ON the light buttons (display only).
+// Selection state and applyLight() still use the real AWS item (item.num / item.url) —
+// these are just the button artwork, matched by position (1st light -> white, 2nd -> yellow).
+const LIGHT_BUTTON_ICONS = ["/lights/white.png", "/lights/yellow.png"];
+
 const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
   const [selectedCeiling, setSelectedCeiling] = useState(null);
   const [selectedFloor,   setSelectedFloor]   = useState(null);
@@ -52,9 +57,9 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
 
         setAllCeilingImages(ceilingData);
         
-        setCeilingThumbnails(processImages(ceilingData.filter(i => i.key.includes("/V2/"))));
-        setFloorThumbnails(processImages(floorData.filter(i => i.key.includes("/V2/"))));
-        setLightThumbnails(processImages(lightData)); 
+        setCeilingThumbnails(processImages(ceilingData.filter(i => i.key.includes("/V1/"))));
+        setFloorThumbnails(processImages(floorData.filter(i => i.key.includes("/V1/"))));
+        setLightThumbnails(processImages(lightData.filter(i => i.key.includes("/V1/")))); 
 
       } catch (err) {
         console.error("Fetch error:", err);
@@ -108,7 +113,7 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
       applyLight(null);
     }
 
-    const found = allCeilingImages.find((img) => img.key.includes(`/V2/${num}.png`));
+    const found = allCeilingImages.find((img) => img.key.includes(`/V1/${num}.png`));
     if (found) setCeilingPreviewUrl(found.url);
   };
 
@@ -155,8 +160,8 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
 
         .cec-preview-img {
           width: 100%;
-          height: 100%;
-          object-fit: contain;
+          height: 300%;
+          object-fit: center;
           padding: 30px;
           opacity: 0.95;
           filter: sepia(0.15) saturate(1.05);
@@ -173,7 +178,7 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
         }
 
         .cec-content {
-          height: 480px;
+          height: 300px;
           overflow-y: auto;
           background: linear-gradient(180deg, #FFFDF6, #F7EFCF);
           scrollbar-width: thin;
@@ -204,22 +209,40 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
 
         .cec-grid {
           display: grid;
-          grid-template-columns: repeat(6, 1fr);
-          gap: 12px;
-          padding: 0 24px 20px;
+          grid-template-columns: repeat(8, 1fr);
+          gap: 4px;
+          padding: 0px 24px 2px 20px;
         }
+          .cec-grid-floor {
+           display: grid;
+          grid-template-columns: repeat(8, 1fr);
+          gap: 4px;
+          padding: 0px 24px 30px 20px;
+          }
 
         .cec-swatch-wrap {
           position: relative;
           aspect-ratio: 1;
           cursor: pointer;
-          perspective: 1000px;
+          perspective: 900px;
+          margin-bottom: 22px;
         }
 
         .cec-swatch-item {
           width: 100%;
           height: 100%;
-          background: #FFFBF0; /* Warm Alabaster Gold Base */
+          background: #1F190A; /* Warm Alabaster Gold Base */
+          border: 1px solid #D6C394; /* Soft Brushed Gold Border */
+          border-radius: 4px;
+          overflow: hidden;
+          transition: all 0.4s cubic-bezier(0.25, 1, 0.33, 1);
+          transform-style: preserve-3d;
+        }
+
+        .cec-swatch-item-inner{
+           width: 100%;
+          height: 100%;
+          background: #1F190A; /* Warm Alabaster Gold Base */
           border: 1px solid #D6C394; /* Soft Brushed Gold Border */
           border-radius: 4px;
           overflow: hidden;
@@ -229,11 +252,18 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
 
         .cec-swatch-item img {
           width: 100%;
-          height: 100%;
-          object-fit: cover;
+          height: 80%;
+          object-fit: center;
           opacity: 0.75;
           transition: opacity 0.3s;
         }
+         .cec-swatch-item-inner img{
+          width: 100%;
+          height: 200%;
+          object-fit: center;
+          opacity: 0.75;
+          transition: opacity 0.3s;
+         }
 
         .cec-swatch-badge {
           position: absolute;
@@ -252,7 +282,7 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
         }
 
         .cec-swatch-wrap:hover .cec-swatch-item {
-          transform: translateZ(15px);
+          transform: translateZ(25px);
           border-color: #B88E2F;
           box-shadow: 0 6px 16px rgba(184, 142, 47, 0.15);
         }
@@ -267,7 +297,7 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
 
         .cec-swatch-wrap.selected .cec-swatch-item {
           border-color: #D4AF37;
-          transform: translateZ(20px);
+          transform: translateZ(25px);
           box-shadow: 0 10px 24px rgba(184, 142, 47, 0.3);
           background: #FFF9E6;
         }
@@ -388,7 +418,7 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
                   className={`cec-swatch-wrap ${selectedCeiling === item.num ? "selected" : ""}`}
                   onClick={() => handleCeilingSelect(item.num)}
                 >
-                  <div className="cec-swatch-item">
+                  <div className="cec-swatch-item-inner">
                     <img src={item.url} alt={`Ceiling ${item.num}`} />
                     <div className="cec-swatch-badge">0{item.num}</div>
                   </div>
@@ -401,14 +431,16 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
           <div ref={lightsSectionRef} className="cec-lights-section">
             <div className="cec-section-label"><span>INTEGRATED LIGHTING</span></div>
             <div className="cec-grid">
-              {lightThumbnails.slice(0, 8).map((item) => (
+              {lightThumbnails.slice(0, 8).map((item, idx) => (
                 <div
                   key={item.num}
                   className={`cec-swatch-wrap ${selectedLight === item.num ? "selected" : ""}`}
                   onClick={() => { setSelectedLight(item.num); applyLight(item.num); }}
                 >
                   <div className="cec-swatch-item">
-                    <img src={item.url} alt={`Light ${item.num}`} />
+                    {/* Button artwork is the fixed local icon (white/yellow);
+                        selection state and applyLight() above still use the real AWS item.num */}
+                    <img src={LIGHT_BUTTON_ICONS[idx] || item.url} alt={`Light ${item.num}`} />
                     <div className="cec-swatch-badge">GLOW 0{item.num}</div>
                   </div>
                 </div>
@@ -426,7 +458,7 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
           </div>
 
           <div className="cec-section-label"><span>FLOORING FINISHES</span></div>
-          <div className="cec-grid">
+          <div className="cec-grid-floor">
             {floorThumbnails.map((item) => (
               <div
                 key={item.num}

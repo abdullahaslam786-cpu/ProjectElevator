@@ -9,31 +9,81 @@ import {
   Scale,
   RotateCw,
 } from "lucide-react";
- const categories = ["ALL STYLES", "INDUSTRIAL", "HEALTHCARE", "HOSPITALITY", "CORPORATE"];
+
+const categories = ["ALL STYLES", "INDUSTRIAL", "HEALTHCARE", "HOSPITALITY", "CORPORATE"];
+
+const ceilingOptions = [
+  "ceilings/ceiling1.png",
+  "ceilings/ceiling2.png",
+  "ceilings/ceiling3.png",
+  "ceilings/ceiling4.png",
+  "ceilings/ceiling5.png",
+  "ceilings/ceiling6.png",
+  "ceilings/ceiling7.png",
+];
+
+const materialOptions = [
+  "material/material.png",
+  "material/material2.png",
+  "material/material3.png",
+  "material/material4.png",
+  "material/material5.png",
+  "material/material6.png",
+  "material/material7.png",
+  "material/material9.png",
+  "material/material8.png",
+  "material/material10.png",
+  "material/material11.png",
+];
+
+const handrailOptions = [
+  "handrails/1.png",
+  "handrails/2.png",
+  "handrails/3.png",
+  "handrails/4.png",
+  "handrails/5.png",
+  "handrails/6.png",
+  "handrails/7.png",
+  "handrails/8.png",
+  "handrails/9.png",
+  "handrails/10.png",
+  "handrails/11.png",
+  "handrails/12.png",
+  "handrails/13.png",
+];
+
+const concepts = [
+  { id: 1, title: "Silver Mesh", image: "Cab Inspiration/gallarey/1.jpg", swatches: ["#C9C9C9", "#B99B72", "#5C5C5C", "#1E1E1E"] },
+  { id: 2, title: "Urban Bronze", image: "Cab Inspiration/gallarey/2.jpg", swatches: ["#B08A54", "#8C6239", "#3A332B", "#1E1E1E"] },
+  { id: 3, title: "Marble Elegance", image: "Cab Inspiration/gallarey/3.jpg", swatches: ["#F5F2EC", "#D8CBB4", "#C7C3BB", "#4A463F"] },
+  { id: 4, title: "Graphite Edge", image: "Cab Inspiration/gallarey/4.jpg", swatches: ["#6E6E6E", "#4A4A4A", "#9A9A9A", "#1A1A1A"] },
+  { id: 5, title: "Natural Oak", image: "Cab Inspiration/gallarey/5.jpg", swatches: ["#B9793B", "#D9A24B", "#8C6239", "#3A2E22"] },
+  { id: 6, title: "Linear Grey", image: "Cab Inspiration/gallarey/6.jpg", swatches: ["#B7B2A8", "#8C877C", "#5C574D", "#2A2822"] },
+  { id: 7, title: "Midnight Blue", image: "Cab Inspiration/gallarey/7.jpg", swatches: ["#3C4E60", "#2C3A47", "#D8CFC0", "#1A1A1A"] },
+  { id: 8, title: "Onyx Luxe", image: "Cab Inspiration/gallarey/1.jpg", swatches: ["#1E1B18", "#4A433A", "#D8CBB4", "#EAD9B8"] },
+];
+
 /**
- * InspirationGallery
- * Extracted from CabInspiration.jsx — renders:
- *   - the "What can you customize?" features bar
- *   - the wizard stepper (desktop chevron nav + mobile icon nav + progress dots)
- *   - the "Your Design Journey" sidebar
- *   - the main concept gallery (category pills, grid/list toggle, concept cards)
- *
- * All data and interactive state live in CabInspiration.jsx and are passed
- * down as props — this component is purely presentational.
- *
- * Props:
- *  - features: [{ icon, title }]                — top features bar items
- *  - steps: [{ label, shortLabel, description, icon, active }] — wizard steps
- *  - activeStep: number                          — index of the active step
- *  - handleNavClick: (index: number) => void      — click handler for step nav
- *  - journeyPerks: [{ icon, title, desc }]        — sidebar perk tiles
- *  - viewMode: "grid" | "list"
- *  - setViewMode: (mode: "grid" | "list") => void
- *  - activeCategory: string
- *  - setActiveCategory: (cat: string) => void
- *  - categories: string[]
- *  - concepts: [{ id, image, title, swatches: string[] }]
+ * Maps the active wizard step's label to the correct image set.
+ * Matches loosely (case-insensitive, substring) so it's tolerant of
+ * label variations like "Wall Panels" / "Panels" / "Wall Panel".
  */
+const getGalleryItems = (stepLabel = "") => {
+  const label = stepLabel.toLowerCase();
+
+  if (label.includes("wall") || label.includes("panel")) {
+    return materialOptions.map((img, idx) => ({ id: `material-${idx}`, image: img }));
+  }
+  if (label.includes("handrail")) {
+    return handrailOptions.map((img, idx) => ({ id: `handrail-${idx}`, image: img }));
+  }
+  if (label.includes("ceiling")) {
+    return ceilingOptions.map((img, idx) => ({ id: `ceiling-${idx}`, image: img }));
+  }
+  // Default / "Configuration(s)" step
+  return concepts;
+};
+
 const InspirationGallery = ({
   features,
   steps,
@@ -42,11 +92,9 @@ const InspirationGallery = ({
   journeyPerks,
   viewMode,
   setViewMode,
-  activeCategory,
-  setActiveCategory,
-//   categories,
-  concepts,
 }) => {
+  const galleryItems = getGalleryItems(steps?.[activeStep]?.label);
+
   return (
     <>
       {/* ----------------- SECTION 2: TOP FEATURES BAR ----------------- */}
@@ -69,73 +117,74 @@ const InspirationGallery = ({
         </div>
       </div>
 
-      {/* ----------------- SECTION 1.5: WIZARD STEPPER (Configurations / Wall Panels / Handrails / Ceilings / Review) ----------------- */}
+      {/* ----------------- SECTION 1.5: WIZARD STEPPER ----------------- */}
       <div className="w-full max-w-7xl mx-auto mb-6">
         {/* Desktop: 5 chevron buttons */}
-      <nav className="hidden lg:flex w-full bg-[#f9f6f0]/80 backdrop-blur-sm rounded-xl overflow-hidden border border-[#e5dfd5] p-1 shadow-sm">
-  {steps.map((step, idx) => {
-    const isFirst = idx === 0;
-    const isLast = idx === steps.length - 1;
+        <nav className="hidden lg:flex w-full bg-[#f9f6f0]/80 backdrop-blur-sm rounded-xl overflow-hidden border border-[#e5dfd5] p-1 shadow-sm">
+          {steps.map((step, idx) => {
+            const isFirst = idx === 0;
+            const isLast = idx === steps.length - 1;
 
-    // Define clipPath for flat left/right edges on container ends vs inner chevrons
-    let clipPathStyle =
-      "polygon(18px 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 18px 100%, 0 50%)";
-    if (isFirst) {
-      clipPathStyle =
-        "polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%)";
-    } else if (isLast) {
-      clipPathStyle = "polygon(18px 0, 100% 0, 100% 100%, 18px 100%, 0 50%)";
-    }
+            let clipPathStyle =
+              "polygon(18px 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 18px 100%, 0 50%)";
+            if (isFirst) {
+              clipPathStyle =
+                "polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%)";
+            } else if (isLast) {
+              clipPathStyle = "polygon(18px 0, 100% 0, 100% 100%, 18px 100%, 0 50%)";
+            }
 
-    return (
-      <div
-        key={step.label}
-        className={`relative flex-1 flex items-center gap-3 px-6 py-3.5 text-left ${
-          step.active
-            ? "text-white bg-gradient-to-r from-[#b37a28] via-[#a36c1e] to-[#8c5914] shadow-md"
-            : "text-[#2b2120]"
-        }`}
-        style={{
-          clipPath: clipPathStyle,
-          marginLeft: isFirst ? 0 : "-14px",
-          zIndex: step.active ? 20 : steps.length - idx,
-        }}
-      >
-        <span
-          className={`shrink-0 w-9 h-9 rounded-md flex items-center justify-center ${
-            step.active ? "bg-white/20" : "bg-transparent"
-          }`}
-        >
-          <img
-            src={step.icon}
-            alt={step.shortLabel || step.label}
-            className={`object-contain w-6 h-6 ${
-              step.active ? "brightness-200" : "opacity-70"
-            }`}
-          />
-        </span>
-        <span className="flex flex-col leading-tight">
-          <span
-            className={`text-xs font-bold tracking-wider uppercase ${
-              step.active ? "text-white" : "text-[#1f1918]"
-            }`}
-          >
-            {step.label}
-          </span>
-          {step.description && (
-            <span
-              className={`text-[10px] font-normal line-clamp-1 mt-0.5 ${
-                step.active ? "text-white/80" : "text-[#7a6e65]"
-              }`}
-            >
-              {step.description}
-            </span>
-          )}
-        </span>
-      </div>
-    );
-  })}
-</nav>
+            return (
+              <button
+                key={step.label}
+                type="button"
+                onClick={() => handleNavClick(idx)}
+                className={`relative flex-1 flex items-center gap-3 px-6 py-3.5 text-left ${
+                  step.active
+                    ? "text-white bg-gradient-to-r from-[#b37a28] via-[#a36c1e] to-[#8c5914] shadow-md"
+                    : "text-[#2b2120]"
+                }`}
+                style={{
+                  clipPath: clipPathStyle,
+                  marginLeft: isFirst ? 0 : "-14px",
+                  zIndex: step.active ? 20 : steps.length - idx,
+                }}
+              >
+                <span
+                  className={`shrink-0 w-9 h-9 rounded-md flex items-center justify-center ${
+                    step.active ? "bg-white/20" : "bg-transparent"
+                  }`}
+                >
+                  <img
+                    src={step.icon}
+                    alt={step.shortLabel || step.label}
+                    className={`object-contain w-6 h-6 ${
+                      step.active ? "brightness-200" : "opacity-70"
+                    }`}
+                  />
+                </span>
+                <span className="flex flex-col leading-tight">
+                  <span
+                    className={`text-xs font-bold tracking-wider uppercase ${
+                      step.active ? "text-white" : "text-[#1f1918]"
+                    }`}
+                  >
+                    {step.label}
+                  </span>
+                  {step.description && (
+                    <span
+                      className={`text-[10px] font-normal line-clamp-1 mt-0.5 ${
+                        step.active ? "text-white/80" : "text-[#7a6e65]"
+                      }`}
+                    >
+                      {step.description}
+                    </span>
+                  )}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
 
         {/* Mobile: compact icon nav */}
         <nav className="flex lg:hidden w-full items-center justify-between pt-18">
@@ -166,10 +215,7 @@ const InspirationGallery = ({
 
         {/* Progress dot-line */}
         <div className="relative flex items-center justify-between mt-6 px-12">
-          {/* Background Base Line */}
           <div className="absolute left-12 right-12 h-[1px] bg-[#d3cbc0] top-1/2 -translate-y-1/2" />
-
-          {/* Active Progress Line */}
           <div
             className="absolute left-12 h-[2px] bg-[#b37a28] top-1/2 -translate-y-1/2 transition-all duration-500 ease-out"
             style={{
@@ -178,8 +224,6 @@ const InspirationGallery = ({
               }px)`,
             }}
           />
-
-          {/* Dots matching step positions */}
           {steps.map((step, idx) => {
             const isActive = idx === activeStep;
             const isPassed = idx < activeStep;
@@ -206,9 +250,9 @@ const InspirationGallery = ({
         </div>
       </div>
 
-      {/* ----------------- SECTION 3+4: SIDEBAR (col-span-3) + MAIN GALLERY (col-span-9) ----------------- */}
+      {/* ----------------- SECTION 3+4: SIDEBAR + MAIN GALLERY ----------------- */}
       <div className="max-w-7xl mx-auto mb-4 grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* ---- Sidebar: col-span-3 ---- */}
+        {/* ---- Sidebar ---- */}
         <aside className="lg:col-span-3 bg-white border border-[#E6E0D6] rounded-xl p-5 flex flex-col gap-5 h-fit">
           <div>
             <h3
@@ -238,11 +282,11 @@ const InspirationGallery = ({
             Next Step <ChevronRight className="w-3.5 h-3.5" />
           </button>
 
-          <div className="relative rounded-lg overflow-hidden bg-[#F3ECE0] aspect-[4/3]">
+          <div className="relative rounded-md overflow-hidden bg-[#F3ECE0] aspect-[4/5]">
             <img
-              src="Cab Inspiration/journeypreview.png"
+              src="360.png"
               alt="Elevator interior preview"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-center"
             />
             <button className="absolute bottom-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur-sm px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white hover:bg-black/75 transition-colors">
               <RotateCw className="w-3 h-3" /> Explore in 360°
@@ -275,7 +319,7 @@ const InspirationGallery = ({
           </div>
         </aside>
 
-        {/* ---- Main gallery: col-span-9 ---- */}
+        {/* ---- Main gallery ---- */}
         <div className="lg:col-span-9 flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
             <div>
@@ -319,76 +363,43 @@ const InspirationGallery = ({
             </div>
           </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E6E0D6] pb-3.5">
-  {/* Category Labels */}
-  <div className="flex flex-wrap items-center gap-2">
-    <span className="text-[11px] font-bold tracking-widest text-[#2C2822] uppercase mr-1">
-      Categories:
-    </span>
-    {categories.map((cat, idx) => (
-      <span
-        key={idx}
-        className="px-3 py-1 bg-[#F5F2EC] border border-[#E6E0D6] text-[10px] sm:text-[11px] font-semibold tracking-wider text-[#6B6355] uppercase"
-      >
-        {cat}
-      </span>
-    ))}
-  </div>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E6E0D6] pb-3.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[11px] font-bold tracking-widest text-[#2C2822] uppercase mr-1">
+                Categories:
+              </span>
+              {categories.map((cat, idx) => (
+                <span
+                  key={idx}
+                  className="px-3 py-1 bg-[#F5F2EC] border border-[#E6E0D6] text-[10px] sm:text-[11px] font-semibold tracking-wider text-[#6B6355] uppercase"
+                >
+                  {cat}
+                </span>
+              ))}
+            </div>
 
-  {/* Saved Badge */}
-  <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#F5F2EC] border border-[#E6E0D6] text-[10px] sm:text-[11px] font-semibold tracking-wider text-[#7F5A34] uppercase">
-    <Heart className="w-3.5 h-3.5 text-[#A17C50]" /> Saved Styles
-  </div>
-</div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#F5F2EC] border border-[#E6E0D6] text-[10px] sm:text-[11px] font-semibold tracking-wider text-[#7F5A34] uppercase">
+              <Heart className="w-3.5 h-3.5 text-[#A17C50]" /> Saved Styles
+            </div>
+          </div>
 
-       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-  {concepts.map((concept) => (
-    <div
-      key={concept.id}
-      className="bg-white rounded-none overflow-hidden shadow-sm flex flex-col justify-between group hover:shadow-md transition-shadow"
-    >
-      {/* Image container made taller (3/4) with overlay elements inside */}
-      <div className="bg-[#F3ECE0] aspect-[3/4] overflow-hidden relative">
-        <img
-          src={concept.image}
-          alt={concept.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-        />
-
-        {/* Save button overlaid top right */}
-        <button
-          aria-label="Save concept"
-          className="absolute top-2 right-2 w-7 h-7 rounded-none bg-white/90 flex items-center justify-center text-[#A17C50] hover:text-[#8C6239] transition-colors shadow-sm"
-        >
-          <Heart className="w-3.5 h-3.5" />
-        </button>
-
-        {/* Customize button overlaid at the bottom of the image */}
-        <div className="absolute bottom-2 left-2 right-2">
-          <button className="w-full inline-flex items-center justify-center gap-1 rounded-none bg-white/90 hover:bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#7F5A34] transition-colors shadow-sm">
-            Customize <ChevronRight className="w-3 h-3" />
-          </button>
-        </div>
-      </div>
-
-      {/* Details section under the image */}
-      {/* <div className="p-2.5 sm:p-3.5 bg-white flex flex-col gap-2">
-        <div className="flex items-center gap-1.5">
-          {concept.swatches.map((color, i) => (
-            <span
-              key={i}
-              className="w-3.5 h-3.5 rounded-none border border-black/10"
-              style={{ backgroundColor: color }}
-            />
-          ))}
-        </div>
-        <h3 className="text-xs font-bold text-[#2C2822] uppercase tracking-wide">
-          {concept.title}
-        </h3>
-      </div> */}
-    </div>
-  ))}
-</div>
+          {/* Gallery grid — driven by the active step */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {galleryItems.map((item) => (
+              <div
+                key={item.id}
+                className="bg-white rounded-none overflow-hidden shadow-sm flex flex-col justify-between group hover:shadow-md transition-shadow"
+              >
+                <div className="bg-[#F3ECE0] aspect-[3/4] overflow-hidden relative">
+                  <img
+                    src={item.image}
+                    alt={item.title || `option-${item.id}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-[#E6E0D6] bg-[#FAF6EF] px-4 sm:px-5 py-4">
             <div className="flex items-start gap-2.5">

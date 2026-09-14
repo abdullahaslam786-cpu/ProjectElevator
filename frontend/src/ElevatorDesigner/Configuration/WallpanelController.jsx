@@ -584,7 +584,7 @@ const WallpanelController = ({
           display: grid;
           grid-template-columns: repeat(8, 1fr);
           gap: 8px; 
-          padding: 6px 20px;
+          padding: 12px 20px 180px 20px;
         }
 
         .swatch-wrap {

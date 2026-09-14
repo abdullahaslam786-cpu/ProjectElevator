@@ -192,7 +192,7 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
           gap: 12px;
           padding: 0px 12px;
         }
-        
+      
         .hrc-swatch-premium {
           position: relative;
           aspect-ratio: 1;
@@ -441,7 +441,7 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
                 onClick={toggleSubHandrail}
               >
                 <div className="hrc-btn-glaze" />
-                <div className="hrc-btn-text">SUB HANDRAILS</div>
+                <div className="hrc-btn-text">BUMPERS</div>
               </div>
 
               {/* None Dismiss Slider */}

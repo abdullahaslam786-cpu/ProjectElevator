@@ -147,16 +147,7 @@ const CabInspiration = () => {
   ];
 
   // Elevator Concepts Cards Data (8 cards, 4 per row)
-  const concepts = [
-    { id: 1, title: "Silver Mesh", image: "Cab Inspiration/gallarey/1.jpg", swatches: ["#C9C9C9", "#B99B72", "#5C5C5C", "#1E1E1E"] },
-    { id: 2, title: "Urban Bronze", image: "Cab Inspiration/gallarey/2.jpg", swatches: ["#B08A54", "#8C6239", "#3A332B", "#1E1E1E"] },
-    { id: 3, title: "Marble Elegance", image: "Cab Inspiration/gallarey/3.jpg", swatches: ["#F5F2EC", "#D8CBB4", "#C7C3BB", "#4A463F"] },
-    { id: 4, title: "Graphite Edge", image: "Cab Inspiration/gallarey/4.jpg", swatches: ["#6E6E6E", "#4A4A4A", "#9A9A9A", "#1A1A1A"] },
-    { id: 5, title: "Natural Oak", image: "Cab Inspiration/gallarey/5.jpg", swatches: ["#B9793B", "#D9A24B", "#8C6239", "#3A2E22"] },
-    { id: 6, title: "Linear Grey", image: "Cab Inspiration/gallarey/6.jpg", swatches: ["#B7B2A8", "#8C877C", "#5C574D", "#2A2822"] },
-    { id: 7, title: "Midnight Blue", image: "Cab Inspiration/gallarey/7.jpg", swatches: ["#3C4E60", "#2C3A47", "#D8CFC0","#1A1A1A"] },
-    { id: 8, title: "Onyx Luxe", image: "Cab Inspiration/gallarey/1.jpg", swatches: ["#1E1B18", "#4A433A", "#D8CBB4", "#EAD9B8"] },
-  ];
+
 
   // Stat Highlights
   const statHighlights = [
@@ -165,6 +156,8 @@ const CabInspiration = () => {
     { icon: <FiShare2 className="text-[#8C6239] text-lg shrink-0" />, number: "Unlimited", label: "custom configurations" },
     { icon: <IoStorefrontSharp className="text-[#8C6239] text-lg shrink-0" />, number: "Compatible", label: "with all standard cabs" },
   ];
+
+  // 
 
   return (
     <div
@@ -284,7 +277,7 @@ const CabInspiration = () => {
   activeCategory={activeCategory}
   setActiveCategory={setActiveCategory}
   // categories={categories}
-  concepts={concepts}
+  // concepts={concepts}
 />
 
       {/* SECTION Create a Custom Design */}
