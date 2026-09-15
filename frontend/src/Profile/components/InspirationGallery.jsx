@@ -36,20 +36,15 @@ const materialOptions = [
   "material/material11.png",
 ];
 
+// Only 6 handrail preview images are shown in this gallery step — it stops
+// here, no more images and no pagination beyond these 6.
 const handrailOptions = [
-  "handrails/1.png",
-  "handrails/2.png",
-  "handrails/3.png",
-  "handrails/4.png",
-  "handrails/5.png",
-  "handrails/6.png",
-  "handrails/7.png",
-  "handrails/8.png",
-  "handrails/9.png",
-  "handrails/10.png",
-  "handrails/11.png",
-  "handrails/12.png",
-  "handrails/13.png",
+  "previewHandrails/1.png",
+  "previewHandrails/2.png",
+  "previewHandrails/3.png",
+  "previewHandrails/4.png",
+  "previewHandrails/5.png",
+  "previewHandrails/6.png",
 ];
 
 const concepts = [
@@ -84,6 +79,108 @@ const getGalleryItems = (stepLabel = "") => {
   return concepts;
 };
 
+/**
+ * ReviewInfoPanel
+ * Self-contained explanation of what the Review step does — no external
+ * component or extra props needed. Shown in the gallery area whenever the
+ * active wizard step is "Review".
+ */
+const ReviewInfoPanel = () => {
+  const fields = [
+    {
+      label: "PROJECT / JOB NAME",
+      desc: "This appears at the top of your downloaded spec sheet, next to the model name.",
+    },
+    {
+      label: "DIMENSIONS",
+      desc: "Dimensions are not mandatory at this stage to complete your design. However, you will need to provide them to request an 'Advanced Download'. You can do this now or in the future.",
+      sub: [
+        { tag: "D1", text: "DEPTH" },
+        { tag: "W1", text: "WIDTH" },
+        { tag: "H1", text: "CAB SHELL HEIGHT" },
+        { tag: "H2", text: "CEILING HEIGHT" },
+      ],
+      note: "\"EDIT CAB DIMENSIONS\" unlocks these four fields so you can type in exact measurements.",
+    },
+    {
+      label: "+ QUANTITY",
+      desc: "How many units of this exact configuration you need built.",
+    },
+    {
+      label: "+MORE DETAILS (click to expand)",
+      desc: "Expands a set of optional fields — Job Type, Elevator Type, Cab Shell Material, and Manufacturer — for anyone who wants to specify them up front.",
+      sub: [
+        { tag: "JOB TYPE", text: "New Construction · Modernization · Retrofit" },
+        { tag: "ELEVATOR TYPE", text: "Passenger · Freight · Residential" },
+        { tag: "CAB SHELL MATERIAL", text: "Stainless Steel · Painted Steel · Glass" },
+        { tag: "MANUFACTURER", text: "Otis · Schindler · KONE · ThyssenKrupp" },
+      ],
+    },
+    {
+      label: "SPECIFICATION VERIFICATION",
+      desc: "All parameters auto-saved to cloud repository. Compile configuration layouts into a production-ready blueprint document.",
+    },
+    {
+      label: "DOWNLOAD PRO BLUEPRINT (6 PAGES)",
+      desc: "Generates and downloads a 6-page PDF spec sheet with every view of your elevator design, plus the project details, dimensions, and job specs entered above — ready to send for quoting or fabrication.",
+    },
+  ];
+
+  return (
+    <div className="bg-white border border-[#E6E0D6] rounded-xl p-6 sm:p-8">
+      <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#8C6239] mb-1.5">
+        Design Review
+      </p>
+      <h2
+        className="text-xl sm:text-2xl lg:text-3xl font-medium tracking-tight text-[#2C2822] leading-tight"
+        style={{ fontFamily: "'Playfair Display', serif" }}
+      >
+        Final Summary
+      </h2>
+      <p className="text-xs sm:text-sm text-[#6B6355] mt-1.5 max-w-2xl mb-6">
+        Your elevator configuration is complete. Review your selections, specify optional
+        constraints, and render the design specification sheet.
+      </p>
+
+      <div className="flex flex-col divide-y divide-[#E6E0D6]">
+        {fields.map((field, idx) => (
+          <div key={idx} className="py-4 first:pt-0 last:pb-0">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[#2C2822] mb-1">
+              {field.label}
+            </p>
+            <p className="text-xs sm:text-sm text-[#6B6355] leading-relaxed">{field.desc}</p>
+
+            {field.sub && (
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                {field.sub.map((s, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#F5F2EC] border border-[#E6E0D6] text-[10px] font-semibold tracking-wide text-[#6B6355] uppercase"
+                  >
+                    <span className="text-[#8C6239] font-bold">{s.tag}</span> {s.text}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {field.note && (
+              <p className="text-[11px] text-[#8C6239] italic mt-2">{field.note}</p>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-6 rounded-xl border border-[#E6E0D6] bg-[#FAF6EF] px-4 sm:px-5 py-4 flex items-start gap-2.5">
+        <Lightbulb className="w-4 h-4 text-[#8C6239] mt-0.5 shrink-0" />
+        <p className="text-[11px] text-[#7A705F]">
+          Nothing here is required to finish browsing designs — but filling it in now saves
+          you a step later when you're ready to request a quote.
+        </p>
+      </div>
+    </div>
+  );
+};
+
 const InspirationGallery = ({
   features,
   steps,
@@ -93,7 +190,9 @@ const InspirationGallery = ({
   viewMode,
   setViewMode,
 }) => {
-  const galleryItems = getGalleryItems(steps?.[activeStep]?.label);
+  const activeLabel = (steps?.[activeStep]?.label || "").toLowerCase();
+  const isReviewStep = activeLabel.includes("review");
+  const galleryItems = isReviewStep ? [] : getGalleryItems(steps?.[activeStep]?.label);
 
   return (
     <>
@@ -319,100 +418,106 @@ const InspirationGallery = ({
           </div>
         </aside>
 
-        {/* ---- Main gallery ---- */}
+        {/* ---- Main gallery / Review ---- */}
         <div className="lg:col-span-9 flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-            <div>
-              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#8C6239] mb-1.5">
-                Design Elevator Interiors
-              </p>
-              <h2
-                className="text-xl sm:text-2xl lg:text-3xl font-medium tracking-tight text-[#2C2822] leading-tight"
-                style={{ fontFamily: "'Playfair Display', serif" }}
-              >
-                Find Your Inspiration. Make It Yours.
-              </h2>
-              <p className="text-xs sm:text-sm text-[#6B6355] mt-1.5 max-w-xl">
-                Choose a base design you love, then customize every detail to match your vision.
-              </p>
-            </div>
+          {isReviewStep ? (
+            <ReviewInfoPanel />
+          ) : (
+            <>
+              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+                <div>
+                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#8C6239] mb-1.5">
+                    Design Elevator Interiors
+                  </p>
+                  <h2
+                    className="text-xl sm:text-2xl lg:text-3xl font-medium tracking-tight text-[#2C2822] leading-tight"
+                    style={{ fontFamily: "'Playfair Display', serif" }}
+                  >
+                    Find Your Inspiration. Make It Yours.
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#6B6355] mt-1.5 max-w-xl">
+                    Choose a base design you love, then customize every detail to match your vision.
+                  </p>
+                </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              <button className="inline-flex items-center gap-1.5 rounded-sm border border-[#E6E0D6] bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#2C2822] hover:border-[#8C6239] transition-colors">
-                <Scale className="w-3.5 h-3.5 text-[#8C6239]" /> Compare (0)
-              </button>
-              <button className="inline-flex items-center gap-1.5 rounded-sm border border-[#E6E0D6] bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#2C2822] hover:border-[#8C6239] transition-colors">
-                Sort By: Newest <ChevronDown className="w-3.5 h-3.5" />
-              </button>
-              <div className="flex items-center rounded-sm border border-[#E6E0D6] overflow-hidden">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-2 transition-colors ${viewMode === "grid" ? "bg-[#8C6239] text-white" : "bg-white text-[#8C6239]"}`}
-                  aria-label="Grid view"
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`p-2 transition-colors ${viewMode === "list" ? "bg-[#8C6239] text-white" : "bg-white text-[#8C6239]"}`}
-                  aria-label="List view"
-                >
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E6E0D6] pb-3.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[11px] font-bold tracking-widest text-[#2C2822] uppercase mr-1">
-                Categories:
-              </span>
-              {categories.map((cat, idx) => (
-                <span
-                  key={idx}
-                  className="px-3 py-1 bg-[#F5F2EC] border border-[#E6E0D6] text-[10px] sm:text-[11px] font-semibold tracking-wider text-[#6B6355] uppercase"
-                >
-                  {cat}
-                </span>
-              ))}
-            </div>
-
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#F5F2EC] border border-[#E6E0D6] text-[10px] sm:text-[11px] font-semibold tracking-wider text-[#7F5A34] uppercase">
-              <Heart className="w-3.5 h-3.5 text-[#A17C50]" /> Saved Styles
-            </div>
-          </div>
-
-          {/* Gallery grid — driven by the active step */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-            {galleryItems.map((item) => (
-              <div
-                key={item.id}
-                className="bg-white rounded-none overflow-hidden shadow-sm flex flex-col justify-between group hover:shadow-md transition-shadow"
-              >
-                <div className="bg-[#F3ECE0] aspect-[3/4] overflow-hidden relative">
-                  <img
-                    src={item.image}
-                    alt={item.title || `option-${item.id}`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+                <div className="flex items-center gap-2 shrink-0">
+                  <button className="inline-flex items-center gap-1.5 rounded-sm border border-[#E6E0D6] bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#2C2822] hover:border-[#8C6239] transition-colors">
+                    <Scale className="w-3.5 h-3.5 text-[#8C6239]" /> Compare (0)
+                  </button>
+                  <button className="inline-flex items-center gap-1.5 rounded-sm border border-[#E6E0D6] bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#2C2822] hover:border-[#8C6239] transition-colors">
+                    Sort By: Newest <ChevronDown className="w-3.5 h-3.5" />
+                  </button>
+                  <div className="flex items-center rounded-sm border border-[#E6E0D6] overflow-hidden">
+                    <button
+                      onClick={() => setViewMode("grid")}
+                      className={`p-2 transition-colors ${viewMode === "grid" ? "bg-[#8C6239] text-white" : "bg-white text-[#8C6239]"}`}
+                      aria-label="Grid view"
+                    >
+                      <LayoutGrid className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode("list")}
+                      className={`p-2 transition-colors ${viewMode === "list" ? "bg-[#8C6239] text-white" : "bg-white text-[#8C6239]"}`}
+                      aria-label="List view"
+                    >
+                      <List className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-[#E6E0D6] bg-[#FAF6EF] px-4 sm:px-5 py-4">
-            <div className="flex items-start gap-2.5">
-              <Lightbulb className="w-4 h-4 text-[#8C6239] mt-0.5 shrink-0" />
-              <div>
-                <p className="text-xs font-bold text-[#2C2822]">Don't see what you imagine?</p>
-                <p className="text-[11px] text-[#7A705F]">Start from scratch or mix elements from different designs.</p>
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E6E0D6] pb-3.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] font-bold tracking-widest text-[#2C2822] uppercase mr-1">
+                    Categories:
+                  </span>
+                  {categories.map((cat, idx) => (
+                    <span
+                      key={idx}
+                      className="px-3 py-1 bg-[#F5F2EC] border border-[#E6E0D6] text-[10px] sm:text-[11px] font-semibold tracking-wider text-[#6B6355] uppercase"
+                    >
+                      {cat}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#F5F2EC] border border-[#E6E0D6] text-[10px] sm:text-[11px] font-semibold tracking-wider text-[#7F5A34] uppercase">
+                  <Heart className="w-3.5 h-3.5 text-[#A17C50]" /> Saved Styles
+                </div>
               </div>
-            </div>
-            <button className="inline-flex items-center justify-center gap-2 rounded-sm bg-[#1E1B18] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.15em] text-white hover:bg-black transition-colors shrink-0">
-              Start From Scratch <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
+
+              {/* Gallery grid — driven by the active step */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                {galleryItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="bg-white rounded-none overflow-hidden shadow-sm flex flex-col justify-between group hover:shadow-md transition-shadow"
+                  >
+                    <div className="bg-[#F3ECE0] aspect-[3/4] overflow-hidden relative">
+                      <img
+                        src={item.image}
+                        alt={item.title || `option-${item.id}`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-[#E6E0D6] bg-[#FAF6EF] px-4 sm:px-5 py-4">
+                <div className="flex items-start gap-2.5">
+                  <Lightbulb className="w-4 h-4 text-[#8C6239] mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-xs font-bold text-[#2C2822]">Don't see what you imagine?</p>
+                    <p className="text-[11px] text-[#7A705F]">Start from scratch or mix elements from different designs.</p>
+                  </div>
+                </div>
+                <button className="inline-flex items-center justify-center gap-2 rounded-sm bg-[#1E1B18] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.15em] text-white hover:bg-black transition-colors shrink-0">
+                  Start From Scratch <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </>

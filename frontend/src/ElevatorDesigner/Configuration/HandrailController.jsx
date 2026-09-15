@@ -3,6 +3,12 @@ import { IoClose } from "react-icons/io5";
 import { RingLoader } from "react-spinners";
 import gsap from "gsap";
 
+// Local (public folder) image path for a given handrail number.
+// Used for BOTH the option buttons and the big preview panel so they load
+// instantly, instead of waiting on the AWS url (item.url / previewImages[num]).
+// Files expected at: public/previewHandrail/1.png ... public/previewHandrail/15.png
+const getLocalHandrailImage = (num) => `/previewHandrails/${num}.png`;
+
 const HandrailController = ({ applyHandrail, applySubHandrail }) => {
   const [selectedHandrail, setSelectedHandrail] = useState(null);
   const [subHandrailEnabled, setSubHandrailEnabled] = useState(false);
@@ -76,8 +82,9 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
     setSelectedHandrail(num);
     applyHandrail(num);
 
-    const previewSrc = previewImages[num];
-    setPreviewUrl(previewSrc || null);
+    // Use the local image for the preview instead of the AWS url so it
+    // shows instantly rather than waiting on the network fetch.
+    setPreviewUrl(getLocalHandrailImage(num));
   };
 // const handleMainSelect = (num) => {
 //     setSelectedHandrail(num);
@@ -420,7 +427,9 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
                   className={`hrc-swatch-premium ${selectedHandrail === item.num ? "selected" : ""}`}
                   onClick={() => handleMainSelect(item.num)}
                 >
-                  <img src={item.url} alt={`Handrail ${item.num}`} />
+                  {/* Button artwork is the local image (loads instantly);
+                      selection state and applyHandrail() above still use the real AWS item.num */}
+                  <img src={getLocalHandrailImage(item.num)} alt={`Handrail ${item.num}`} />
                   <div className="hrc-swatch-badge">OPTION 0{item.num}</div>
                 </div>
               ))}

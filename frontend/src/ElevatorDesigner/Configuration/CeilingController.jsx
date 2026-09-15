@@ -9,7 +9,7 @@ const CEILINGS_WITH_LIGHT = [1, 5, 6, 7];
 // Fixed local icons shown ON the light buttons (display only).
 // Selection state and applyLight() still use the real AWS item (item.num / item.url) —
 // these are just the button artwork, matched by position (1st light -> white, 2nd -> yellow).
-const LIGHT_BUTTON_ICONS = ["/lights/white.png", "/lights/yellow.png"];
+const LIGHT_BUTTON_ICONS = ["/lights/yellow.png","/lights/white.png"];
 
 const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
   const [selectedCeiling, setSelectedCeiling] = useState(null);
