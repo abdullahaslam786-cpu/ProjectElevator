@@ -582,7 +582,7 @@ const [isOpen, setIsOpen] = useState(false);
         .meds-main-footer {
           position: fixed; bottom: 0; left: 0; right: 0;
           display: flex; justify-content: space-between; align-items: center;
-          padding: 0.4rem 2.5rem;
+          padding: 0.2rem 2.5rem;
           background: #58595B; z-index: 40;
           font-family: 'Jost', sans-serif;
         }

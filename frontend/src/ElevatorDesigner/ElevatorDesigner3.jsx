@@ -7,6 +7,7 @@ import OpenModel from "./Configuration/OpenModel";
 import WallpanelController from "./Configuration/WallpanelController";
 import HandrailController from "./Configuration/HandrailController";
 import CeilingController from "./Configuration/CeilingController";
+import FloorController from "./Configuration/FloorController";
 import Review from "./Configuration/Review";
 import { saveDesignState, loadDesignState } from "../redux/features/Project/projectSlice";
 import gsap from "gsap";
@@ -50,6 +51,7 @@ export default function ElevatorDesigner3() {
     { label: "Wall Panels",    shortLabel: "Walls",  icon: "/ConfigurationNavbar/Wallpanel.png", active: false },
     { label: "Handrails",      shortLabel: "Rails",  icon: "/ConfigurationNavbar/handrail.png",  active: false },
     { label: "Ceilings",       shortLabel: "Roof",   icon: "/ConfigurationNavbar/ceiling.png",   active: false },
+    { label: "Floors",         shortLabel: "Floor",  icon: "/ConfigurationNavbar/floor.png",     active: false },
     { label: "Review",         shortLabel: "Review", icon: "/ConfigurationNavbar/review.png",    active: false },
   ]);
 
@@ -96,7 +98,22 @@ export default function ElevatorDesigner3() {
           setSelectedPanels(ds.selectedPanels ?? {
             A: [], B: [], C: [], D: [], E: [], F: [], G: [],
           });
-          if (ds.steps) setSteps(ds.steps);
+
+          // NOTE: We intentionally do NOT overwrite the whole `steps` array
+          // with `ds.steps`. The steps array (labels/icons/order) is UI
+          // structure that lives in code, not user data — a subproject saved
+          // before a new step (e.g. "Floors") was added would otherwise load
+          // a stale, shorter array and silently lose that tab forever.
+          // We only restore *which* step was active.
+          if (ds.steps) {
+            const savedActiveLabel = ds.steps.find((s) => s.active)?.label;
+            setSteps((prevSteps) =>
+              prevSteps.map((step) => ({
+                ...step,
+                active: step.label === savedActiveLabel,
+              }))
+            );
+          }
         }
       } catch (err) {
         console.error("[DesignLoad] Failed:", err.message);
@@ -474,8 +491,12 @@ export default function ElevatorDesigner3() {
       {activeStep === "Ceilings" && (
         <CeilingController
           applyCeiling={setAppliedCeiling}
-          applyFloor={setAppliedFloor}
           applyLight={setAppliedLight}
+        />
+      )}
+      {activeStep === "Floors" && (
+        <FloorController
+          applyFloor={setAppliedFloor}
         />
       )}
       {activeStep === "Review" && (

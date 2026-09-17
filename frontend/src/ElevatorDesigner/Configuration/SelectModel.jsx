@@ -10,7 +10,7 @@ const SelectModel = ({
   setSelectedModel,
   onResetConfiguration,
 }) => {
-  const [activeTab, setActiveTab] = useState("LEVELe");
+  const [activeTab, setActiveTab] = useState("ELX");
   const [openingOptions, setOpeningOptions] = useState({
     front: false,
     straight: false,
@@ -23,9 +23,26 @@ const SelectModel = ({
   const tabRefs = useRef([]);
   const cardRefs = useRef({});
 
+
+// LevelE-101    ELX-1101
+// LevelE-102    ELX-1102
+// LevelE-103    ELX-1103
+// LevelE-104    ELX-1104
+// LevelE-105    ELX-1105
+// LevelE-106    ELX-1106
+// LevelE-107    ELX-1107
+// LevelE-108    ELX-1108
+// LevelR-201    RLX-2201
+// LevelR-202    RLX-2202
+// LevelR-203    RLX-2203
+// LevelR-204    RLX-2204
+// LevelR-205    RLX-2205
+// LevelC-301    CLX-3301
+// LevelC-302    CLX-3302
+
   const skeleton = [
     {
-      modelId: "LEVELe-101",
+      modelId: "ELX-1101",
       views: [
         { id: "view-1", image: "/SKELETONS/Gaf-001/1 GAF-001 v1.jpg" },
         { id: "view-2", image: "/SKELETONS/Gaf-001/1 GAF-001 v2.jpg" },
@@ -33,7 +50,7 @@ const SelectModel = ({
       ],
     },
     {
-      modelId: "LEVELe-102",
+      modelId: "ELX-1102",
       views: [
         { id: "view-1", image: "/SKELETONS/Gaf-002/2 GAF-001 v1.jpg" },
         { id: "view-2", image: "/SKELETONS/Gaf-002/2 GAF-001 v2.jpg" },
@@ -41,7 +58,7 @@ const SelectModel = ({
       ],
     },
     {
-      modelId: "LEVELe-103",
+      modelId: "ELX-1103",
       views: [
         { id: "view-1", image: "/SKELETONS/Gaf-003/3 GAF-001 v1.jpg" },
         { id: "view-2", image: "/SKELETONS/Gaf-003/3 GAF-001 v2.jpg" },
@@ -49,7 +66,7 @@ const SelectModel = ({
       ],
     },
     {
-      modelId: "LEVELe-104",
+      modelId: "ELX-1104",
       views: [
         { id: "view-1", image: "/SKELETONS/Gaf-004/4 GAF-001 v1.jpg" },
         { id: "view-2", image: "/SKELETONS/Gaf-004/4 GAF-001 v2.jpg" },
@@ -57,7 +74,7 @@ const SelectModel = ({
       ],
     },
     {
-      modelId: "LEVELe-105",
+      modelId: "ELX-1105",
       views: [
         { id: "view-1", image: "/SKELETONS/Gaf-005/5 GAF-001 v1.jpg" },
         { id: "view-2", image: "/SKELETONS/Gaf-005/5 GAF-001 v2.jpg" },
@@ -65,7 +82,7 @@ const SelectModel = ({
       ],
     },
     {
-      modelId: "LEVELe-106",
+      modelId: "ELX-1106",
       views: [
         { id: "view-1", image: "/SKELETONS/Gaf-006/6 GAF-001 v1.jpg" },
         { id: "view-2", image: "/SKELETONS/Gaf-006/6 GAF-001 v2.jpg" },
@@ -73,7 +90,7 @@ const SelectModel = ({
       ],
     },
     {
-      modelId: "LEVELe-107",
+      modelId: "ELX-1107",
       views: [
         { id: "view-1", image: "/SKELETONS/Gaf-007/7 GAF-001 v1.jpg" },
         { id: "view-2", image: "/SKELETONS/Gaf-007/7 GAF-001 v2.jpg" },
@@ -81,7 +98,7 @@ const SelectModel = ({
       ],
     },
     {
-      modelId: "LEVELe-108",
+      modelId: "ELX-1108",
       views: [
         { id: "view-1", image: "/SKELETONS/Gaf-008/8 GAF-001 v1.jpg" },
         { id: "view-2", image: "/SKELETONS/Gaf-008/8 GAF-001 v2.jpg" },
@@ -89,7 +106,7 @@ const SelectModel = ({
       ],
     },
     {
-      modelId: "LEVELr-201",
+      modelId: "RLX-2201",
       views: [
         { id: "view-1", image: "/SKELETONS/Gaf-009/9 GAF-001 v1.jpg" },
         { id: "view-2", image: "/SKELETONS/Gaf-009/9 GAF-001 v2.jpg" },
@@ -97,7 +114,7 @@ const SelectModel = ({
       ],
     },
     {
-      modelId: "LEVELr-202",
+      modelId: "RLX-2202",
       views: [
         { id: "view-1", image: "/SKELETONS/Gaf-010/10 GAF-001 v1.jpg" },
         { id: "view-2", image: "/SKELETONS/Gaf-010/10 GAF-001 v2.jpg" },
@@ -105,7 +122,7 @@ const SelectModel = ({
       ],
     },
     {
-      modelId: "LEVELr-203",
+      modelId: "RLX-2203",
       views: [
         { id: "view-1", image: "/SKELETONS/Gaf-011/11 GAF-001 v1.jpg" },
         { id: "view-2", image: "/SKELETONS/Gaf-011/11 GAF-001 v2.jpg" },
@@ -113,7 +130,7 @@ const SelectModel = ({
       ],
     },
     {
-      modelId: "LEVELr-204",
+      modelId: "RLX-2204",
       views: [
         { id: "view-1", image: "/SKELETONS/Gaf-012/12 GAF-001 v1.jpg" },
         { id: "view-2", image: "/SKELETONS/Gaf-012/12 GAF-001 v2.jpg" },
@@ -121,7 +138,7 @@ const SelectModel = ({
       ],
     },
     {
-      modelId: "LEVELr-205",
+      modelId: "RLX-2205",
       views: [
         { id: "view-1", image: "/SKELETONS/Gaf-013/13 GAF-001 v1.jpg" },
         { id: "view-2", image: "/SKELETONS/Gaf-013/13 GAF-001 v2.jpg" },
@@ -129,7 +146,7 @@ const SelectModel = ({
       ],
     },
     {
-      modelId: "LEVELc-301",
+      modelId: "CLX-3301",
       views: [
         { id: "view-1", image: "/SKELETONS/Gaf-014/14 GAF-001 v1.jpg" },
         { id: "view-2", image: "/SKELETONS/Gaf-014/14 GAF-001 v2.jpg" },
@@ -137,7 +154,7 @@ const SelectModel = ({
       ],
     },
     {
-      modelId: "LEVELc-302",
+      modelId: "CLX-3302",
       views: [
         { id: "view-1", image: "/SKELETONS/Gaf-015/15 GAF-001 v1.jpg" },
         { id: "view-2", image: "/SKELETONS/Gaf-015/15 GAF-001 v2.jpg" },
@@ -147,32 +164,32 @@ const SelectModel = ({
   ];
 
   const elevatorData = {
-    LEVELe: [
-      { id: "LEVELe-101", name: "LEVELe-101" },
-      { id: "LEVELe-102", name: "LEVELe-102" },
-      { id: "LEVELe-103", name: "LEVELe-103" },
-      { id: "LEVELe-104", name: "LEVELe-104" },
-      { id: "LEVELe-105", name: "LEVELe-105" },
-      { id: "LEVELe-106", name: "LEVELe-106" },
-      { id: "LEVELe-107", name: "LEVELe-107" },
-      { id: "LEVELe-108", name: "LEVELe-108" },
+    ELX: [
+      { id: "ELX-1101", name: "ELX-1101" },
+      { id: "ELX-1102", name: "ELX-1102" },
+      { id: "ELX-1103", name: "ELX-1103" },
+      { id: "ELX-1104", name: "ELX-1104" },
+      { id: "ELX-1105", name: "ELX-1105" },
+      { id: "ELX-1106", name: "ELX-1106" },
+      { id: "ELX-1107", name: "ELX-1107" },
+      { id: "ELX-1108", name: "ELX-1108" },
     ],
-    LEVELr: [
-      { id: "LEVELr-201", name: "LEVELr-201" },
-      { id: "LEVELr-202", name: "LEVELr-202" },
-      { id: "LEVELr-203", name: "LEVELr-203" },
-      { id: "LEVELr-204", name: "LEVELr-204" },
-      { id: "LEVELr-205", name: "LEVELr-205" },
+    RLX: [
+      { id: "RLX-2201", name: "RLX-2201" },
+      { id: "RLX-2202", name: "RLX-2202" },
+      { id: "RLX-2203", name: "RLX-2203" },
+      { id: "RLX-2204", name: "RLX-2204" },
+      { id: "RLX-2205", name: "RLX-2205" },
     ],
-    LEVELc: [
-      { id: "LEVELc-301", name: "LEVELc-301" },
-      { id: "LEVELc-302", name: "LEVELc-302" },
+    CLX: [
+      { id: "CLX-3301", name: "CLX-3301" },
+      { id: "CLX-3302", name: "CLX-3302" },
     ],
   };
 
   // ── GSAP Tabs Mechanics ──────────────────────────────────────────────────
   useEffect(() => {
-    ["LEVELe", "LEVELr", "LEVELc"].forEach((tab, idx) => {
+    ["ELX", "RLX", "CLX"].forEach((tab, idx) => {
       const el = tabRefs.current[idx];
       if (!el) return;
       if (activeTab === tab) {
@@ -573,7 +590,7 @@ const SelectModel = ({
         {/* 3D Angled Tab Navigation */}
         <div className="smc-tab-perspective-deck">
           <div className="smc-tab-rail">
-            {["LEVELe", "LEVELr", "LEVELc"].map((tab, idx) => (
+            {["ELX", "RLX", "CLX"].map((tab, idx) => (
               <button
                 key={tab}
                 ref={(el) => (tabRefs.current[idx] = el)}
@@ -642,7 +659,7 @@ const SelectModel = ({
             System Specifications
           </h3>
           <p className="text-xs text-gray-500 leading-relaxed font-normal">
-            LEVELe pairs structural aluminum-framed modules with high-precision internal interlocking alignment matrices. Material loads do not transfer between configuration switches.
+            ELX pairs structural aluminum-framed modules with high-precision internal interlocking alignment matrices. Material loads do not transfer between configuration switches.
           </p>
         </div>
       </div>

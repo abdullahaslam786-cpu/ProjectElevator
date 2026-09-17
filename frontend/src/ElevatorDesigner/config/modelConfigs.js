@@ -1,11 +1,29 @@
 // src/config/modelConfigs.js
 
+
+
+// LevelE-101    ELX-1101
+// LevelE-102    ELX-1102
+// LevelE-103    ELX-1103
+// LevelE-104    ELX-1104
+// LevelE-105    ELX-1105
+// LevelE-106    ELX-1106
+// LevelE-107    ELX-1107
+// LevelE-108    ELX-1108
+// LevelR-201    RLX-2201
+// LevelR-202    RLX-2202
+// LevelR-203    RLX-2203
+// LevelR-204    RLX-2204
+// LevelR-205    RLX-2205
+// LevelC-301    CLX-3301
+// LevelC-302    CLX-3302
+
 export const modelConfigs = {
   // ────────────────────────────────────────────────
   //                LEVELe-101  (your current one)
   // ────────────────────────────────────────────────
-  "LEVELe-101": {
-    name: "LEVELe-101",
+  "ELX-1101": {
+    name: "ELX-1101",
     skeletonViews: {
       1: [
         { id: 1, img: "/C SK/1 GAF/V1/1.png" },
@@ -145,8 +163,8 @@ export const modelConfigs = {
   // ────────────────────────────────────────────────
   //                LEVELe-102
   // ────────────────────────────────────────────────
-  "LEVELe-102": {
-    name: "LEVELe-102",
+  "ELX-1102": {
+    name: "ELX-1102",
     skeletonViews: {
       1: [
         { id: 1, img: "/C SK/2 GAF/V1/1.png" },
@@ -252,8 +270,8 @@ export const modelConfigs = {
   // ────────────────────────────────────────────────
   //                LEVELe-103
   // ────────────────────────────────────────────────
-  "LEVELe-103": {
-    name: "LEVELe-103",
+  "ELX-1103": {
+    name: "ELX-1103",
     skeletonViews: {
       1: [
         { id: 1, img: "/C SK/3 GAF/V1/1.png" },
@@ -351,10 +369,10 @@ export const modelConfigs = {
     },
   },
   // ────────────────────────────────────────────────
-  //                LEVELe-104
+  //                ELX-1104
   // ────────────────────────────────────────────────
-  "LEVELe-104": {
-    name: "LEVELe-104",
+  "ELX-1104": {
+    name: "ELX-1104",
     skeletonViews: {
       1: [
         { id: 1, img: "/C SK/4 GAF/V1/1.png" },
@@ -454,10 +472,10 @@ export const modelConfigs = {
     },
   },
   // ────────────────────────────────────────────────
-  //                LEVELe-105
+  //                ELX-1105
   // ────────────────────────────────────────────────
-  "LEVELe-105": {
-    name: "LEVELe-105",
+  "ELX-1105": {
+    name: "ELX-1105",
     skeletonViews: {
       1: [
         { id: 1, img: "/C SK/5 GAF/V1/1.png" },
@@ -567,10 +585,10 @@ export const modelConfigs = {
   
   
   // ────────────────────────────────────────────────
-  //                LEVELe-106
+  //                ELX-1106
   // ────────────────────────────────────────────────
-  "LEVELe-106": {
-    name: "LEVELe-106",
+  "ELX-1106": {
+    name: "ELX-1106",
     skeletonViews: {
       1: [
         { id: 1, img: "/C SK/6 GAF/V1/1.png" },
@@ -697,10 +715,10 @@ export const modelConfigs = {
     },
   },
   // ────────────────────────────────────────────────
-  //                LEVELe-107
+  //                ELX-1107
   // ────────────────────────────────────────────────
-  "LEVELe-107": {
-    name: "LEVELe-107",
+  "ELX-1107": {
+    name: "ELX-1107",
     skeletonViews: {
       1: [
         { id: 1, img: "/C SK/7 GAF/V1/1.png" },
@@ -875,10 +893,10 @@ export const modelConfigs = {
     },
   },
   // ────────────────────────────────────────────────
-  //                LEVELe-108
+  //                ELX-1108
   // ────────────────────────────────────────────────
-  "LEVELe-108": {
-    name: "LEVELe-108",
+  "ELX-1108": {
+    name: "ELX-1108",
     skeletonViews: {
       1: [
         { id: 1, img: "/C SK/8 GAF/V1/1.png" },
@@ -1078,10 +1096,10 @@ export const modelConfigs = {
     },
   },
   // ────────────────────────────────────────────────
-  //                LEVELr-201
+  //                RLX-2201
   // ────────────────────────────────────────────────
-  "LEVELr-201": {
-    name: "LEVELr-201",
+  "RLX-2201": {
+    name: "RLX-2201",
     skeletonViews: {
       1: [
         { id: 1, img: "/C SK/9 GAF/V1/1.png" },
@@ -1206,10 +1224,10 @@ export const modelConfigs = {
     },
   },
   // ────────────────────────────────────────────────
-  //                LEVELr-202
+  //                RLX-2202
   // ────────────────────────────────────────────────
-  "LEVELr-202": {
-    name: "LEVELr-202",
+  "RLX-2202": {
+    name: "RLX-2202",
     skeletonViews: {
       1: [
         { id: 1, img: "/C SK/10 GAF/V1/1.png" },
@@ -1443,10 +1461,10 @@ export const modelConfigs = {
     },
   },
   // ────────────────────────────────────────────────
-  //                LEVELr-203
+  //                RLX-2203
   // ────────────────────────────────────────────────
-  "LEVELr-203": {
-    name: "LEVELr-203",
+  "RLX-2203": {
+    name: "RLX-2203",
     skeletonViews: {
       1: [
         { id: 1, img: "/C SK/11 GAF/V1/1.png" },
@@ -1615,10 +1633,10 @@ export const modelConfigs = {
     },
   },
   // ────────────────────────────────────────────────
-  //                LEVELr-204
+  //                RLX-2204
   // ────────────────────────────────────────────────
-  "LEVELr-204": {
-    name: "LEVELr-204",
+  "RLX-2204": {
+    name: "RLX-2204",
     skeletonViews: {
       1: [
         { id: 1, img: "/C SK/12 GAF/V1/1.png" },
@@ -1721,10 +1739,10 @@ export const modelConfigs = {
     },
   },
   // ────────────────────────────────────────────────
-  //                LEVELr-205
+  //                RLX-2205
   // ────────────────────────────────────────────────
-  "LEVELr-205": {
-    name: "LEVELr-205",
+  "RLX-2205": {
+    name: "RLX-2205",
     skeletonViews: {
       1: [
         { id: 1, img: "/C SK/13 GAF/V1/1.png" },
@@ -1823,10 +1841,10 @@ export const modelConfigs = {
     },
   },
   // ────────────────────────────────────────────────
-  //                LEVELc-301
+  //                CLX-3301
   // ────────────────────────────────────────────────
- "LEVELc-301": {
-  name: "LEVELc-301",
+ "CLX-3301": {
+  name: "CLX-3301",
   skeletonViews: {
     1: [
       { id: 1, img: "/C SK/14 GAF/V1/1.png" },
@@ -1952,10 +1970,10 @@ export const modelConfigs = {
   },
  },
   // ────────────────────────────────────────────────
-  //                LEVELc-302
+  //                CLX-3302
   // ────────────────────────────────────────────────
-  "LEVELc-302": {
-    name: "LEVELc-302",
+  "CLX-3302": {
+    name: "CLX-3302",
     skeletonViews: {
       1: [
         { id: 1, img: "/C SK/15 GAF/V1/1.png" },

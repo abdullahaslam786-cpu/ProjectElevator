@@ -11,13 +11,11 @@ const CEILINGS_WITH_LIGHT = [1, 5, 6, 7];
 // these are just the button artwork, matched by position (1st light -> white, 2nd -> yellow).
 const LIGHT_BUTTON_ICONS = ["/lights/yellow.png","/lights/white.png"];
 
-const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
+const CeilingController = ({ applyCeiling, applyLight }) => {
   const [selectedCeiling, setSelectedCeiling] = useState(null);
-  const [selectedFloor,   setSelectedFloor]   = useState(null);
   const [selectedLight,   setSelectedLight]   = useState(null);
 
   const [ceilingThumbnails, setCeilingThumbnails] = useState([]);
-  const [floorThumbnails,   setFloorThumbnails]   = useState([]);
   const [lightThumbnails,   setLightThumbnails]   = useState([]);
 
   const [ceilingPreviewUrl, setCeilingPreviewUrl] = useState(null);
@@ -45,21 +43,18 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [cRes, fRes, lRes] = await Promise.all([
+        const [cRes, lRes] = await Promise.all([
           fetch("/api/images-by-prefix?prefix=SubMaterial/ceiling"),
-          fetch("/api/images-by-prefix?prefix=SubMaterial/floor"),
           fetch("/api/images-by-prefix?prefix=SubMaterial/lights"),
         ]);
-        
+
         const ceilingData = await cRes.json();
-        const floorData   = await fRes.json();
         const lightData   = await lRes.json();
 
         setAllCeilingImages(ceilingData);
-        
+
         setCeilingThumbnails(processImages(ceilingData.filter(i => i.key.includes("/V1/"))));
-        setFloorThumbnails(processImages(floorData.filter(i => i.key.includes("/V1/"))));
-        setLightThumbnails(processImages(lightData.filter(i => i.key.includes("/V1/")))); 
+        setLightThumbnails(processImages(lightData.filter(i => i.key.includes("/V1/"))));
 
       } catch (err) {
         console.error("Fetch error:", err);
@@ -117,7 +112,6 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
     if (found) setCeilingPreviewUrl(found.url);
   };
 
-  // ADDED BACK: The missing handler function to fix the ceiling crash
   const handleNoneLight = useCallback(() => {
     setSelectedLight(null);
     applyLight(null);
@@ -130,9 +124,9 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
 
         .cec-root {
           font-family: 'Jost', sans-serif;
-          background: linear-gradient(180deg, #FFFDF6, #F7EFCF); /* Soft Cream to Light Golden Veil */
-          color: #5C4A26; /* Deep Bronze-Gold text */
-          min-height: 100%;
+          background: linear-gradient(180deg, #FFFDF6, #F7EFCF);
+          color: #5C4A26;
+          min-height: 150%;
         }
 
         .cec-header {
@@ -140,8 +134,8 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
           align-items: center;
           justify-content: space-between;
           padding: 6px 24px;
-          background: linear-gradient(180deg, #423516 0%, #29200B 100%); /* Deep Satin Gold-Onyx */
-          border-bottom: 1px solid #C9A245; /* Polished Golden Hairline Separator */
+          background: linear-gradient(180deg, #423516 0%, #29200B 100%);
+          border-bottom: 1px solid #C9A245;
         }
 
         .cec-header-title {
@@ -149,13 +143,13 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
           font-size: 12px;
           font-weight: 300;
           letter-spacing: 0.15em;
-          color: #FFF3CD; /* Radiant White-Gold Tint */
+          color: #FFF3CD;
         }
 
         .cec-preview {
           position: relative;
           overflow: hidden;
-          background: #1F190A; /* Dense Golden Shadows */
+          background: #1F190A;
         }
 
         .cec-preview-img {
@@ -170,7 +164,7 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
         .cec-preview-overlay {
           position: absolute;
           inset: 0;
-          background: linear-gradient(to top, rgba(41,32,11,0.95) 0%, transparent 60%); /* Amber Shaded Vignette */
+          background: linear-gradient(to top, rgba(41,32,11,0.95) 0%, transparent 60%);
           display: flex;
           flex-direction: column;
           justify-content: flex-end;
@@ -178,7 +172,7 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
         }
 
         .cec-content {
-          height: 300px;
+          height: 600px;
           overflow-y: auto;
           background: linear-gradient(180deg, #FFFDF6, #F7EFCF);
           scrollbar-width: thin;
@@ -197,14 +191,14 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
           font-weight: 500;
           letter-spacing: 0.35em;
           text-transform: uppercase;
-          color: #AA9154; /* Muted Ochre-Gold Label Text */
+          color: #AA9154;
         }
 
         .cec-section-label::after {
           content: '';
           flex: 1;
           height: 1px;
-          background: #E8D8A7; /* Light Gold Wireframe Separator */
+          background: #E8D8A7;
         }
 
         .cec-grid {
@@ -213,12 +207,6 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
           gap: 4px;
           padding: 0px 24px 2px 20px;
         }
-          .cec-grid-floor {
-           display: grid;
-          grid-template-columns: repeat(8, 1fr);
-          gap: 4px;
-          padding: 0px 24px 30px 20px;
-          }
 
         .cec-swatch-wrap {
           position: relative;
@@ -231,8 +219,8 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
         .cec-swatch-item {
           width: 100%;
           height: 100%;
-          background: #1F190A; /* Warm Alabaster Gold Base */
-          border: 1px solid #D6C394; /* Soft Brushed Gold Border */
+          background: #1F190A;
+          border: 1px solid #D6C394;
           border-radius: 4px;
           overflow: hidden;
           transition: all 0.4s cubic-bezier(0.25, 1, 0.33, 1);
@@ -242,8 +230,8 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
         .cec-swatch-item-inner{
            width: 100%;
           height: 100%;
-          background: #1F190A; /* Warm Alabaster Gold Base */
-          border: 1px solid #D6C394; /* Soft Brushed Gold Border */
+          background: #1F190A;
+          border: 1px solid #D6C394;
           border-radius: 4px;
           overflow: hidden;
           transition: all 0.4s cubic-bezier(0.25, 1, 0.33, 1);
@@ -271,8 +259,8 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
           left: 0;
           right: 0;
           height: 18px;
-          background: linear-gradient(135deg, #E6C262 0%, #B88E2F 100%); /* Liquid Satin Gold Badge */
-          color: #241A03; /* High Contrast Dark Bronze text */
+          background: linear-gradient(135deg, #E6C262 0%, #B88E2F 100%);
+          color: #241A03;
           font-size: 8px;
           font-weight: 800;
           display: flex;
@@ -304,7 +292,7 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
 
         .cec-swatch-wrap.selected .cec-swatch-badge {
           bottom: 0;
-          background: linear-gradient(135deg, #FFFFFF 0%, #FFF2CC 100%); /* Radiant White-Gold Highlight */
+          background: linear-gradient(135deg, #FFFFFF 0%, #FFF2CC 100%);
           color: #5C4A26;
           border-top: 1px solid #E6C262;
         }
@@ -317,7 +305,7 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
           position: relative;
           width: 100%;
           height: 50px;
-          background: #FAEDC8; /* Soft Amber-Cream Matte Base */
+          background: #FAEDC8;
           border: 1px solid #D6C394;
           border-radius: 4px;
           overflow: hidden;
@@ -330,7 +318,7 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
         .cec-btn-glaze {
           position: absolute;
           inset: 0;
-          background: linear-gradient(90deg, #E6C262 0%, #FFF2CC 50%, #B88E2F 100%); /* Shimmering Luxury Gold Sweep */
+          background: linear-gradient(90deg, #E6C262 0%, #FFF2CC 50%, #B88E2F 100%);
           transform: translateX(-100%);
           transition: transform 0.5s cubic-bezier(0.25, 1, 0.33, 1);
         }
@@ -342,7 +330,7 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
           font-weight: 500;
           letter-spacing: 0.25em;
           text-transform: uppercase;
-          color: #7A6535; /* Crisp Medium Bronze-Gold text */
+          color: #7A6535;
           transition: color 0.3s;
         }
 
@@ -354,11 +342,10 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
           color: #241A03;
         }
 
-        /* Active State Custom Accent - Kept for specific selection states */
         .cec-luxury-btn.active {
           border-color: #B88E2F;
         }
-        
+
         .cec-luxury-btn.active .cec-btn-glaze {
           transform: translateX(0);
           background: linear-gradient(135deg, #E6C262 0%, #B88E2F 100%);
@@ -447,7 +434,7 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
               ))}
             </div>
             <div className="px-6 pb-6">
-              <div 
+              <div
                 className={`cec-luxury-btn ${selectedLight === null ? "active" : ""}`}
                 onClick={handleNoneLight}
               >
@@ -455,22 +442,6 @@ const CeilingController = ({ applyCeiling, applyFloor, applyLight }) => {
                 <div className="cec-btn-text">DEACTIVATE ILLUMINATION</div>
               </div>
             </div>
-          </div>
-
-          <div className="cec-section-label"><span>FLOORING FINISHES</span></div>
-          <div className="cec-grid-floor">
-            {floorThumbnails.map((item) => (
-              <div
-                key={item.num}
-                className={`cec-swatch-wrap ${selectedFloor === item.num ? "selected" : ""}`}
-                onClick={() => { setSelectedFloor(item.num); applyFloor(item.num); }}
-              >
-                <div className="cec-swatch-item">
-                  <img src={item.url} alt={`Floor ${item.num}`} />
-                  <div className="cec-swatch-badge">BASE 0{item.num}</div>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </div>

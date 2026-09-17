@@ -450,7 +450,7 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
                 onClick={toggleSubHandrail}
               >
                 <div className="hrc-btn-glaze" />
-                <div className="hrc-btn-text">BUMPERS</div>
+                <div className="hrc-btn-text">BUMPER RAILS</div>
               </div>
 
               {/* None Dismiss Slider */}
