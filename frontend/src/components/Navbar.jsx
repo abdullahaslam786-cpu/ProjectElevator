@@ -210,7 +210,7 @@ const [isOpen, setIsOpen] = useState(false);
           display: flex;
           align-items: center;
           justify-content: space-between;
-          height: 72px;
+          height: 60px;
           gap: 1.75rem;
         }
 

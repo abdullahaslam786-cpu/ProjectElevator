@@ -396,8 +396,8 @@ const ModelPreview = forwardRef((props, ref) => {
           className={`relative flex-1 flex items-center justify-center px-0 pt-6 pb-0 ${
             showThumbnails ? "md:w-[57%]" : "w-full"
           }`}
-style={{
-  backgroundColor: "#fffff0",
+style={{  
+  backgroundImage: `url("/openmodelbg/openmodel.png")`,
   backgroundSize: "cover",
   backgroundPosition: "center"
 }}

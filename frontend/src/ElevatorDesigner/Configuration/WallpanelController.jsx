@@ -37,6 +37,10 @@ const specialConfig = {
   15: { C: "golden", D: "silver" },
 };
 
+const materialsSelections = [
+  "PANELS", "TEXTURES", "COLORS", "METALS", "WOODS", "STONES", "SPECIALITY"
+]
+
 const WallpanelController = ({
   activeZone,
   setActiveZone,
@@ -81,6 +85,7 @@ const WallpanelController = ({
   const [previewKey, setPreviewKey] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedMaterialTab, setSelectedMaterialTab] = useState(materialsSelections[0]);
 
   // Reset
   useEffect(() => {
@@ -236,17 +241,21 @@ const WallpanelController = ({
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 6px 20px;
-          background: linear-gradient(180deg, #3A2E14 0%, #251D0C 100%); /* Deep Metallic Gold-Black */
+          padding: 7px 20px;
+        
           color: #F3E5AB; /* Soft Muted Gold Text */
           border-bottom: 1px solid #8C7335; /* Polished Gold Divider */
         }
-        .wpc-header-model {
+
+         .wpc-header-title {
           font-family: 'Cormorant Garamond', serif;
-          font-size: 12px;
-          font-weight: 300;
-          letter-spacing: 0.12em;
+          font-size: 13px;
+          font-weight: 900;
+          letter-spacing: 0.15em;
+          color: #4A3826; /* Deep Studio Brown */
         }
+
+       
         .wpc-header-zone {
           font-size: 8px;
           font-weight: 300;
@@ -259,7 +268,7 @@ const WallpanelController = ({
         .wpc-zone-rail {
           display: flex;
           gap: 6px;
-          background: linear-gradient(180deg, #4A3B1B, #2D240F); /* Deep Gold Tinted Base */
+          background: linear-gradient(180deg, #F4EED4, #85612E); /* Deep Gold Tinted Base */
           padding: 6px 20px;
           border-bottom: 1px solid #8C7335;
           overflow-x: auto;
@@ -346,6 +355,54 @@ const WallpanelController = ({
           margin-right: 4px;
           white-space: nowrap;
         }
+
+        .mat-tab-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 14px;
+}
+
+.mat-tab-btn {
+  padding: 7px 16px;
+  font-family: 'Jost', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  
+  
+  border: 1px solid #E7DFCB;
+  border-radius: 0px;
+  cursor: pointer;
+  transition: border-color 0.3s ease, background 0.3s ease, color 0.3s ease, transform 0.2s ease;
+
+
+
+
+background: linear-gradient(135deg, #F7ECD8 0%, #EFDBAF 100%);
+  border-color: #C9974E;
+  color: #5C4A26;
+  box-shadow: 0 4px 12px rgba(201, 151, 78, 0.2);
+
+}
+
+.mat-tab-btn:hover {
+  border-color: #D6C394;
+  color: #5C4A26;
+}
+
+.mat-tab-btn:active {
+  transform: scale(0.97);
+}
+
+.mat-tab-btn.active {
+  background: #85612E;
+  border-color: #C9974E;
+ color: #ffffff;
+  box-shadow: 0 4px 12px rgba(201, 151, 78, 0.2);
+}
 
         .panel-cube-wrap {
           perspective: 1000px;
@@ -775,10 +832,16 @@ const WallpanelController = ({
         {/* ── Header ── */}
         <div className="wpc-header">
           <div className="flex items-center justify-center gap-6">
-            <div className="wpc-header-model">{selectedModelId}</div>
-            <div className="wpc-header-zone" style={{ marginTop: 2 }}>
+
+             <div className="flex flex-col">
+              <div className="wpc-header-title">Wall Panels</div>
+              <div className="text-[11px] text-[#AA9154] tracking-[0.15em] font-light">Select a material and finish for your elevator walls</div>
+             </div>
+
+            {/* <div className="wpc-header-model">{selectedModelId}</div> */}
+            {/* <div className="wpc-header-zone" style={{ marginTop: 2 }}>
               Zone {activeZone} &nbsp;·&nbsp; Design Selection
-            </div>
+            </div> */}
           </div>
           <div style={{
             fontFamily: "'Cormorant Garamond', serif",
@@ -826,6 +889,20 @@ const WallpanelController = ({
         {/* ── Panel selector (3D Cubes) ── */}
         <div className="wpc-panel-row">
           <span className="wpc-panel-label">Panels</span>
+
+<div className="mat-tab-row">
+  {materialsSelections.map((selection) => (
+    <button
+      key={selection}
+      type="button"
+      onClick={() => setSelectedMaterialTab(selection)}
+      className={`mat-tab-btn ${selectedMaterialTab === selection ? "active" : ""}`}
+    >
+      {selection}
+    </button>
+  ))}
+</div>
+
           {panelCount > 0
             ? Array.from({ length: panelCount }).map((_, i) => {
                 const num = i + 1;

@@ -199,7 +199,7 @@ const SubProjectDetail = ({ subproject, projectId }) => {
             <p style={eyebrow} className="pb-0.5" >Specifications</p>
 
             <Field label="Configuration">
-              <p className="text-sm" style={{ color: INK }}>LEVEL-e-102</p>
+              <p className="text-sm" style={{ color: INK }}>{subproject.configuration || "N/A"}</p>
             </Field>
             <Field label="Frame style">
               <p className="text-sm" style={{ color: INK }}>Minimal</p>

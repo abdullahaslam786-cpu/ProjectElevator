@@ -1,7 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { Check } from "lucide-react";
 import SelectModel from "./Configuration/SelectModel";
 import OpenModel from "./Configuration/OpenModel";
 import WallpanelController from "./Configuration/WallpanelController";
@@ -303,57 +302,58 @@ export default function ElevatorDesigner3() {
 
         /* ── Desktop-Only Custom Hexagon Component Layouts ────────────────── */
         @media (min-width: 1024px) {
-          .ed3-navbar-wrapper { 
-    perspective: 1000px; 
-    width: 100%; 
-    margin-bottom: 6px; 
-    margin-top: 24px; /* Reduced from 58px to save vertical space */
-  }
+          .ed3-navbar-wrapper {
+            perspective: 1000px;
+            width: 100%;
+            margin-bottom: 6px;
+            margin-top: 24px;
+          }
           .ed3-navbar { display: flex; flex-direction: row; align-items: center; justify-content: start; width: 100%; }
-         .ed3-step-button-container { 
-    position: relative; 
-    flex: 1; 
-    min-height: 60px; /* Reduced from 74px */
-    margin-right: -2.2rem; /* Replaced -38px with relative rem unit */
-    filter: drop-shadow(0 4px 8px rgba(92,74,38,0.12)); 
-    transform-style: preserve-3d; 
-  }
+          .ed3-step-button-container {
+            position: relative;
+            flex: 1;
+            min-height: 60px;
+            margin-right: -2.2rem;
+            filter: drop-shadow(0 4px 8px rgba(92,74,38,0.12));
+            transform-style: preserve-3d;
+          }
           .ed3-step-button-container:last-child { margin-right: 0; }
-         .ed3-step-button {
-    position: relative; 
-    width: 100%; 
-    height: 100%; 
-    min-height: 60px; 
-    display: flex; 
-    align-items: center; 
-    justify-content: space-between;
-    padding: 8px 1.8rem 8px 2.5rem; /* Reduced rigid horizontal padding */
-    background: linear-gradient(180deg, #423516 0%, #29200B 100%); 
-    color: #E6C262; 
-    border: none; 
-    outline: none; 
-    cursor: pointer; 
-    user-select: none;
-    clip-path: polygon(88% 0%, 100% 50%, 88% 100%, 0% 100%, 12% 50%, 0% 0%); 
-    transform-style: preserve-3d; 
-    transition: color 0.3s ease;
-  }
-    .ed3-step-button span {
-    font-size: 10px; /* Scaled down slightly from 11px so labels don't wrap */
-    letter-spacing: 0.1em;
-  }
+          .ed3-step-button {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 1.8rem 8px 2.5rem;
+            background: linear-gradient(180deg, #FDF9F0 0%, #F3EAD3 100%);
+            color: #5C4A26;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            user-select: none;
+            clip-path: polygon(88% 0%, 100% 50%, 88% 100%, 0% 100%, 12% 50%, 0% 0%);
+            transform-style: preserve-3d;
+            transition: color 0.3s ease;
+          }
+          .ed3-step-button span {
+            font-size: 10px;
+            letter-spacing: 0.1em;
+          }
           .ed3-step-button::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, #FFF2CC, #C9A245); clip-path: polygon(88% 0%, 100% 50%, 88% 100%, 0% 100%, 12% 50%, 0% 0%); z-index: -1; }
-          .ed3-step-inner-face { position: absolute; inset: 2px 3px 2px 3px; background: #29200B; clip-path: polygon(88% 0%, 100% 50%, 88% 100%, 0% 100%, 12% 50%, 0% 0%); z-index: 1; pointer-events: none; transition: background 0.3s ease; }
-          .ed3-step-button:hover { color: #FFFFFF; }
-          .ed3-step-button:hover .ed3-step-inner-face { background: #3D3012; }
+          .ed3-step-inner-face { position: absolute; inset: 2px 3px 2px 3px; background: #F7EFDC; clip-path: polygon(88% 0%, 100% 50%, 88% 100%, 0% 100%, 12% 50%, 0% 0%); z-index: 1; pointer-events: none; transition: background 0.3s ease; }
+          .ed3-step-button:hover { color: #3D2C12; }
+          .ed3-step-button:hover .ed3-step-inner-face { background: #EFE2C0; }
           .ed3-step-button.active { color: #FFFFFF; }
-          .ed3-step-button.active .ed3-step-inner-face { background: linear-gradient(to bottom, #423516, #1F190A); }
+          /* Active state recolored with the requested brown "material" gradient */
+          .ed3-step-button.active .ed3-step-inner-face { background: linear-gradient(115deg, #583410 0%, #946934 100%); }
           .ed3-step-spotlight { position: absolute; inset: 0; background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 243, 205, 0.25), transparent 60%); pointer-events: none; z-index: 5; }
-          
-          .ed3-bulbs-panel { display: flex; flex-direction: row; align-items: center; justify-content: space-around; width: 100%; padding: 10px 45px; background: #1F190A; border-bottom: 2px solid #C9A245; border-top: 1px solid rgba(230, 194, 98, 0.2); margin-top: 4px; box-shadow: inset 0 4px 20px rgba(0,0,0,0.4); }
+
+          .ed3-bulbs-panel { display: flex; flex-direction: row; align-items: center; justify-content: space-around; width: 100%; padding: 10px 45px; background: #FDF9F0; border-bottom: 2px solid #946934; border-top: 1px solid rgba(148, 105, 52, 0.2); margin-top: 4px; box-shadow: inset 0 2px 10px rgba(88, 52, 16, 0.08); }
           .ed3-bulb-container { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; }
-          .ed3-status-bulb { width: 12px; height: 12px; border-radius: 50%; background: #382C0E; border: 1px solid #5C4A26; transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.6); }
-          .ed3-status-bulb.active { background: radial-gradient(circle at 35% 35%, #FFFFFF 0%, #FFF2CC 30%, #E6C262 70%, #B88E2F 100%); border-color: #FFF9E6; box-shadow: 0 0 6px #E6C262, 0 0 15px rgba(230, 194, 98, 0.8), inset 0 1px 2px rgba(255,255,255,0.6); filter: drop-shadow(0 0 4px rgba(230, 194, 98, 0.5)); }
+          .ed3-status-bulb { width: 12px; height: 12px; border-radius: 50%; background: #F3EAD3; border: 1px solid #D6C394; transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; box-shadow: inset 0 2px 4px rgba(92,74,38,0.15); }
+          .ed3-status-bulb.active { background: radial-gradient(circle at 35% 35%, #C99A5B 0%, #946934 60%, #583410 100%); border-color: #583410; box-shadow: 0 0 6px rgba(148,105,52,0.6), 0 0 15px rgba(88,52,16,0.4), inset 0 1px 2px rgba(255,255,255,0.3); filter: drop-shadow(0 0 3px rgba(148, 105, 52, 0.4)); }
         }
 
         .ed3-save-badge { position: fixed; bottom: 24px; right: 24px; padding: 8px 16px; border-radius: 2px; font-family: 'Jost', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; z-index: 999; border: 1px solid #D6C394; box-shadow: 0 4px 12px rgba(41, 32, 11, 0.1); }
@@ -366,7 +366,7 @@ export default function ElevatorDesigner3() {
 
       <div className="ed3-root w-full flex justify-center ">
         {/* Responsive Box Frame: Zero mobile paddings */}
-        <div className="w-full min-h-screen max-w-7xl mx-auto p-2 sm:p-4 lg:px-6 lg:pt-12 lg:pb-20">
+        <div className="w-full min-h-screen max-w-7xl mx-auto p-2 sm:p-4 lg:px-2 lg:pt-9 lg:pb-20">
 
           {saveStatus && (
             <div className={`ed3-save-badge ${saveStatus}`}>
@@ -378,8 +378,8 @@ export default function ElevatorDesigner3() {
 
           {/* Master Responsive Header Bar Matrix */}
           <div className="w-full bg-[#1c1615] lg:bg-transparent border-b border-[#dfb76c]/40 lg:border-b-0">
-            
-            {/* Mobile Horizon Tabs System (Fluid Stretch Execution with ICONS appended) */}
+
+            {/* Mobile Horizon Tabs System */}
             <nav className="flex lg:hidden w-full items-center justify-between pt-18">
               {steps.map((step, index) => (
                 <button
@@ -387,8 +387,8 @@ export default function ElevatorDesigner3() {
                   type="button"
                   onClick={() => handleNavClick(index)}
                   className={`flex-1 flex flex-col items-center justify-center pt-3 pb-2.5 transition-all duration-200 border-b-2 ${
-                    step.active 
-                      ? "text-[#ffffff] bg-[#2b2120] border-[#dfb76c]" 
+                    step.active
+                      ? "text-[#ffffff] bg-[#2b2120] border-[#dfb76c]"
                       : "text-[#dfb76c]/60 border-transparent bg-transparent"
                   }`}
                 >
@@ -406,7 +406,7 @@ export default function ElevatorDesigner3() {
               ))}
             </nav>
 
-            {/* Premium Big Screen Geometric Hex Nav Track — WITH LABELS & ICONS intact */}
+            {/* Premium Big Screen Geometric Hex Nav Track — WITH LABELS & ICONS, gold active material */}
             <div className="hidden lg:block ed3-navbar-wrapper">
               <nav className="ed3-navbar">
                 {steps.map((step, index) => (
@@ -423,7 +423,7 @@ export default function ElevatorDesigner3() {
                       <div className="ed3-step-inner-face">
                         <div className="ed3-step-spotlight" />
                       </div>
-                      
+
                       {/* Name Label is permanently visible on desktop */}
                       <span className="relative z-10 text-[11px] font-bold tracking-widest uppercase transition-colors duration-300 transform translate-z-[12px]">
                         {step.label}

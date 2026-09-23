@@ -10,6 +10,9 @@ import { HiX } from "react-icons/hi";
 import { RingLoader } from "react-spinners";
 import gsap from "gsap";
 import ModelPreview from "./ModelPreview";
+import { PiCornersOut } from "react-icons/pi";
+import { HiOutlineBuildingOffice } from "react-icons/hi2";
+import { IoIosArrowRoundForward } from "react-icons/io";
 
 const OpenModel = forwardRef(
   (
@@ -151,6 +154,7 @@ useEffect(() => {
             height: 100%;
             transform-style: preserve-3d;
             transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            
           }
 
           .om-cube .om-face {
@@ -161,11 +165,11 @@ useEffect(() => {
             justify-content: center;
             font-size: 10px;
             font-weight: 500;
-            letter-spacing: 0.18em;
+           whitespace: nowrap;
             text-transform: uppercase;
             backface-visibility: hidden;
             border-radius: 4px;
-            padding: 0 16px;
+            padding: 0px;
           }
 
           /* Dimensions Option Variant */
@@ -210,11 +214,11 @@ useEffect(() => {
             {/* Top Action Header Bar */}
   <div 
   ref={topBarRef}
-  className="absolute top-0  left-0 right-0 h-auto min-h-[90px] lg:min-h-[90px] bg-[#FFFBF0]/95 backdrop-blur-md z-10 flex flex-col items-center justify-center  gap-3 lg:gap-3 border-b border-[#D6C394] shadow-sm"
+  className="absolute top-0  left-0 right-0 h-auto min-h-[90px] lg:min-h-[50px] px-2 bg-[#FFFBF0]/95 backdrop-blur-md z-10 flex  items-center justify-center  gap-3 lg:gap-3 border-b border-[#D6C394] shadow-sm"
 >
   {/* Elevator Metadata Text */}
-  <div className="gsap-fade-in w-full flex flex-row items-center justify-between lg:justify-center lg:gap-8 text-left transition-all duration-300">
-    <div className="text-[10px] sm:text-xs lg:text-[11px] text-[#8A8165] font-light tracking-[0.2em] lg:tracking-[0.25em] uppercase">
+  <div className="gsap-fade-in w-full flex flex-col items-center justify-between lg:justify-center  text-left transition-all duration-300">
+    <div className="text-[10px] sm:text-xs lg:text-[11px] text-[#8A8165]  tracking-wider  uppercase whitespace-nowrap">
       Studio Space Pipeline
     </div>
     <div className="text-[14px] sm:text-[15px] lg:text-[12px] text-[#241A03] font-light tracking-wide font-serif mt-0.5 lg:mt-0">
@@ -223,16 +227,18 @@ useEffect(() => {
   </div>
 
   {/* Interactive Controls Segment: Color-mapped buttons directly within utility classes */}
-  <div className="flex flex-row items-center justify-center gap-3 sm:gap-4 w-full lg:w-auto lg:min-w-[460px] gsap-fade-in">
+  <div className="flex flex-row items-center justify-center gap-3 sm:gap-2 w-full lg:w-auto lg:min-w-[260px] gsap-fade-in">
     {activeStep !== "Configurations" && (
-      <div className="om-cube-wrap om-cube-dim flex-1 lg:flex-initial lg:w-[200px] h-11 lg:h-[42px]">
+      <div className="om-cube-wrap om-cube-dim flex-1 lg:flex-initial lg:w-[180px] h-11 lg:h-[42px]">
         <button
           onClick={() => openModal(1)}
           className="om-cube w-full h-full"
         >
           {/* Light Golden Face: Warm Alabaster Cream base with soft brushed gold border */}
           <div className="om-face front text-center text-[11px] sm:text-xs lg:text-[13px] bg-[#FFFBF0] text-[#B88E2F] border border-[#D6C394] rounded-[4px] !important">
-            Alter Dimensions
+            
+            <div className="flex justify-between items-center gap-1"><span><PiCornersOut size={20} /></span><span className="whitespace-nowrap tracking-wider"> Alter Dimensions</span></div>
+           
           </div>
           {/* Flip Side: Muted Amber-Cream */}
           <div className="om-face bottom text-center text-[11px] sm:text-xs lg:text-[13px] bg-[#FAEDC8] text-[#5C4A26] border border-[#C9A245] rounded-[4px] !important">
@@ -242,14 +248,14 @@ useEffect(() => {
       </div>
     )}
 
-    <div className="om-cube-wrap om-cube-next flex-1 lg:flex-initial lg:w-[180px] h-11 lg:h-[42px]">
+    <div className="om-cube-wrap om-cube-next flex-1 lg:flex-initial lg:w-[150px] h-11 lg:h-[42px]">
       <button
         onClick={onNext}
         className="om-cube w-full h-full"
       >
         {/* Golden Face: Shimmering Luxury Metallic Sweep with High-Contrast Deep Bronze Text */}
         <div className="om-face front text-center text-[11px] sm:text-xs lg:text-[13px] bg-gradient-to-br from-[#E6C262] via-[#FFF2CC] to-[#B88E2F] text-[#241A03] font-semibold rounded-[4px] shadow-sm !important">
-          Next Step →
+         <div className="flex justify-between items-center gap-1"><span><HiOutlineBuildingOffice size={20} /></span><span className="whitespace-nowrap">Next Step</span><span><IoIosArrowRoundForward size={20} /></span></div>
         </div>
         {/* Flip Side: Premium Deep Gold-Onyx Accent */}
         <div className="om-face bottom text-center text-[11px] sm:text-xs lg:text-[13px] bg-gradient-to-b from-[#423516] to-[#29200B] text-[#FFF3CD] border border-[#C9A245] rounded-[4px] !important">
@@ -264,7 +270,7 @@ useEffect(() => {
   
 
             {/* Main Interactive Stage Area */}
-            <div ref={mainPreviewRef} className="w-full h-full pt-16 relative">
+            <div ref={mainPreviewRef} className="w-full h-full pt-6 relative">
               {isLoading && (
                 <div 
                   ref={loaderRef}

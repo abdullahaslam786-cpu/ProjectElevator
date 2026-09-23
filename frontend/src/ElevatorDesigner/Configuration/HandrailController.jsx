@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { IoClose } from "react-icons/io5";
+import { IoClose, IoCheckmark } from "react-icons/io5";
 import { RingLoader } from "react-spinners";
 import gsap from "gsap";
 
@@ -9,8 +9,27 @@ import gsap from "gsap";
 // Files expected at: public/previewHandrail/1.png ... public/previewHandrail/15.png
 const getLocalHandrailImage = (num) => `/previewHandrails/${num}.png`;
 
+// 15 images grouped into 5 style categories of 3.
+// Within each category, position 0/1/2 = Silver/Golden/Black finish.
+// e.g. Round -> Silver:1, Golden:2, Black:3
+//      Flat  -> Silver:4, Golden:5, Black:6  ...etc
+const HANDRAIL_CATEGORIES = [
+  { label: "Round", nums: [1, 2, 3] },
+  { label: "Flat",  nums: [4, 5, 6] },
+  { label: "Oval",  nums: [7, 8, 9] },
+  { label: "Add",   nums: [10, 11, 12] },
+  { label: "Slim",  nums: [13, 14, 15] },
+];
+
+const FINISHES = [
+  { name: "Silver", swatch: "radial-gradient(circle at 35% 32%, #ffffff 0%, #d6dade 35%, #a3a9ae 70%, #797f84 100%)" },
+  { name: "Golden", swatch: "radial-gradient(circle at 35% 32%, #fff6dd 0%, #eac36c 35%, #c9974e 70%, #8b5e34 100%)" },
+  { name: "Black",  swatch: "radial-gradient(circle at 35% 32%, #5a5852 0%, #2c2a26 40%, #131211 75%, #000000 100%)" },
+];
+
 const HandrailController = ({ applyHandrail, applySubHandrail }) => {
   const [selectedHandrail, setSelectedHandrail] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [subHandrailEnabled, setSubHandrailEnabled] = useState(false);
   const [thumbnails, setThumbnails] = useState([]);
   const [previewImages, setPreviewImages] = useState({});
@@ -80,6 +99,8 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
 
   const handleMainSelect = (num) => {
     setSelectedHandrail(num);
+    // applyHandrail still receives the real handrail number — downstream (AWS
+    // material fetch / model application) is completely untouched.
     applyHandrail(num);
 
     // Use the local image for the preview instead of the AWS url so it
@@ -94,11 +115,34 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
 //     setPreviewUrl(previewSrc || null);
 //   };
 
+  const handleCategoryClick = (idx) => {
+    const isOpeningNewCategory = selectedCategory !== idx;
+    setSelectedCategory((prev) => (prev === idx ? null : idx));
+
+    // Opening a category (or switching to a different one) defaults the
+    // preview + selection to that category's Silver (first) finish.
+    // Clicking to collapse the already-open category leaves the current
+    // selection untouched.
+    if (isOpeningNewCategory) {
+      const silverNum = HANDRAIL_CATEGORIES[idx].nums[0];
+      handleMainSelect(silverNum);
+    }
+  };
+
+  // Which category (if any) the currently-applied handrail belongs to,
+  // so the right category card + finish circle stay highlighted after reload.
+  const activeCategoryIndex = selectedHandrail
+    ? HANDRAIL_CATEGORIES.findIndex((cat) => cat.nums.includes(selectedHandrail))
+    : -1;
+
+  const openCategoryIndex = selectedCategory !== null ? selectedCategory : activeCategoryIndex;
+
   // ─── INSERT IT HERE ───
   const toggleSubHandrail = () => {
     const newState = !subHandrailEnabled;
     setSubHandrailEnabled(newState);
     applySubHandrail(newState ? "subhandrail" : null);
+    
   };
   return (
     <>
@@ -108,46 +152,49 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
         .hrc-root {
           font-family: 'Jost', sans-serif;
           color: #5C4A26; /* Deep Bronze-Gold text */
-          background: linear-gradient(180deg, #FFFDF6, #F7EFCF); /* Soft Cream to Light Golden Veil */
-          min-height: 100%;
+          background: linear-gradient(180deg, #FFFDF8, #F7F1E4); /* Soft Cream Studio Backdrop */
+          height: 100%;
+          display: flex;
+          flex-direction: column;
         }
         
         .hrc-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 6px 24px;
-          background: linear-gradient(180deg, #423516 0%, #29200B 100%); /* Deep Satin Gold-Onyx */
-          border-bottom: 1px solid #C9A245; /* Polished Golden Hairline Separator */
+          padding: 7px 24px;
+          background: #FFFFFF;
+          border-bottom: 1px solid #EADFC8; /* Light Golden Hairline Separator */
+          flex-shrink: 0;
         }
         
         .hrc-header-title {
           font-family: 'Cormorant Garamond', serif;
-          font-size: 12px;
-          font-weight: 300;
+          font-size: 13px;
+          font-weight: 900;
           letter-spacing: 0.15em;
-          color: #FFF3CD; /* Radiant White-Gold Tint */
+          color: #4A3826; /* Deep Studio Brown */
         }
         
         .hrc-preview {
           position: relative;
           overflow: hidden;
-          background: #1F190A; /* Dense Golden Shadows */
+          background: #F7F1E4; /* Light Studio Backdrop */
           height: 0px;
+          flex-shrink: 0; /* height is driven by GSAP; never let flex squeeze it */
         }
         
         .hrc-preview-img {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          transform: scale(1.15);
        
         }
         
         .hrc-preview-overlay {
           position: absolute;
           inset: 0;
-          background: linear-gradient(to top, rgba(41,32,11,0.95) 0%, transparent 60%); /* Amber Shaded Vignette */
+          background: linear-gradient(to top, rgba(74,56,38,0.85) 0%, transparent 55%); /* Soft Brown Legibility Scrim */
           display: flex;
           flex-direction: column;
           justify-content: flex-end;
@@ -158,16 +205,18 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
           font-family: 'Cormorant Garamond', serif;
           font-size: 16px;
           font-weight: 400;
-          color: #FFF0B8; /* Warm Candlelight Gold */
+          color: #FFFDF6;
           letter-spacing: 0.1em;
         }
         
         .hrc-content {
-          height: 580px;
+          flex: 1 1 auto;
+          min-height: 0; /* required so a flex child can actually shrink and scroll instead of overflowing its parent */
           overflow-y: auto;
-          background: linear-gradient(180deg, #FFFDF6, #F7EFCF);
+          overflow-x: hidden;
+          background: linear-gradient(180deg, #FFFDF8, #F7F1E4);
           scrollbar-width: thin;
-          scrollbar-color: #D4AF37 #F7EFCF;
+          scrollbar-color: #C9974E #F7F1E4;
         }
         
         .hrc-section-label {
@@ -189,113 +238,189 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
           content: '';
           flex: 1;
           height: 1px;
-          background: #E8D8A7; /* Light Gold Wireframe Separator */
-        }
-        
-        /* ── Special Luxury Grid Microinteractions ── */
-        .hrc-grid {
-          display: grid;
-          grid-template-columns: repeat(8, 1fr);
-          gap: 12px;
-          padding: 0px 12px;
-        }
-      
-        .hrc-swatch-premium {
-          position: relative;
-          aspect-ratio: 1;
-          cursor: pointer;
-          background: #FFFBF0; /* Warm Alabaster Gold Base */
-          border: 1px solid #D6C394; /* Soft Brushed Gold Border */
-          border-radius: 4px;
-          overflow: hidden;
-          perspective: 400px;
-          transform-style: preserve-3d;
-          transition: border-color 0.4s ease, transform 0.4s cubic-bezier(0.25, 1, 0.33, 1), box-shadow 0.4s ease;
+          background: #EADFC8; /* Light Gold Wireframe Separator */
         }
 
-        .hrc-swatch-premium img {
+        /* ── Style Category Cards (Round / Flat / Oval / Add / Slim) ── */
+        .hrc-category-grid {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 12px;
+          padding: 0px 14px;
+        }
+
+        .hrc-category-card {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          cursor: pointer;
+          background: #FFFFFF;
+          border: 1px solid #E7DFCB;
+          border-radius: 10px;
+          overflow: hidden;
+          transition: border-color 0.3s ease, transform 0.3s cubic-bezier(0.25, 1, 0.33, 1), box-shadow 0.3s ease;
+        }
+
+        .hrc-category-image-wrap {
+          position: relative;
+          aspect-ratio: 1;
+          background: #FBF7EC;
+        }
+
+        .hrc-category-image-wrap img {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          opacity: 0.75;
-          transition: opacity 0.4s ease, transform 0.4s ease;
+          opacity: 0.92;
+          transition: opacity 0.3s ease, transform 0.3s ease;
         }
 
-        /* Gold Tag Label fixed securely at base */
-        .hrc-swatch-badge {
+        .hrc-category-check {
           position: absolute;
-          bottom: -20px;
-          left: 0;
-          right: 0;
+          top: 6px;
+          right: 6px;
+          width: 18px;
           height: 18px;
-          background: linear-gradient(135deg, #E6C262 0%, #B88E2F 100%); /* Liquid Satin Gold Badge */
-          color: #241A03; /* High Contrast Dark Bronze text */
-          font-size: 8px;
-          font-weight: 700;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #E7A94C 0%, #C9974E 100%);
+          color: #FFFFFF;
           display: flex;
           align-items: center;
           justify-content: center;
-          letter-spacing: 0.1em;
-          transition: bottom 0.35s cubic-bezier(0.25, 1, 0.33, 1);
+          box-shadow: 0 2px 6px rgba(74, 56, 38, 0.35);
         }
 
-        /* Hover: Extrude up along Z-axis while staying completely flat to avoid click loss */
-        .hrc-swatch-premium:hover {
-          border-color: #B88E2F;
-          transform: translateZ(10px);
-          box-shadow: 0 6px 16px rgba(184, 142, 47, 0.15);
+        .hrc-category-label {
+          padding: 6px 4px;
+          text-align: center;
+          font-size: 9px;
+          font-weight: 600;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: #8F7A4F;
+          background: #FFFDF6;
+          border-top: 1px solid #F0E8D2;
+          transition: background 0.3s ease, color 0.3s ease;
         }
 
-        .hrc-swatch-premium:hover img {
+        .hrc-category-card:hover {
+          border-color: #C9974E;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 18px rgba(180, 140, 70, 0.18);
+        }
+
+        .hrc-category-card:hover img {
           opacity: 1;
-          transform: scale(1.05);
+          transform: scale(1.03);
         }
 
-        .hrc-swatch-premium:hover .hrc-swatch-badge {
-          bottom: 0;
+        .hrc-category-card.expanded {
+          border-color: #C9974E;
+          box-shadow: 0 8px 20px rgba(201, 151, 78, 0.3);
         }
 
-        /* Selected Luxury State Tracking */
-        .hrc-swatch-premium.selected {
-          border-color: #D4AF37;
-          box-shadow: 0 8px 24px rgba(212, 175, 55, 0.35);
-          transform: translateZ(15px);
-          background: #FFF9E6;
-        }
-
-        .hrc-swatch-premium.selected img {
-          opacity: 1;
-        }
-
-        .hrc-swatch-premium.selected .hrc-swatch-badge {
-          bottom: 0;
-          background: linear-gradient(135deg, #FFFFFF 0%, #FFF2CC 100%); /* Radiant White-Gold Highlight */
+        .hrc-category-card.expanded .hrc-category-label {
+          background: linear-gradient(135deg, #F7ECD8 0%, #F0DEB8 100%);
           color: #5C4A26;
-          border-top: 1px solid #E6C262;
+        }
+
+        /* ── Select Finish: circular Silver / Golden / Black swatches ── */
+        .hrc-finish-panel {
+          padding: 4px 14px 4px;
+          animation: hrc-finish-in 0.3s ease;
+        }
+
+        @keyframes hrc-finish-in {
+          from { opacity: 0; transform: translateY(-6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hrc-finish-row {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 16px;
+          justify-items: center;
+        }
+
+        .hrc-finish-swatch {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+        }
+
+        .hrc-finish-circle {
+          position: relative;
+          width: 56px;
+          height: 56px;
+          border-radius: 50%;
+          border: 2px solid #E7DFCB;
+          box-shadow: inset 0 2px 5px rgba(0,0,0,0.15), 0 3px 8px rgba(92,74,38,0.12);
+          transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .hrc-finish-swatch:hover .hrc-finish-circle {
+          transform: translateY(-2px) scale(1.05);
+        }
+
+        .hrc-finish-swatch.selected .hrc-finish-circle {
+          border-color: #C9974E;
+          box-shadow: inset 0 2px 5px rgba(0,0,0,0.15), 0 0 0 3px rgba(201,151,78,0.2), 0 6px 14px rgba(201,151,78,0.3);
+        }
+
+        .hrc-finish-check {
+          position: absolute;
+          bottom: -4px;
+          right: -4px;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #E7A94C 0%, #C9974E 100%);
+          color: #FFFFFF;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 6px rgba(74, 56, 38, 0.35);
+          border: 2px solid #FFFDF8;
+        }
+
+        .hrc-finish-name {
+          font-size: 9px;
+          font-weight: 600;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          color: #8F7A4F;
+          transition: color 0.3s ease;
+        }
+
+        .hrc-finish-swatch.selected .hrc-finish-name {
+          color: #5C4A26;
         }
         
-        /* ── Special Fluid Expansion Action Buttons ── */
+        /* ── Light Studio Action Buttons ── */
         .hrc-luxury-btn {
           position: relative;
           height: 35px;
-          background: #FAEDC8; /* Soft Amber-Cream Matte Base */
-          border: 1px solid #D6C394;
-          border-radius: 4px;
+          background: #FFFFFF;
+          border: 1px solid #E7DFCB;
+          border-radius: 6px;
           overflow: hidden;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: all 0.4s cubic-bezier(0.25, 1, 0.33, 1);
+          transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
         }
 
-        /* Glaze layer overlay background slide effect */
+        /* Glaze layer overlay background slide effect — one clear owner of transform
+           and background per state, so hover and active never race each other. */
         .hrc-btn-glaze {
           position: absolute;
           inset: 0;
-          background: linear-gradient(90deg, #E6DCBA 0%, #DBC995 100%); /* Shimmering Champagne Silk Slide */
+          background: linear-gradient(90deg, #F7ECD8 0%, #F0DEB8 100%); /* Soft Tan Slide */
           transform: translateX(-100%);
-          transition: transform 0.4s cubic-bezier(0.25, 1, 0.33, 1);
+          transition: transform 0.35s cubic-bezier(0.25, 1, 0.33, 1), background 0.3s ease;
           z-index: 1;
         }
 
@@ -305,82 +430,125 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
           font-weight: 500;
           letter-spacing: 0.2em;
           text-transform: uppercase;
-          color: #7A6535; /* Crisp Medium Bronze-Gold text */
+          color: #8F7A4F;
           z-index: 2;
           transition: color 0.3s ease;
         }
 
-        .hrc-luxury-btn:hover .hrc-btn-glaze {
+        /* Hover only applies to buttons that are NOT already active, so the
+           slide-in animation never gets re-triggered/interrupted on an
+           already-selected button. */
+        .hrc-luxury-btn:not(.active):hover {
+          border-color: #D6C394;
+          transform: translateY(-1px);
+        }
+
+        .hrc-luxury-btn:not(.active):hover .hrc-btn-glaze {
           transform: translateX(0);
         }
 
-        .hrc-luxury-btn:hover .hrc-btn-text {
-          color: #3D3012;
+        .hrc-luxury-btn:not(.active):hover .hrc-btn-text {
+          color: #5C4A26;
         }
 
-        /* Active Enabled State Configurations */
+        .hrc-luxury-btn:active {
+          transform: translateY(0) scale(0.98);
+        }
+
+        /* Active/Selected State — matches the light tan "Standard" pill from the studio UI */
         .hrc-luxury-btn.active {
-          border-color: #C9A245;
-          background: #FFF7DB;
-          box-shadow: 0 4px 20px rgba(212, 175, 55, 0.25);
+          border-color: #C9974E;
+          background: #FFFCF3;
+          box-shadow: 0 4px 14px rgba(201, 151, 78, 0.2);
         }
 
         .hrc-luxury-btn.active .hrc-btn-glaze {
           transform: translateX(0);
-          background: linear-gradient(135deg, #E6C262 0%, #B88E2F 100%); /* True Metallic Gold Solidification */
+          background: linear-gradient(135deg, #F7ECD8 0%, #EFDBAF 100%);
         }
 
         .hrc-luxury-btn.active .hrc-btn-text {
-          color: #FFFFFF; /* High Bright Contrast */
-          font-weight: 600;
-          text-shadow: 0 1px 2px rgba(41, 32, 11, 0.3);
+          color: #5C4A26;
+          font-weight: 700;
         }
 
-        /* Clear Mode Color Mapping Override */
+        /* "None" selected — kept neutral rather than alarming, in line with the light theme */
+        .hrc-luxury-btn.clear-btn.active {
+          border-color: #C8BEA4;
+          background: #FBF9F3;
+        }
+
         .hrc-luxury-btn.clear-btn.active .hrc-btn-glaze {
-          background: linear-gradient(135deg, #B83C3A 0%, #7A1D1B 100%); /* Rich Crimson Velvet Reset Accent */
+          background: linear-gradient(135deg, #EDE7D6 0%, #E1D8BE 100%);
         }
         
         .hrc-luxury-btn.clear-btn.active .hrc-btn-text {
-          color: #ffffff;
-          text-shadow: none;
+          color: #5C4A26;
         }
 
         .hrc-apply-btn {
           padding: 8px 20px;
           background: transparent;
-          border: 1px solid #B88E2F;
+          border: 1px solid #FFF3D6;
           font-family: 'Jost', sans-serif;
           font-size: 9px;
           font-weight: 500;
           letter-spacing: 0.2em;
           text-transform: uppercase;
-          color: #8F722C;
+          color: #FFF3D6;
           cursor: pointer;
           border-radius: 3px;
           transition: all 0.3s;
         }
         .hrc-apply-btn:hover {
-          background: linear-gradient(135deg, #E6C262 0%, #B88E2F 100%);
-          border-color: #B88E2F;
+          background: linear-gradient(135deg, #E7A94C 0%, #C9974E 100%);
+          border-color: #C9974E;
           color: #FFFFFF;
-          box-shadow: 0 4px 12px rgba(184, 142, 47, 0.2);
+          box-shadow: 0 4px 12px rgba(184, 142, 47, 0.25);
+        }
+
+        .hrc-preview-close {
+          position: absolute;
+          top: 16px;
+          right: 16px;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: rgba(255, 253, 246, 0.9);
+          border: 1px solid #E7DFCB;
+          color: #5C4A26;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.3s;
+        }
+        .hrc-preview-close:hover {
+          background: #FFFFFF;
+          border-color: #C9974E;
         }
       `}</style>
 
       <div className="hrc-root">
         {/* Header */}
         <div className="hrc-header">
+<div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           <div className="hrc-header-title">HANDRAIL CONFIGURATOR</div>
+ <div className="text-[11px] text-[#AA9154] tracking-[0.15em] font-light">
+Select a handrail style, finish and height to complete your design.
+          </div>
+</div>
           <div style={{
             fontSize: 9,
             letterSpacing: '0.25em',
-            color: '#d4a843',
+            color: '#C9974E',
             textTransform: 'uppercase',
-            fontWeight: 500
+            fontWeight: 700
           }}>
             Premium Finishes
           </div>
+
+         
         </div>
 
         {/* Preview Area (GSAP Controlled Drop Height) */}
@@ -398,8 +566,8 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
                   </button>
                 </div>
               </div>
-              <button 
-                className="absolute top-4 right-4 w-8 h-8 bg-black/60 hover:bg-black/90 text-white rounded-full flex items-center justify-center transition-all border border-[#332a15]"
+              <button
+                className="hrc-preview-close"
                 onClick={() => { setPreviewUrl(null); setSelectedHandrail(null); }}
               >
                 <IoClose size={16} />
@@ -411,33 +579,78 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
         {/* Scrollable Content Workspace */}
         <div className="hrc-content">
           <div className="hrc-section-label">
-            <span>MAIN ARCHITECTURE LAYER</span>
+            <span>SELECT HANDRAIL STYLE</span>
           </div>
 
           {loading ? (
             <div className="flex flex-col items-center justify-center py-24">
-              <RingLoader color="#d4a843" size={45} />
-              <p className="mt-5 text-[10px] tracking-[0.3em] text-[#8a8680] font-light">COMPILING TEXTURE SWATCHES</p>
+              <RingLoader color="#C9974E" size={45} />
+              <p className="mt-5 text-[10px] tracking-[0.3em] text-[#AA9154] font-light">COMPILING TEXTURE SWATCHES</p>
             </div>
           ) : (
-            <div className="hrc-grid">
-              {thumbnails.map((item) => (
-                <div
-                  key={item.num}
-                  className={`hrc-swatch-premium ${selectedHandrail === item.num ? "selected" : ""}`}
-                  onClick={() => handleMainSelect(item.num)}
-                >
-                  {/* Button artwork is the local image (loads instantly);
-                      selection state and applyHandrail() above still use the real AWS item.num */}
-                  <img src={getLocalHandrailImage(item.num)} alt={`Handrail ${item.num}`} />
-                  <div className="hrc-swatch-badge">OPTION 0{item.num}</div>
-                </div>
-              ))}
-            </div>
+            <>
+              <div className="hrc-category-grid">
+                {HANDRAIL_CATEGORIES.map((cat, idx) => {
+                  const isExpanded = openCategoryIndex === idx;
+                  const isAppliedHere = activeCategoryIndex === idx;
+                  return (
+                    <div
+                      key={cat.label}
+                      className={`hrc-category-card ${isExpanded ? "expanded" : ""}`}
+                      onClick={() => handleCategoryClick(idx)}
+                    >
+                      <div className="hrc-category-image-wrap">
+                        {/* Representative thumbnail = the Silver (first) variant of the category */}
+                        <img src={getLocalHandrailImage(cat.nums[0])} alt={cat.label} />
+                        {isAppliedHere && (
+                          <div className="hrc-category-check">
+                            <IoCheckmark size={12} />
+                          </div>
+                        )}
+                      </div>
+                      <div className="hrc-category-label">{cat.label}</div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Select Finish — only shown once a category is chosen */}
+              {openCategoryIndex !== -1 && openCategoryIndex !== null && (
+                <>
+                  <div className="hrc-section-label" style={{ marginTop: 18 }}>
+                    <span>Select Finish</span>
+                  </div>
+                  <div className="hrc-finish-panel">
+                    <div className="hrc-finish-row">
+                      {FINISHES.map((finish, i) => {
+                        const num = HANDRAIL_CATEGORIES[openCategoryIndex].nums[i];
+                        const isSelected = selectedHandrail === num;
+                        return (
+                          <div
+                            key={finish.name}
+                            className={`hrc-finish-swatch ${isSelected ? "selected" : ""}`}
+                            onClick={() => handleMainSelect(num)}
+                          >
+                            <div className="hrc-finish-circle" style={{ background: finish.swatch }}>
+                              {isSelected && (
+                                <div className="hrc-finish-check">
+                                  <IoCheckmark size={11} />
+                                </div>
+                              )}
+                            </div>
+                            <div className="hrc-finish-name">{finish.name}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
+            </>
           )}
 
           {/* Sub Handrails Control Area */}
-          <div className="hrc-section-label">
+          <div className="hrc-section-label" style={{ marginTop: 18 }}>
             <span>SECONDARY PERIMETER GUARD</span>
           </div>
 
