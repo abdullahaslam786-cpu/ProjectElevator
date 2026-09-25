@@ -397,7 +397,7 @@ const ModelPreview = forwardRef((props, ref) => {
             showThumbnails ? "md:w-[57%]" : "w-full"
           }`}
 style={{  
-  backgroundImage: `url("/openmodelbg/openmodel.png")`,
+  backgroundImage: `url("/openmodelbg/openmodel.jpg")`,
   backgroundSize: "cover",
   backgroundPosition: "center"
 }}

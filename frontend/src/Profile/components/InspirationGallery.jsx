@@ -286,7 +286,7 @@ const InspirationGallery = ({
         </nav>
 
         {/* Mobile: compact icon nav */}
-        {/* <nav className="flex lg:hidden w-full items-center justify-between pt-18">
+        <nav className="flex lg:hidden w-full items-center justify-between pt-18">
           {steps.map((step, index) => (
             <button
               key={index}
@@ -310,20 +310,20 @@ const InspirationGallery = ({
               </span>
             </button>
           ))}
-        </nav> */}
+        </nav>
 
         {/* Progress dot-line */}
         <div className="relative flex items-center justify-between mt-6 px-12">
           {/* <div className="absolute left-12 right-12 h-[1px] bg-[#d3cbc0] top-1/2 -translate-y-1/2" /> */}
-          {/* <div
+          <div
             className="absolute left-12 h-[2px] bg-[#b37a28] top-1/2 -translate-y-1/2 transition-all duration-500 ease-out"
             style={{
               width: `calc(${(activeStep / (steps.length - 1)) * 100}% - ${
                 (activeStep / (steps.length - 1)) * 24
               }px)`,
-            }} */}
-          {/* /> */}
-          {/* {steps.map((step, idx) => {
+            }}
+         /> 
+          {steps.map((step, idx) => {
             const isActive = idx === activeStep;
             const isPassed = idx < activeStep;
 
@@ -345,7 +345,7 @@ const InspirationGallery = ({
                 />
               </button>
             );
-          })} */}
+          })}
         </div>
       </div>
 

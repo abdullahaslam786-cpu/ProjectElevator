@@ -734,7 +734,7 @@ const Review = ({
                     <option value="">Select an Option</option>
                     <option value="Passenger">Passenger</option>
                     <option value="Freight">Freight</option>
-                    <option value="Residential">Residential</option>
+                    <option value="Residential">Service</option>
                   </select>
                 </div>
 
@@ -747,8 +747,8 @@ const Review = ({
                   >
                     <option value="">Select an Option</option>
                     <option value="Stainless Steel">Stainless Steel</option>
-                    <option value="Painted Steel">Painted Steel</option>
-                    <option value="Glass">Glass</option>
+                    <option value="Painted Steel">Wood</option>
+                   
                   </select>
                 </div>
 
@@ -761,9 +761,9 @@ const Review = ({
                   >
                     <option value="">Select an Option</option>
                     <option value="Otis">Otis</option>
-                    <option value="Schindler">Schindler</option>
-                    <option value="KONE">KONE</option>
-                    <option value="ThyssenKrupp">ThyssenKrupp</option>
+                    <option value="Schindler">Mitsubishi</option>
+                    <option value="KONE">Fuji tech</option>
+                    <option value="ThyssenKrupp">Other</option>
                   </select>
                 </div>
               </div>

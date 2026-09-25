@@ -3,20 +3,21 @@ import { IoClose, IoSearch } from "react-icons/io5";
 import { FaStar } from "react-icons/fa";
 import { RingLoader } from "react-spinners";
 import { modelConfigs } from "../config/modelConfigs";
-
-const modelToDesignMap = {
-  "LEVELe-101": 1, "LEVELe-102": 2, "LEVELe-103": 3, "LEVELe-104": 4,
-  "LEVELe-105": 5, "LEVELe-106": 6, "LEVELe-107": 7, "LEVELe-108": 8,
-  "LEVELr-201": 9, "LEVELr-202": 10, "LEVELr-203": 11, "LEVELr-204": 12,
-  "LEVELr-205": 13, "LEVELc-301": 14, "LEVELc-302": 15,
-};
+import { materialsCollection } from "../config/materialsCollection";
 
 // const modelToDesignMap = {
-//   "ELX-1101": 1, "ELX-1102": 2, "ELX-1103": 3, "ELX-1104": 4,
-//   "ELX-1105": 5, "ELX-1106": 6, "ELX-1107": 7, "ELX-1108": 8,
-//   "RLX-2201": 9, "RLX-2202": 10, "RLX-2203": 11, "RLX-2204": 12,
-//   "RLX-2205": 13, "CLX-3301": 14, "CLX-3302": 15,
+//   "LEVELe-101": 1, "LEVELe-102": 2, "LEVELe-103": 3, "LEVELe-104": 4,
+//   "LEVELe-105": 5, "LEVELe-106": 6, "LEVELe-107": 7, "LEVELe-108": 8,
+//   "LEVELr-201": 9, "LEVELr-202": 10, "LEVELr-203": 11, "LEVELr-204": 12,
+//   "LEVELr-205": 13, "LEVELc-301": 14, "LEVELc-302": 15,
 // };
+
+const modelToDesignMap = {
+  "ELX-1101": 1, "ELX-1102": 2, "ELX-1103": 3, "ELX-1104": 4,
+  "ELX-1105": 5, "ELX-1106": 6, "ELX-1107": 7, "ELX-1108": 8,
+  "RLX-2201": 9, "RLX-2202": 10, "RLX-2203": 11, "RLX-2204": 12,
+  "RLX-2205": 13, "CLX-3301": 14, "CLX-3302": 15,
+};
 
 
 const specialConfig = {
@@ -152,12 +153,27 @@ const WallpanelController = ({
     loadCurrentDesign();
   }, [designNum, onDesignLoad]);
 
+  // Which GAF codes belong to the currently selected category tab
+  // (PANELS / TEXTURES / COLORS / METALS / WOODS / STONES / SPECIALITY),
+  // sourced from materialsCollection.
+  const allowedGafCodes = useMemo(() => {
+    const categoryKey = selectedMaterialTab.toLowerCase();
+    const group = materialsCollection[categoryKey] || {};
+    return new Set(Object.values(group));
+  }, [selectedMaterialTab]);
+
   const filteredMaterials = useMemo(() => {
-    if (!searchTerm.trim()) return materials;
-    return materials.filter((item) =>
-      item.label.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [materials, searchTerm]);
+    // Same filter concept as search — just filtering by category membership first.
+    let list = materials.filter((item) => allowedGafCodes.has(item.label));
+
+    if (searchTerm.trim()) {
+      list = list.filter((item) =>
+        item.label.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    return list;
+  }, [materials, searchTerm, allowedGafCodes]);
 
   const handleThumbnailClick = (item) => {
     setPreviewUrl(item.url);
@@ -168,9 +184,15 @@ const WallpanelController = ({
   const handleSpecialClick = (type) => {
     const folder = type === "golden" ? "goldenLayers" : "blackLayers";
     const keyPrefix = `SubMaterial/Layers/${folder}`;
-    const previewFullUrl = `https://project-elevator-2026.s3.eu-north-1.amazonaws.com/${keyPrefix}/V1/1.png`;
+
+    // Show the same local image that's already used as the card's background
+    // (instant, no AWS round-trip) in the big preview area above.
+    // previewKey is untouched — it still drives handleApply()'s
+    // blackLayers/goldenLayers material-application logic exactly as before.
+    const localPreviewUrl = type === "golden" ? "/EF/golden.png" : "/EF/stainless.png";
+
     setPreviewKey(keyPrefix);
-    setPreviewUrl(previewFullUrl);
+    setPreviewUrl(localPreviewUrl);
   };
 
   // Silver zone handler
@@ -887,8 +909,8 @@ background: linear-gradient(135deg, #F7ECD8 0%, #EFDBAF 100%);
         </div>
 
         {/* ── Panel selector (3D Cubes) ── */}
-        <div className="wpc-panel-row">
-          <span className="wpc-panel-label">Panels</span>
+        <div className="wpc-panel-row flex flex-col gap-2 items-baseline">
+          {/* <span className="wpc-panel-label">Panels</span> */}
 
 <div className="mat-tab-row">
   {materialsSelections.map((selection) => (
@@ -903,7 +925,8 @@ background: linear-gradient(135deg, #F7ECD8 0%, #EFDBAF 100%);
   ))}
 </div>
 
-          {panelCount > 0
+      <div className="flex items-center justify-center gap-2">
+            {panelCount > 0
             ? Array.from({ length: panelCount }).map((_, i) => {
                 const num = i + 1;
                 const isSelected = selectedPanels[activeZone]?.includes(num);
@@ -923,6 +946,7 @@ background: linear-gradient(135deg, #F7ECD8 0%, #EFDBAF 100%);
                 );
               })
             : null}
+      </div>
         </div>
 
         {/* ── Search bar (normal zones only) ── */}
@@ -980,7 +1004,7 @@ background: linear-gradient(135deg, #F7ECD8 0%, #EFDBAF 100%);
             </span>
           </div>
 
-          {/* ── GOLDEN ZONE: Black + Golden ── */}
+          {/* ── GOLDEN ZONE: Stainless base + Freeze Bronze ── */}
           {isGoldenZone && (
             <div className="wpc-special-grid">
               <div
@@ -988,28 +1012,57 @@ background: linear-gradient(135deg, #F7ECD8 0%, #EFDBAF 100%);
                 onClick={() => handleSpecialClick("black")}
               >
                 <div className="wpc-special-card-cube">
-                  <div className="wpc-special-card-face wpc-special-card-front" style={{ background: '#111111', color: '#e8e4de' }}>
+                  <div
+                    className="wpc-special-card-face wpc-special-card-front"
+                    style={{
+                      backgroundImage: 'url("/EF/stainless.png")',
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      color: '#e8e4de'
+                    }}
+                  >
                     <div className="wpc-special-card-dot" />
-                    <div className="wpc-special-card-label">Black Base</div>
+                    <div className="wpc-special-card-label">Stainless base</div>
                   </div>
-                  <div className="wpc-special-card-face wpc-special-card-depth" style={{ background: '#0a0a0a', borderTop: '1px solid #2d2824' }} />
+                  <div
+                    className="wpc-special-card-face wpc-special-card-depth"
+                    style={{
+                      backgroundImage: 'url("/EF/stainless.png")',
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      borderTop: '1px solid #2d2824'
+                    }}
+                  />
                 </div>
               </div>
-              
+
               <div
                 className={`wpc-special-card-wrap ${previewKey?.includes("goldenLayers") ? "selected" : ""}`}
                 onClick={() => handleSpecialClick("golden")}
               >
                 <div className="wpc-special-card-cube">
-                  <div className="wpc-special-card-face wpc-special-card-front" style={{ 
-                    background: 'linear-gradient(135deg, #1f180c 0%, #3a2e14 100%)', 
-                    color: '#f5d98a',
-                    border: '1px solid #4a3b19'
-                  }}>
+                  <div
+                    className="wpc-special-card-face wpc-special-card-front"
+                    style={{
+                      backgroundImage: 'url("/EF/golden.png")',
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      color: '#f5d98a',
+                      border: '1px solid #4a3b19'
+                    }}
+                  >
                     <div className="wpc-special-card-dot" style={{ color: '#d4a843' }} />
-                    <div className="wpc-special-card-label">Golden Accent</div>
+                    <div className="wpc-special-card-label">Freeze Bronze</div>
                   </div>
-                  <div className="wpc-special-card-face wpc-special-card-depth" style={{ background: '#1c1405' }} />
+                  <div
+                    className="wpc-special-card-face wpc-special-card-depth"
+                    style={{
+                      backgroundImage: 'url("/EF/golden.png")',
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      borderTop: '1px solid #4a3b19'
+                    }}
+                  />
                 </div>
               </div>
             </div>
@@ -1058,6 +1111,10 @@ background: linear-gradient(135deg, #F7ECD8 0%, #EFDBAF 100%);
                 <div style={{ marginTop: 12, fontSize: 10, letterSpacing: '0.2em', color: '#9a9590', textTransform: 'uppercase' }}>
                   Loading finishes
                 </div>
+              </div>
+            ) : filteredMaterials.length === 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 0', color: '#AA945B', fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+                No finishes found in this category
               </div>
             ) : (
               <div className="wpc-grid">
