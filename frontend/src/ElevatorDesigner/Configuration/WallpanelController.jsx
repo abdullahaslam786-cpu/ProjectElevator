@@ -39,7 +39,7 @@ const specialConfig = {
 };
 
 const materialsSelections = [
-  "PANELS", "TEXTURES", "COLORS", "METALS", "WOODS", "STONES", "SPECIALITY"
+  "VENEER", "METALS", "STONE", "LEATHER", "GLASS","PANELS"
 ]
 
 const WallpanelController = ({
@@ -156,11 +156,15 @@ const WallpanelController = ({
   // Which GAF codes belong to the currently selected category tab
   // (PANELS / TEXTURES / COLORS / METALS / WOODS / STONES / SPECIALITY),
   // sourced from materialsCollection.
-  const allowedGafCodes = useMemo(() => {
-    const categoryKey = selectedMaterialTab.toLowerCase();
-    const group = materialsCollection[categoryKey] || {};
-    return new Set(Object.values(group));
-  }, [selectedMaterialTab]);
+const allowedGafCodes = useMemo(() => {
+  const categoryKey = selectedMaterialTab.toLowerCase();
+  // try exact lowercase first, then try title-case fallback
+  const group =
+    materialsCollection[categoryKey] ||
+    materialsCollection[categoryKey.charAt(0).toUpperCase() + categoryKey.slice(1)] ||
+    {};
+  return new Set(Object.values(group));
+}, [selectedMaterialTab]);
 
   const filteredMaterials = useMemo(() => {
     // Same filter concept as search — just filtering by category membership first.
@@ -253,8 +257,8 @@ const WallpanelController = ({
 
         .wpc-root {
           font-family: 'Jost', sans-serif;
-          color: #4A3B1B; /* Rich Deep Bronze/Gold text */
-          background: linear-gradient(180deg, #FFFDF9, #FAF3E0); /* Soft Champagne / Light Golden Veil */
+          color: #8E5A31; /* Rich Deep Bronze/Gold text */
+          background: #FCF9F4; /* Soft Champagne / Light Golden Veil */
           min-height: 100%;
         }
 
@@ -263,10 +267,10 @@ const WallpanelController = ({
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 7px 20px;
-        
-          color: #F3E5AB; /* Soft Muted Gold Text */
-          border-bottom: 1px solid #8C7335; /* Polished Gold Divider */
+          padding: 7px 24px;
+          background: #FCF9F4;
+          border-bottom: 1px solid #EADFC8;
+          flex-shrink: 0;
         }
 
          .wpc-header-title {
@@ -274,7 +278,7 @@ const WallpanelController = ({
           font-size: 13px;
           font-weight: 900;
           letter-spacing: 0.15em;
-          color: #4A3826; /* Deep Studio Brown */
+          color: #8E5A31; /* Deep Studio Brown */
         }
 
        
@@ -283,16 +287,16 @@ const WallpanelController = ({
           font-weight: 300;
           letter-spacing: 0.3em;
           text-transform: uppercase;
-          color: #D4AF37; /* Bright Metallic Gold Accent */
+          color:#BF9050 /* Bright Metallic Gold Accent */
         }
 
         /* ── Zone rail ── */
         .wpc-zone-rail {
           display: flex;
           gap: 6px;
-          background: linear-gradient(180deg, #F4EED4, #85612E); /* Deep Gold Tinted Base */
+          background: #FCF9F4; /* Deep Gold Tinted Base */
           padding: 6px 20px;
-          border-bottom: 1px solid #8C7335;
+          border-bottom: 1px solid #E3D7C5;
           overflow-x: auto;
           scrollbar-width: none;
         }
@@ -336,15 +340,15 @@ const WallpanelController = ({
 
         /* Zone Buttons Front/Bottom styling */
         .wpc-zone-cube .face.front {
-          background: linear-gradient(180deg, #705B29, #4A3B1B); /* Matte Gold-Bronze Base */
-          color: #FFF2CC; /* Liquid Light Gold Text */
-          border: 1px solid #AA8F4A; /* Brushed Gold Frame */
+        background: linear-gradient(180deg, #8E5A31, #5C3A1E); /* Dark Brown Base */
+          color: #FCF9F4;
+          border: 1px solid #BF9050; /* Light Brown Frame */
           transform: translateZ(20px);
         }
 
         .wpc-zone-cube .face.bottom {
-          background: linear-gradient(135deg, #FFF1C5, #D4AF37, #8C7335); /* Pure Gold Metallic Spectrum */
-          color: #1F190A; /* Deep Charcoal Contrast text */
+         background: linear-gradient(135deg, #DFB97D, #BF9050, #8E5A31); /* Light Brown Spectrum */
+          color: #FFFFFF;
           font-weight: 600;
           transform: rotateX(-90deg) translateZ(9px);
         }
@@ -360,12 +364,12 @@ const WallpanelController = ({
 
         /* ── Panel Row & 3D Panel Cubes ── */
         .wpc-panel-row {
-          display: flex;
+        display: flex;
           align-items: center;
           gap: 12px;
           padding: 6px 20px;
-          background: #F4EED4; /* Muted Champagne Cream */
-          border-bottom: 1px solid #D0C39A; /* Soft Warm Gold Border */
+          background: #F8F2E8;
+          border-bottom: 1px solid #E3D7C5;
           flex-wrap: wrap;
         }
         .wpc-panel-label {
@@ -379,40 +383,33 @@ const WallpanelController = ({
         }
 
         .mat-tab-row {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 4px 14px;
+display: flex;
+          flex-direction: row;
+          flex-wrap: wrap;
+          gap: 8px;
+          padding: 4px 14px;
 }
 
 .mat-tab-btn {
   padding: 7px 16px;
-  font-family: 'Jost', sans-serif;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  
-  
-  border: 1px solid #E7DFCB;
-  border-radius: 0px;
-  cursor: pointer;
-  transition: border-color 0.3s ease, background 0.3s ease, color 0.3s ease, transform 0.2s ease;
-
-
-
-
-background: linear-gradient(135deg, #F7ECD8 0%, #EFDBAF 100%);
-  border-color: #C9974E;
-  color: #5C4A26;
-  box-shadow: 0 4px 12px rgba(201, 151, 78, 0.2);
+          font-family: 'Jost', sans-serif;
+          font-size: 10px;
+          font-weight: 600;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          border: 1px solid #BF9050;
+          border-radius: 0px;
+          cursor: pointer;
+          transition: border-color 0.3s ease, background 0.3s ease, color 0.3s ease, transform 0.2s ease;
+          background: #FCF9F4;
+          color: #8E5A31;
+          box-shadow: 0 2px 8px rgba(142, 90, 49, 0.1);
 
 }
 
 .mat-tab-btn:hover {
-  border-color: #D6C394;
-  color: #5C4A26;
+border-color: #8E5A31;
+          color: #8E5A31;
 }
 
 .mat-tab-btn:active {
@@ -420,10 +417,10 @@ background: linear-gradient(135deg, #F7ECD8 0%, #EFDBAF 100%);
 }
 
 .mat-tab-btn.active {
-  background: #85612E;
-  border-color: #C9974E;
- color: #ffffff;
-  box-shadow: 0 4px 12px rgba(201, 151, 78, 0.2);
+background: #8E5A31;
+          border-color: #BF9050;
+          color: #FCF9F4;
+          box-shadow: 0 4px 12px rgba(142, 90, 49, 0.25);
 }
 
         .panel-cube-wrap {
@@ -435,16 +432,16 @@ background: linear-gradient(135deg, #F7ECD8 0%, #EFDBAF 100%);
 
         /* Panel Cube Front/Bottom Faces */
         .wpc-panel-cube .face.front {
-          background: linear-gradient(180deg, #5A4822, #4A3B1B); /* Dense Gold Core */
-          color: #F7E7B4; /* Warm Cream Text */
-          border: 1px solid #BA9E59; /* Soft Metallic Border */
+       background: linear-gradient(180deg, #8E5A31, #5C3A1E); /* Dark Brown Core */
+          color: #FCF9F4;
+          border: 1px solid #BF9050; /* Light Brown Border */
           font-weight: 500;
           transform: translateZ(20px);
         }
 
         .wpc-panel-cube .face.bottom {
-          background: linear-gradient(135deg, #FFFFFF, #E6CA73, #A6873B); /* Shimmering Light Gold */
-          color: #4A3B1B;
+        background: linear-gradient(135deg, #DFB97D, #BF9050, #8E5A31); /* Light Brown Metallic */
+          color: #FFFFFF;
           font-weight: 700;
           transform: rotateX(-90deg) translateZ(9px);
           box-shadow: inset 0 0 8px rgba(0,0,0,0.12);
@@ -460,24 +457,24 @@ background: linear-gradient(135deg, #F7ECD8 0%, #EFDBAF 100%);
 
         /* ── Advanced Luxury Search bar ── */
         .wpc-search {
-          display: flex;
+       display: flex;
           align-items: center;
           gap: 12px;
           padding: 0 24px;
           height: 38px;
-          background: linear-gradient(90deg, #4A3B1B, #5A4822); /* Radiant Bronze-Gold Bar */
-          border-bottom: 1px solid #8C7335;
+          background: linear-gradient(90deg, #8E5A31, #6E4423); /* Dark Brown Bar */
+          border-bottom: 1px solid #BF9050;
           position: relative;
           transition: background 0.3s ease;
         }
         .wpc-search::after {
-          content: '';
+        content: '';
           position: absolute;
           bottom: 0;
           left: 0;
           width: 100%;
           height: 1px;
-          background: linear-gradient(90deg, transparent, #E6CA73, transparent);
+          background: linear-gradient(90deg, transparent, #BF9050, transparent);
           transform: scaleX(0);
           transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
         }
@@ -493,45 +490,45 @@ background: linear-gradient(135deg, #F7ECD8 0%, #EFDBAF 100%);
           font-weight: 400;
           letter-spacing: 0.2em;
           text-transform: uppercase;
-          color: #FFF9E6;
+          color: #FCF9F4;
           background: transparent;
         }
         .wpc-search input::placeholder { 
-          color: #C2B085; /* Pale Gold Placeholder */
+          color: #DFB97D; /* Pale Gold Placeholder */
           transition: color 0.3s ease;
         }
         .wpc-search input:focus::placeholder {
-          color: #FFF9E6;
+          color: #FCF9F4;
         }
         .wpc-search-icon { 
-          color: #D4AF37; 
-          flex-shrink: 0; 
+          color: #BF9050; 
+          flex-shrink: 0;
           filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.3));
         }
         .wpc-search-divider {
           width: 1px;
           height: 16px;
-          background: #705B29;
+          background: #6E4423;
         }
         .wpc-search-action {
-          font-size: 9px;
+         font-size: 9px;
           font-weight: 500;
           letter-spacing: 0.15em;
-          color: #E6CA73;
+          color: #FCF9F4;
           cursor: pointer;
           padding: 4px 10px;
           display: flex;
           align-items: center;
           gap: 6px;
           border-radius: 20px;
-          background: #5A4822;
-          border: 1px solid #8C7335;
+          background: #5C3A1E;
+          border: 1px solid #BF9050;
           transition: all 0.3s ease;
         }
         .wpc-search-action:hover {
-          color: #FFFFFF;
-          border-color: #D4AF37;
-          background: #705B29;
+         color: #FFFFFF;
+          border-color: #DFB97D;
+          background: #8E5A31;
         }
 
         /* ── Immersive Architectural Preview area ── */
@@ -628,13 +625,13 @@ background: linear-gradient(135deg, #F7ECD8 0%, #EFDBAF 100%);
         .wpc-content {
           height: 390px;
           overflow-y: auto;
-          background: linear-gradient(180deg, #FFFDF9, #FAF3E0);
+          background: #FCF9F4;
           scrollbar-width: thin;
-          scrollbar-color: #D0C39A #FAF3E0;
+          scrollbar-color: #BF9050 #FCF9F4;
         }
         .wpc-content::-webkit-scrollbar { width: 4px; }
-        .wpc-content::-webkit-scrollbar-track { background: #FAF3E0; }
-        .wpc-content::-webkit-scrollbar-thumb { background: #D0C39A; border-radius: 2px; }
+       .wpc-content::-webkit-scrollbar-track { background: #FCF9F4; }
+        .wpc-content::-webkit-scrollbar-thumb { background: #BF9050; border-radius: 2px; }
 
         /* ── Section label ── */
         .wpc-section-label {

@@ -292,19 +292,20 @@ const Review = ({
         }
 
         .review-header {
-          display: flex;
+            display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 6px 12px;
-          background: linear-gradient(180deg, #423516 0%, #29200B 100%); /* Deep Satin Gold-Onyx */
-          border-bottom: 1px solid #C9A245; /* Polished Golden Hairline Separator */
+          padding: 7px 24px;
+          background: #FFFFFF;
+          border-bottom: 1px solid #EADFC8;
+          flex-shrink: 0;
         }
         .review-header-title {
           font-family: 'Cormorant Garamond', serif;
-          font-size: 12px;
-          font-weight: 300;
+          font-size: 13px;
+          font-weight: 900;
           letter-spacing: 0.15em;
-          color: #FFF3CD; /* Radiant White-Gold Tint */
+          color: #4A3826; /* Deep Studio Brown */
         }
 
         .review-content {
@@ -605,7 +606,10 @@ const Review = ({
       <div className="review-root">
         {/* Header */}
         <div className="review-header">
+          <div className="">
           <div className="review-header-title">DESIGN REVIEW</div>
+          <div className="text-[11px] text-[#AA9154] tracking-[0.15em] font-light">Please customize the Elevator dimension, quantity and details.</div>
+          </div>
           <div style={{ fontSize: 9, letterSpacing: '0.25em', color: '#d4a843', fontWeight: 600 }}>
             FINAL SUMMARY
           </div>

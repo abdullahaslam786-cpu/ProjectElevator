@@ -3,22 +3,16 @@ import { IoClose, IoCheckmark } from "react-icons/io5";
 import { RingLoader } from "react-spinners";
 import gsap from "gsap";
 
-// Local (public folder) image path for a given handrail number.
-// Used for BOTH the option buttons and the big preview panel so they load
-// instantly, instead of waiting on the AWS url (item.url / previewImages[num]).
-// Files expected at: public/previewHandrail/1.png ... public/previewHandrail/15.png
+// Local preview thumbs (UI only) — public/previewHandrails/1.png … 12.png
 const getLocalHandrailImage = (num) => `/previewHandrails/${num}.png`;
 
-// 15 images grouped into 5 style categories of 3.
-// Within each category, position 0/1/2 = Silver/Golden/Black finish.
-// e.g. Round -> Silver:1, Golden:2, Black:3
-//      Flat  -> Silver:4, Golden:5, Black:6  ...etc
+// Only four styles under SubMaterial/splithandrails/
+// Within each category: index 0 = Silver, 1 = Golden, 2 = Black
 const HANDRAIL_CATEGORIES = [
   { label: "Round", nums: [1, 2, 3] },
-  { label: "Flat",  nums: [4, 5, 6] },
+  { label: "Flat",  nums: [13, 14, 15] },
   { label: "Oval",  nums: [7, 8, 9] },
   { label: "Add",   nums: [10, 11, 12] },
-  { label: "Slim",  nums: [13, 14, 15] },
 ];
 
 const FINISHES = [
@@ -27,180 +21,183 @@ const FINISHES = [
   { name: "Black",  swatch: "radial-gradient(circle at 35% 32%, #5a5852 0%, #2c2a26 40%, #131211 75%, #000000 100%)" },
 ];
 
-const HandrailController = ({ applyHandrail, applySubHandrail }) => {
+const HandrailController = ({
+  applyHandrail,
+  applySubHandrail,
+  // Parent (ElevatorDesigner3) just stores whatever is passed here, same as
+  // applySubHandrail. ModelPreview does the actual per-view S3 key building —
+  // so what we pass is a small { style, finish } descriptor, not a full key.
+  // Passing null turns the layer off (same pattern as applySubHandrail(null)).
+  applyFrontHandrail,
+  applySideHandrail,
+}) => {
   const [selectedHandrail, setSelectedHandrail] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [subHandrailEnabled, setSubHandrailEnabled] = useState(false);
-  const [thumbnails, setThumbnails] = useState([]);
-  const [previewImages, setPreviewImages] = useState({});
   const [previewUrl, setPreviewUrl] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const [frontEnabled, setFrontEnabled] = useState(false);
+  const [sideEnabled, setSideEnabled] = useState(false);
+  const [splitFinish, setSplitFinish] = useState("silver");
 
   const previewContainerRef = useRef(null);
 
   useEffect(() => {
-    const fetchHandrails = async () => {
+    const warm = async () => {
       try {
         setLoading(true);
-
-        // Main Handrails Thumbnails
-        const thumbRes = await fetch("/api/images-by-prefix?prefix=SubMaterial/handrails");
-        if (thumbRes.ok) {
-          const data = await thumbRes.json();
-          const thumbs = data
-            .filter(item => item.key.includes("/V2/") && item.key.endsWith(".png"))
-            .map(item => {
-              const match = item.key.match(/\/V2\/(\d+)\.png$/);
-              return { ...item, num: match ? parseInt(match[1]) : 0 };
-            })
-            .sort((a, b) => a.num - b.num);
-          setThumbnails(thumbs);
-        }
-
-        // Preview Images
-        const previewRes = await fetch("/api/images-by-prefix?prefix=previewHandrails");
-        if (previewRes.ok) {
-          const previewData = await previewRes.json();
-          const previewMap = {};
-          previewData.forEach((item) => {
-            const match = item.key.match(/previewHandrails\/(\d+)\.(png|jpg|jpeg)$/i);
-            if (match) previewMap[parseInt(match[1])] = item.url;
-          });
-          setPreviewImages(previewMap);
-        }
-      } catch (err) {
-        console.error("Handrail fetch error:", err);
+        await fetch("/api/images-by-prefix?prefix=previewHandrails").catch(() => null);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchHandrails();
+    warm();
   }, []);
 
-  // GSAP animation handle for Dropdown Preview Height transitions
   useEffect(() => {
-    if (previewContainerRef.current) {
-      if (previewUrl) {
-        gsap.to(previewContainerRef.current, {
-          height: 250,
-          duration: 0.5,
-          ease: "power3.out"
-        });
-      } else {
-        gsap.to(previewContainerRef.current, {
-          height: 0,
-          duration: 0.4,
-          ease: "power3.inOut"
-        });
-      }
+    if (!previewContainerRef.current) return;
+    if (previewUrl) {
+      gsap.to(previewContainerRef.current, {
+        height: 250,
+        duration: 0.5,
+        ease: "power3.out",
+      });
+    } else {
+      gsap.to(previewContainerRef.current, {
+        height: 0,
+        duration: 0.4,
+        ease: "power3.inOut",
+      });
     }
   }, [previewUrl]);
 
+  // Style / finish = UI ONLY — never touches the 3D model
   const handleMainSelect = (num) => {
     setSelectedHandrail(num);
-    // applyHandrail still receives the real handrail number — downstream (AWS
-    // material fetch / model application) is completely untouched.
-    applyHandrail(num);
-
-    // Use the local image for the preview instead of the AWS url so it
-    // shows instantly rather than waiting on the network fetch.
     setPreviewUrl(getLocalHandrailImage(num));
-  };
-// const handleMainSelect = (num) => {
-//     setSelectedHandrail(num);
-//     applyHandrail(num);
 
-//     const previewSrc = previewImages[num];
-//     setPreviewUrl(previewSrc || null);
-//   };
-
-  const handleCategoryClick = (idx) => {
-    const isOpeningNewCategory = selectedCategory !== idx;
-    setSelectedCategory((prev) => (prev === idx ? null : idx));
-
-    // Opening a category (or switching to a different one) defaults the
-    // preview + selection to that category's Silver (first) finish.
-    // Clicking to collapse the already-open category leaves the current
-    // selection untouched.
-    if (isOpeningNewCategory) {
-      const silverNum = HANDRAIL_CATEGORIES[idx].nums[0];
-      handleMainSelect(silverNum);
+    const cat = HANDRAIL_CATEGORIES.find((c) => c.nums.includes(num));
+    if (cat) {
+      const finishIdx = cat.nums.indexOf(num);
+      const finishName = FINISHES[finishIdx]?.name?.toLowerCase();
+      if (finishName) setSplitFinish(finishName);
     }
   };
 
-  // Which category (if any) the currently-applied handrail belongs to,
-  // so the right category card + finish circle stay highlighted after reload.
+  const handleCategoryClick = (idx) => {
+    const isOpeningNew = selectedCategory !== idx;
+    setSelectedCategory((prev) => (prev === idx ? null : idx));
+
+    if (isOpeningNew) {
+      handleMainSelect(HANDRAIL_CATEGORIES[idx].nums[0]);
+      setFrontEnabled(false);
+      setSideEnabled(false);
+    }
+  };
+
   const activeCategoryIndex = selectedHandrail
     ? HANDRAIL_CATEGORIES.findIndex((cat) => cat.nums.includes(selectedHandrail))
     : -1;
 
-  const openCategoryIndex = selectedCategory !== null ? selectedCategory : activeCategoryIndex;
+  const openCategoryIndex =
+    selectedCategory !== null ? selectedCategory : activeCategoryIndex;
 
-  // ─── INSERT IT HERE ───
+  const selectedStyleKey =
+    openCategoryIndex !== -1 && openCategoryIndex !== null
+      ? HANDRAIL_CATEGORIES[openCategoryIndex].label.toLowerCase()
+      : null;
+
+  // FRONT — pass a { style, finish } descriptor, or null to turn the layer off.
+  // ModelPreview builds the actual SubMaterial/splithandrails/FrontHandrails/... key
+  // per-view from this, exactly like appliedHandrail/appliedCeiling/etc. are just
+  // identifiers and ModelPreview builds their per-view keys too.
+  useEffect(() => {
+    if (!applyFrontHandrail) return;
+
+    if (!frontEnabled || !selectedStyleKey) {
+      applyFrontHandrail(null);
+      return;
+    }
+
+    applyFrontHandrail({ style: selectedStyleKey, finish: splitFinish });
+  }, [frontEnabled, selectedStyleKey, splitFinish, applyFrontHandrail]);
+
+  // SIDE — same pattern
+  useEffect(() => {
+    if (!applySideHandrail) return;
+
+    if (!sideEnabled || !selectedStyleKey) {
+      applySideHandrail(null);
+      return;
+    }
+
+    applySideHandrail({ style: selectedStyleKey, finish: splitFinish });
+  }, [sideEnabled, selectedStyleKey, splitFinish, applySideHandrail]);
+
+  // Bumper — unchanged
   const toggleSubHandrail = () => {
-    const newState = !subHandrailEnabled;
-    setSubHandrailEnabled(newState);
-    applySubHandrail(newState ? "subhandrail" : null);
-    
+    const next = !subHandrailEnabled;
+    setSubHandrailEnabled(next);
+    applySubHandrail(next ? "subhandrail" : null);
   };
+
   return (
     <>
-  <style>{`
+      <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght=300;400;500&family=Jost:wght=200;300;400;500&display=swap');
 
         .hrc-root {
           font-family: 'Jost', sans-serif;
-          color: #5C4A26; /* Deep Bronze-Gold text */
-          background: linear-gradient(180deg, #FFFDF8, #F7F1E4); /* Soft Cream Studio Backdrop */
+          color: #5C4A26;
+          background: linear-gradient(180deg, #FFFDF8, #F7F1E4);
           height: 100%;
           display: flex;
           flex-direction: column;
         }
-        
+
         .hrc-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
           padding: 7px 24px;
           background: #FFFFFF;
-          border-bottom: 1px solid #EADFC8; /* Light Golden Hairline Separator */
+          border-bottom: 1px solid #EADFC8;
           flex-shrink: 0;
         }
-        
+
         .hrc-header-title {
           font-family: 'Cormorant Garamond', serif;
           font-size: 13px;
           font-weight: 900;
           letter-spacing: 0.15em;
-          color: #4A3826; /* Deep Studio Brown */
+          color: #4A3826;
         }
-        
+
         .hrc-preview {
           position: relative;
           overflow: hidden;
-          background: #F7F1E4; /* Light Studio Backdrop */
+          background: #F7F1E4;
           height: 0px;
-          flex-shrink: 0; /* height is driven by GSAP; never let flex squeeze it */
+          flex-shrink: 0;
         }
-        
+
         .hrc-preview-img {
           width: 100%;
           height: 100%;
           object-fit: cover;
-       
         }
-        
+
         .hrc-preview-overlay {
           position: absolute;
           inset: 0;
-          background: linear-gradient(to top, rgba(74,56,38,0.85) 0%, transparent 55%); /* Soft Brown Legibility Scrim */
+          background: linear-gradient(to top, rgba(74,56,38,0.85) 0%, transparent 55%);
           display: flex;
           flex-direction: column;
           justify-content: flex-end;
           padding: 20px;
         }
-        
+
         .hrc-preview-name {
           font-family: 'Cormorant Garamond', serif;
           font-size: 16px;
@@ -208,45 +205,44 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
           color: #FFFDF6;
           letter-spacing: 0.1em;
         }
-        
+
         .hrc-content {
           flex: 1 1 auto;
-          min-height: 0; /* required so a flex child can actually shrink and scroll instead of overflowing its parent */
+          min-height: 0;
           overflow-y: auto;
           overflow-x: hidden;
           background: linear-gradient(180deg, #FFFDF8, #F7F1E4);
           scrollbar-width: thin;
           scrollbar-color: #C9974E #F7F1E4;
         }
-        
+
         .hrc-section-label {
           display: flex;
           align-items: center;
           gap: 12px;
-          padding: 6px  14px;
+          padding: 6px 14px;
         }
-        
+
         .hrc-section-label span {
           font-size: 9px;
           font-weight: 500;
           letter-spacing: 0.35em;
           text-transform: uppercase;
-          color: #AA9154; /* Muted Ochre-Gold Label Text */
+          color: #AA9154;
         }
-        
+
         .hrc-section-label::after {
           content: '';
           flex: 1;
           height: 1px;
-          background: #EADFC8; /* Light Gold Wireframe Separator */
+          background: #EADFC8;
         }
 
-        /* ── Style Category Cards (Round / Flat / Oval / Add / Slim) ── */
         .hrc-category-grid {
           display: grid;
-          grid-template-columns: repeat(5, 1fr);
+          grid-template-columns: repeat(4, 1fr);
           gap: 12px;
-          padding: 0px 14px;
+          padding: 0 14px;
         }
 
         .hrc-category-card {
@@ -324,7 +320,6 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
           color: #5C4A26;
         }
 
-        /* ── Select Finish: circular Silver / Golden / Black swatches ── */
         .hrc-finish-panel {
           padding: 4px 14px 4px;
           animation: hrc-finish-in 0.3s ease;
@@ -337,7 +332,7 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
 
         .hrc-finish-row {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: repeat(3, 1fr);
           gap: 16px;
           justify-items: center;
         }
@@ -397,8 +392,7 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
         .hrc-finish-swatch.selected .hrc-finish-name {
           color: #5C4A26;
         }
-        
-        /* ── Light Studio Action Buttons ── */
+
         .hrc-luxury-btn {
           position: relative;
           height: 35px;
@@ -413,12 +407,10 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
           transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
         }
 
-        /* Glaze layer overlay background slide effect — one clear owner of transform
-           and background per state, so hover and active never race each other. */
         .hrc-btn-glaze {
           position: absolute;
           inset: 0;
-          background: linear-gradient(90deg, #F7ECD8 0%, #F0DEB8 100%); /* Soft Tan Slide */
+          background: linear-gradient(90deg, #F7ECD8 0%, #F0DEB8 100%);
           transform: translateX(-100%);
           transition: transform 0.35s cubic-bezier(0.25, 1, 0.33, 1), background 0.3s ease;
           z-index: 1;
@@ -435,9 +427,6 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
           transition: color 0.3s ease;
         }
 
-        /* Hover only applies to buttons that are NOT already active, so the
-           slide-in animation never gets re-triggered/interrupted on an
-           already-selected button. */
         .hrc-luxury-btn:not(.active):hover {
           border-color: #D6C394;
           transform: translateY(-1px);
@@ -455,7 +444,6 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
           transform: translateY(0) scale(0.98);
         }
 
-        /* Active/Selected State — matches the light tan "Standard" pill from the studio UI */
         .hrc-luxury-btn.active {
           border-color: #C9974E;
           background: #FFFCF3;
@@ -472,7 +460,6 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
           font-weight: 700;
         }
 
-        /* "None" selected — kept neutral rather than alarming, in line with the light theme */
         .hrc-luxury-btn.clear-btn.active {
           border-color: #C8BEA4;
           background: #FBF9F3;
@@ -481,7 +468,7 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
         .hrc-luxury-btn.clear-btn.active .hrc-btn-glaze {
           background: linear-gradient(135deg, #EDE7D6 0%, #E1D8BE 100%);
         }
-        
+
         .hrc-luxury-btn.clear-btn.active .hrc-btn-text {
           color: #5C4A26;
         }
@@ -500,6 +487,7 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
           border-radius: 3px;
           transition: all 0.3s;
         }
+
         .hrc-apply-btn:hover {
           background: linear-gradient(135deg, #E7A94C 0%, #C9974E 100%);
           border-color: #C9974E;
@@ -523,44 +511,56 @@ const HandrailController = ({ applyHandrail, applySubHandrail }) => {
           cursor: pointer;
           transition: all 0.3s;
         }
+
         .hrc-preview-close:hover {
           background: #FFFFFF;
           border-color: #C9974E;
         }
+
+        .hrc-split-hint {
+          text-align: center;
+          font-size: 9px;
+          letter-spacing: 0.15em;
+          color: #AA9154;
+          text-transform: uppercase;
+          margin-top: 10px;
+        }
       `}</style>
 
       <div className="hrc-root">
-        {/* Header */}
         <div className="hrc-header">
-<div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-          <div className="hrc-header-title">HANDRAIL CONFIGURATOR</div>
- <div className="text-[11px] text-[#AA9154] tracking-[0.15em] font-light">
-Select a handrail style, finish and height to complete your design.
+          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+            <div className="hrc-header-title">HANDRAIL CONFIGURATOR</div>
+            <div className="text-[11px] text-[#AA9154] tracking-[0.15em] font-light">
+              Select a handrail style, finish and height to complete your design.
+            </div>
           </div>
-</div>
-          <div style={{
-            fontSize: 9,
-            letterSpacing: '0.25em',
-            color: '#C9974E',
-            textTransform: 'uppercase',
-            fontWeight: 700
-          }}>
+          <div
+            style={{
+              fontSize: 9,
+              letterSpacing: "0.25em",
+              color: "#C9974E",
+              textTransform: "uppercase",
+              fontWeight: 700,
+            }}
+          >
             Premium Finishes
           </div>
-
-         
         </div>
 
-        {/* Preview Area (GSAP Controlled Drop Height) */}
         <div ref={previewContainerRef} className="hrc-preview">
           {previewUrl && (
             <>
-              <img src={previewUrl} alt={`Handrail ${selectedHandrail}`} className="hrc-preview-img" />
+              <img
+                src={previewUrl}
+                alt={`Handrail ${selectedHandrail}`}
+                className="hrc-preview-img"
+              />
               <div className="hrc-preview-overlay">
                 <div className="hrc-preview-name">
                   EXTERIOR PROFILE OPTION 0{selectedHandrail}
                 </div>
-                <div style={{ marginTop: '12px' }}>
+                <div style={{ marginTop: "12px" }}>
                   <button className="hrc-apply-btn" onClick={() => {}}>
                     CONFIRM LAYER
                   </button>
@@ -568,7 +568,10 @@ Select a handrail style, finish and height to complete your design.
               </div>
               <button
                 className="hrc-preview-close"
-                onClick={() => { setPreviewUrl(null); setSelectedHandrail(null); }}
+                onClick={() => {
+                  setPreviewUrl(null);
+                  setSelectedHandrail(null);
+                }}
               >
                 <IoClose size={16} />
               </button>
@@ -576,7 +579,6 @@ Select a handrail style, finish and height to complete your design.
           )}
         </div>
 
-        {/* Scrollable Content Workspace */}
         <div className="hrc-content">
           <div className="hrc-section-label">
             <span>SELECT HANDRAIL STYLE</span>
@@ -585,7 +587,9 @@ Select a handrail style, finish and height to complete your design.
           {loading ? (
             <div className="flex flex-col items-center justify-center py-24">
               <RingLoader color="#C9974E" size={45} />
-              <p className="mt-5 text-[10px] tracking-[0.3em] text-[#AA9154] font-light">COMPILING TEXTURE SWATCHES</p>
+              <p className="mt-5 text-[10px] tracking-[0.3em] text-[#AA9154] font-light">
+                COMPILING TEXTURE SWATCHES
+              </p>
             </div>
           ) : (
             <>
@@ -600,8 +604,10 @@ Select a handrail style, finish and height to complete your design.
                       onClick={() => handleCategoryClick(idx)}
                     >
                       <div className="hrc-category-image-wrap">
-                        {/* Representative thumbnail = the Silver (first) variant of the category */}
-                        <img src={getLocalHandrailImage(cat.nums[0])} alt={cat.label} />
+                        <img
+                          src={getLocalHandrailImage(cat.nums[0])}
+                          alt={cat.label}
+                        />
                         {isAppliedHere && (
                           <div className="hrc-category-check">
                             <IoCheckmark size={12} />
@@ -614,7 +620,65 @@ Select a handrail style, finish and height to complete your design.
                 })}
               </div>
 
-              {/* Select Finish — only shown once a category is chosen */}
+              {/* 1. Click Add/Round/Flat/Oval → this section appears (nothing on model yet) */}
+              {selectedStyleKey && (
+                <>
+                  <div className="hrc-section-label" style={{ marginTop: 12 }}>
+                    <span>SPLIT HANDRAIL LAYERS</span>
+                  </div>
+
+                  <div className="px-6 pb-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* 2. FRONT → parent gets { style, finish } for FrontHandrails */}
+                      <div
+                        className={`hrc-luxury-btn ${frontEnabled ? "active" : ""}`}
+                        onClick={() => setFrontEnabled(true)}
+                      >
+                        <div className="hrc-btn-glaze" />
+                        <div className="hrc-btn-text">FRONT</div>
+                      </div>
+                      {/* 4. FRONT OFF → parent gets null */}
+                      <div
+                        className={`hrc-luxury-btn clear-btn ${!frontEnabled ? "active" : ""}`}
+                        onClick={() => setFrontEnabled(false)}
+                      >
+                        <div className="hrc-btn-glaze" />
+                        <div className="hrc-btn-text">FRONT OFF</div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4" style={{ marginTop: 10 }}>
+                      <div
+                        className={`hrc-luxury-btn ${sideEnabled ? "active" : ""}`}
+                        onClick={() => setSideEnabled(true)}
+                      >
+                        <div className="hrc-btn-glaze" />
+                        <div className="hrc-btn-text">SIDE</div>
+                      </div>
+                      <div
+                        className={`hrc-luxury-btn clear-btn ${!sideEnabled ? "active" : ""}`}
+                        onClick={() => setSideEnabled(false)}
+                      >
+                        <div className="hrc-btn-glaze" />
+                        <div className="hrc-btn-text">SIDE OFF</div>
+                      </div>
+                    </div>
+
+                    {(frontEnabled || sideEnabled) && (
+                      <div className="hrc-split-hint">
+                        Applying {splitFinish} · {selectedStyleKey}
+                        {frontEnabled && sideEnabled
+                          ? " · front + side"
+                          : frontEnabled
+                            ? " · front"
+                            : " · side"}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* 3. Golden finish → if Front/Side is on, parent gets updated { style, finish } */}
               {openCategoryIndex !== -1 && openCategoryIndex !== null && (
                 <>
                   <div className="hrc-section-label" style={{ marginTop: 18 }}>
@@ -631,7 +695,10 @@ Select a handrail style, finish and height to complete your design.
                             className={`hrc-finish-swatch ${isSelected ? "selected" : ""}`}
                             onClick={() => handleMainSelect(num)}
                           >
-                            <div className="hrc-finish-circle" style={{ background: finish.swatch }}>
+                            <div
+                              className="hrc-finish-circle"
+                              style={{ background: finish.swatch }}
+                            >
                               {isSelected && (
                                 <div className="hrc-finish-check">
                                   <IoCheckmark size={11} />
@@ -649,25 +716,19 @@ Select a handrail style, finish and height to complete your design.
             </>
           )}
 
-          {/* Sub Handrails Control Area */}
           <div className="hrc-section-label" style={{ marginTop: 18 }}>
             <span>SECONDARY PERIMETER GUARD</span>
           </div>
-
           <div className="px-6 pb-14">
             <div className="grid grid-cols-2 gap-4">
-              
-              {/* Sub Handrails Toggle Slider */}
-              <div 
+              <div
                 className={`hrc-luxury-btn ${subHandrailEnabled ? "active" : ""}`}
                 onClick={toggleSubHandrail}
               >
                 <div className="hrc-btn-glaze" />
                 <div className="hrc-btn-text">BUMPER RAILS</div>
               </div>
-
-              {/* None Dismiss Slider */}
-              <div 
+              <div
                 className={`hrc-luxury-btn clear-btn ${!subHandrailEnabled ? "active" : ""}`}
                 onClick={() => {
                   setSubHandrailEnabled(false);
@@ -677,7 +738,6 @@ Select a handrail style, finish and height to complete your design.
                 <div className="hrc-btn-glaze" />
                 <div className="hrc-btn-text">NONE</div>
               </div>
-
             </div>
           </div>
         </div>

@@ -67,20 +67,21 @@ const FloorController = ({ applyFloor }) => {
         }
 
         .flc-header {
-          display: flex;
+              display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 6px 24px;
-          background: linear-gradient(180deg, #423516 0%, #29200B 100%);
-          border-bottom: 1px solid #C9A245;
+          padding: 7px 24px;
+          background: #FFFFFF;
+          border-bottom: 1px solid #EADFC8;
+          flex-shrink: 0;
         }
 
         .flc-header-title {
-          font-family: 'Cormorant Garamond', serif;
-          font-size: 12px;
-          font-weight: 300;
+        font-family: 'Cormorant Garamond', serif;
+          font-size: 13px;
+          font-weight: 900;
           letter-spacing: 0.15em;
-          color: #FFF3CD;
+          color: #4A3826; /* Deep Studio Brown */
         }
 
         /* Pure-CSS reveal: no JS animation library involved, so the panel
@@ -232,7 +233,10 @@ const FloorController = ({ applyFloor }) => {
 
       <div className="flc-root">
         <div className="flc-header">
+          <div className="flex-flex-col">
           <div className="flc-header-title">FLOOR CONFIGURATOR</div>
+          <div className=" text-[11px] text-[#AA9154] tracking-[0.15em] font-light">Please select the floor to Enhance your Elevator floor.</div>
+          </div>
           <div style={{ fontSize: 9, letterSpacing: "0.25em", color: "#d4a843", fontWeight: 600 }}>
             PREMIUM SERIES
           </div>

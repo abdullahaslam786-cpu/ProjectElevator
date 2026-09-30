@@ -187,13 +187,7 @@ const [isOpen, setIsOpen] = useState(false);
           font-family: 'Jost', sans-serif;
           transition: background 0.4s ease, box-shadow 0.4s ease;
           padding: 0 2.5rem;
-         background: linear-gradient(
-  90deg,
-  rgba(250,248,244,1) 0%,
-  rgba(241,234,223,1) 30%,
-  rgba(210,194,172,1) 60%,
-  rgba(138,115,96,1) 100%
-);
+         background: #F3EEE8;
           backdrop-filter: blur(18px) saturate(140%);
           -webkit-backdrop-filter: blur(18px) saturate(140%);
         }

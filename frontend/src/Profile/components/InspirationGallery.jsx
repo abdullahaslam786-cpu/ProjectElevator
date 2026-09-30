@@ -286,7 +286,7 @@ const InspirationGallery = ({
         </nav>
 
         {/* Mobile: compact icon nav */}
-        <nav className="flex lg:hidden w-full items-center justify-between pt-18">
+        {/* <nav className="flex lg:hidden w-full items-center justify-between pt-18">
           {steps.map((step, index) => (
             <button
               key={index}
@@ -310,7 +310,7 @@ const InspirationGallery = ({
               </span>
             </button>
           ))}
-        </nav>
+        </nav> */}
 
         {/* Progress dot-line */}
         <div className="relative flex items-center justify-between mt-6 px-12">

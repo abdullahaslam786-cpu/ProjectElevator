@@ -1,119 +1,124 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
-import { IoClose } from "react-icons/io5";
-import { RingLoader } from "react-spinners";
-import gsap from "gsap";
+  import React, { useEffect, useState, useRef, useCallback } from "react";
+  import { IoClose } from "react-icons/io5";
+  import { RingLoader } from "react-spinners";
+  import gsap from "gsap";
 
-// Ceiling numbers that ALLOW lights
-const CEILINGS_WITH_LIGHT = [1, 5, 6, 7];
+  // Ceiling numbers that ALLOW lights
+  const CEILINGS_WITH_LIGHT = [1, 5, 6, 7];
 
-// Fixed local icons shown ON the light buttons (display only).
-const LIGHT_BUTTON_ICONS = ["/lights/yellow.png", "/lights/white.png"];
+  // Fixed local icons shown ON the light buttons (display only).
+  // Selection state and applyLight() still use the real AWS item (item.num / item.url) —
+  // these are just the button artwork, matched by position (1st light -> white, 2nd -> yellow).
+  const LIGHT_BUTTON_ICONS = ["/lights/yellow.png","/lights/white.png"];
 
-const CeilingController = ({ applyCeiling, applyLight }) => {
-  const [selectedCeiling, setSelectedCeiling] = useState(1);
-  const [selectedLight, setSelectedLight] = useState(1);
+  const CeilingController = ({ applyCeiling, applyLight }) => {
+    const [selectedCeiling, setSelectedCeiling] = useState(null);
+    const [selectedLight,   setSelectedLight]   = useState(null);
 
-  const [ceilingThumbnails, setCeilingThumbnails] = useState([]);
-  const [lightThumbnails, setLightThumbnails] = useState([]);
+    const [ceilingThumbnails, setCeilingThumbnails] = useState([]);
+    const [lightThumbnails,   setLightThumbnails]   = useState([]);
 
-  const [ceilingPreviewUrl, setCeilingPreviewUrl] = useState(1);
-  const [allCeilingImages, setAllCeilingImages] = useState([]);
-  const [loading, setLoading] = useState(true);
+    const [ceilingPreviewUrl, setCeilingPreviewUrl] = useState(null);
+    const [allCeilingImages,  setAllCeilingImages]  = useState([]);
+    const [loading, setLoading] = useState(true);
 
-  const previewContainerRef = useRef(null);
-  const lightsSectionRef = useRef(null);
+    const previewContainerRef = useRef(null);
+    const lightsSectionRef = useRef(null);
 
-  // Status for the conditional Light Options container
-  const lightsEnabled = CEILINGS_WITH_LIGHT.includes(selectedCeiling);
+    // Status for the conditional Light Options container
+    const lightsEnabled = CEILINGS_WITH_LIGHT.includes(selectedCeiling);
 
-  // ── Robust Image Processing Engine ──
-  const processImages = useCallback((data) => {
-    return data
-      .filter((item) => item.key.endsWith(".png"))
-      .map((item) => {
-        const match = item.key.match(/(\d+)\.png$/);
-        return { ...item, num: match ? parseInt(match[1]) : 0 };
-      })
-      .sort((a, b) => a.num - b.num);
-  }, []);
+    // ── Robust Image Processing Engine ──
+    const processImages = useCallback((data) => {
+      return data
+        .filter((item) => item.key.endsWith(".png"))
+        .map((item) => {
+          const match = item.key.match(/(\d+)\.png$/);
+          return { ...item, num: match ? parseInt(match[1]) : 0 };
+        })
+        .sort((a, b) => a.num - b.num);
+    }, []);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [cRes, lRes] = await Promise.all([
-          fetch("/api/images-by-prefix?prefix=SubMaterial/ceiling"),
-          fetch("/api/images-by-prefix?prefix=SubMaterial/lights"),
-        ]);
+    useEffect(() => {
+      const fetchData = async () => {
+        try {
+          setLoading(true);
+          const [cRes, lRes] = await Promise.all([
+            fetch("/api/images-by-prefix?prefix=SubMaterial/ceiling"),
+            fetch("/api/images-by-prefix?prefix=SubMaterial/lights"),
+          ]);
 
-        const ceilingData = await cRes.json();
-        const lightData = await lRes.json();
+          const ceilingData = await cRes.json();
+          const lightData   = await lRes.json();
 
-        setAllCeilingImages(ceilingData);
+          setAllCeilingImages(ceilingData);
 
-        setCeilingThumbnails(processImages(ceilingData.filter((i) => i.key.includes("/V1/"))));
-        setLightThumbnails(processImages(lightData.filter((i) => i.key.includes("/V1/"))));
-      } catch (err) {
-        console.error("Fetch error:", err);
-      } finally {
-        setLoading(false);
+          setCeilingThumbnails(processImages(ceilingData.filter(i => i.key.includes("/V1/"))));
+          setLightThumbnails(processImages(lightData.filter(i => i.key.includes("/V1/"))));
+
+        } catch (err) {
+          console.error("Fetch error:", err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchData();
+    }, [processImages]);
+
+    // GSAP: Dropdown Preview Animation
+    useEffect(() => {
+      if (previewContainerRef.current) {
+        gsap.to(previewContainerRef.current, {
+          height: ceilingPreviewUrl ? 260 : 0,
+          duration: 0.5,
+          ease: "power3.out"
+        });
       }
+    }, [ceilingPreviewUrl]);
+
+    // GSAP: Lights Section Reveal
+    useEffect(() => {
+      if (lightsSectionRef.current) {
+        if (lightsEnabled) {
+          gsap.to(lightsSectionRef.current, {
+            height: "auto",
+            opacity: 1,
+            marginTop: 10,
+            duration: 0.6,
+            ease: "power3.out",
+          });
+        } else {
+          gsap.to(lightsSectionRef.current, {
+            height: 0,
+            opacity: 0,
+            marginTop: 0,
+            duration: 0.4,
+            ease: "power3.inOut"
+          });
+        }
+      }
+    }, [lightsEnabled]);
+
+    const handleCeilingSelect = (num) => {
+      setSelectedCeiling(num);
+      applyCeiling(num);
+
+      if (!CEILINGS_WITH_LIGHT.includes(num)) {
+        setSelectedLight(null);
+        applyLight(null);
+      }
+
+      const found = allCeilingImages.find((img) => img.key.includes(`/V1/${num}.png`));
+      if (found) setCeilingPreviewUrl(found.url);
     };
-    fetchData();
-  }, [processImages]);
 
-  // GSAP: Dropdown Preview Animation
-  useEffect(() => {
-    if (previewContainerRef.current) {
-      gsap.to(previewContainerRef.current, {
-        height: ceilingPreviewUrl ? 260 : 0,
-        duration: 0.5,
-        ease: "power3.out",
-      });
-    }
-  }, [ceilingPreviewUrl]);
-
-  // GSAP: Lights Section Reveal
-  useEffect(() => {
-    if (lightsSectionRef.current) {
-      if (lightsEnabled) {
-        gsap.to(lightsSectionRef.current, {
-          height: "auto",
-          opacity: 1,
-          duration: 0.6,
-          ease: "power3.out",
-        });
-      } else {
-        gsap.to(lightsSectionRef.current, {
-          height: 0,
-          opacity: 0,
-          duration: 0.4,
-          ease: "power3.inOut",
-        });
-      }
-    }
-  }, [lightsEnabled]);
-
-  const handleCeilingSelect = (num) => {
-    setSelectedCeiling(num);
-    applyCeiling(num);
-
-    if (!CEILINGS_WITH_LIGHT.includes(num)) {
+    const handleNoneLight = useCallback(() => {
       setSelectedLight(null);
       applyLight(null);
-    }
+    }, [applyLight]);
 
-    const found = allCeilingImages.find((img) => img.key.includes(`/V1/${num}.png`));
-    if (found) setCeilingPreviewUrl(found.url);
-  };
-
-  const handleNoneLight = useCallback(() => {
-    setSelectedLight(null);
-    applyLight(null);
-  }, [applyLight]);
-
-  return (
-    <>
+    return (
+      <>
       <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Jost:wght=200;300;400;500&display=swap');
 
@@ -125,7 +130,7 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
           }
 
           .cec-header {
-            display: flex;
+              display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 7px 24px;
@@ -360,51 +365,22 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
           }
         `}</style>
 
-      <div className="cec-root">
-        <div className="cec-header">
-          <div className="flex flex-col">
+        <div className="cec-root">
+          <div className="cec-header">
+            <div className="flex flex-col">
             <div className="cec-header-title">CEILING CONFIGURATOR</div>
-            <div className="text-[11px] text-[#AA9154] tracking-[0.15em] font-light">
-              Please select the Ceiling according to your Elevator design
+            <div className="text-[11px] text-[#AA9154] tracking-[0.15em] font-light">Please select the Ceiling according to your Elevator design</div>
+            </div>
+            <div style={{ fontSize: 9, letterSpacing: '0.25em', color: '#d4a843', fontWeight: 600 }}>
+              PREMIUM SERIES
             </div>
           </div>
-          <div style={{ fontSize: 9, letterSpacing: '0.25em', color: '#d4a843', fontWeight: 600 }}>
-            PREMIUM SERIES
-          </div>
-        </div>
 
-        <div className="grid grid-cols-6">
-          <div className="col-span-2 p-3 flex flex-col justify-between">
-            <div ref={lightsSectionRef} className="cec-lights-section w-full">
-              <div className="cec-section-label mb-2">
-                <span>INTEGRATED LIGHTING</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                {lightThumbnails.slice(0, 8).map((item, idx) => (
-                  <div
-                    key={item.num}
-                    className={`cec-swatch-wrap ${selectedLight === item.num ? "selected" : ""}`}
-                    onClick={() => {
-                      setSelectedLight(item.num);
-                      applyLight(item.num);
-                    }}
-                  >
-                    <div className="cec-swatch-item">
-                      <img src={LIGHT_BUTTON_ICONS[idx] || item.url} alt={`Light ${item.num}`} />
-                      <div className="cec-swatch-badge">GLOW 0{item.num}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div
-                className={`cec-luxury-btn ${selectedLight === null ? "active" : ""}`}
-                onClick={handleNoneLight}
-              >
-                <div className="cec-btn-glaze" />
-                <div className="cec-btn-text text-[9px] text-center px-1">DEACTIVATE ILLUMINATION</div>
-              </div>
-            </div>
-          </div>
+
+<div className="grid grid-cols-6">
+<div className="col-span-2">
+  hy there
+</div>
 
           <div ref={previewContainerRef} className="cec-preview col-span-4">
             {ceilingPreviewUrl && (
@@ -417,45 +393,72 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
                 </div>
                 <button
                   className="absolute top-4 right-4 w-8 h-8 bg-black/60 text-white rounded-full flex items-center justify-center border border-[#332a15]"
-                  onClick={() => {
-                    setCeilingPreviewUrl(null);
-                    setSelectedCeiling(null);
-                    applyCeiling(null);
-                  }}
+                  onClick={() => { setCeilingPreviewUrl(null); setSelectedCeiling(null); applyCeiling(null); }}
                 >
                   <IoClose size={16} />
                 </button>
               </>
             )}
           </div>
-        </div>
 
-        <div className="cec-content">
-          <div className="cec-section-label"><span>CEILING STRUCTURE</span></div>
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <RingLoader color="#d4a843" size={40} />
-            </div>
-          ) : (
-            <div className="cec-grid">
-              {ceilingThumbnails.map((item) => (
-                <div
-                  key={item.num}
-                  className={`cec-swatch-wrap ${selectedCeiling === item.num ? "selected" : ""}`}
-                  onClick={() => handleCeilingSelect(item.num)}
-                >
-                  <div className="cec-swatch-item-inner">
-                    <img src={item.url} alt={`Ceiling ${item.num}`} />
-                    <div className="cec-swatch-badge">0{item.num}</div>
+          
+</div>
+          <div className="cec-content">
+            <div className="cec-section-label"><span>CEILING STRUCTURE</span></div>
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-20">
+                <RingLoader color="#d4a843" size={40} />
+              </div>
+            ) : (
+              <div className="cec-grid">
+                {ceilingThumbnails.map((item) => (
+                  <div
+                    key={item.num}
+                    className={`cec-swatch-wrap ${selectedCeiling === item.num ? "selected" : ""}`}
+                    onClick={() => handleCeilingSelect(item.num)}
+                  >
+                    <div className="cec-swatch-item-inner">
+                      <img src={item.url} alt={`Ceiling ${item.num}`} />
+                      <div className="cec-swatch-badge">0{item.num}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </>
-  );
-};
+                ))}
+              </div>
+            )}
 
-export default CeilingController;
+            {/* Lighting UI wrapper layer */}
+            <div ref={lightsSectionRef} className="cec-lights-section">
+              <div className="cec-section-label"><span>INTEGRATED LIGHTING</span></div>
+              <div className="cec-grid">
+                {lightThumbnails.slice(0, 8).map((item, idx) => (
+                  <div
+                    key={item.num}
+                    className={`cec-swatch-wrap ${selectedLight === item.num ? "selected" : ""}`}
+                    onClick={() => { setSelectedLight(item.num); applyLight(item.num); }}
+                  >
+                    <div className="cec-swatch-item">
+                      {/* Button artwork is the fixed local icon (white/yellow);
+                          selection state and applyLight() above still use the real AWS item.num */}
+                      <img src={LIGHT_BUTTON_ICONS[idx] || item.url} alt={`Light ${item.num}`} />
+                      <div className="cec-swatch-badge">GLOW 0{item.num}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="px-6 pb-6">
+                <div
+                  className={`cec-luxury-btn ${selectedLight === null ? "active" : ""}`}
+                  onClick={handleNoneLight}
+                >
+                  <div className="cec-btn-glaze" />
+                  <div className="cec-btn-text">DEACTIVATE ILLUMINATION</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  };
+
+  export default CeilingController;

@@ -298,21 +298,21 @@ const SelectModel = ({
         }
 
         .smc-header {
-          flex: 0 0 auto;
-          display: flex;
+             display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 6px 24px;
-          background: linear-gradient(180deg, #423516 0%, #29200B 100%);
-          color: #FFF3CD;
-          border-bottom: 2px solid #C9A245;
+          padding: 7px 24px;
+          background: #FFFFFF;
+          border-bottom: 1px solid #EADFC8;
+          flex-shrink: 0;
         }
 
         .smc-header-title {
-          font-size: 11px;
-          font-weight: 600;
+          font-family: 'Cormorant Garamond', serif;
+          font-size: 13px;
+          font-weight: 900;
           letter-spacing: 0.15em;
-          color: #E6C262;
+          color: #4A3826; /* Deep Studio Brown */
         }
 
         /* ── 3D Projection Deck Hierarchy ── */
@@ -581,7 +581,10 @@ const SelectModel = ({
       <div className="smc-root">
         {/* Header Block */}
         <div className="smc-header">
+          <div className="flex flex-col ">
           <div className="smc-header-title">ELEVATOR CONFIGURATIONS</div>
+          <div className="text-[11px] text-[#AA9154] tracking-[0.15em] font-light">Please Select the Elevators from these three different varient to fullfill your Dreams</div>
+          </div>
           <div className="text-[10px] font-bold tracking-[0.2em] text-[#dfb76c]">
             STAGE 01
           </div>
