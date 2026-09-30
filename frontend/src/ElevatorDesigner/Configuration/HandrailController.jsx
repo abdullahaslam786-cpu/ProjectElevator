@@ -10,24 +10,32 @@ const getLocalHandrailImage = (num) => `/previewHandrails/${num}.png`;
 // Within each category: index 0 = Silver, 1 = Golden, 2 = Black
 const HANDRAIL_CATEGORIES = [
   { label: "Round", nums: [1, 2, 3] },
-  { label: "Flat",  nums: [13, 14, 15] },
-  { label: "Oval",  nums: [7, 8, 9] },
-  { label: "Add",   nums: [10, 11, 12] },
+  { label: "Flat", nums: [13, 14, 15] },
+  { label: "Oval", nums: [7, 8, 9] },
+  { label: "Add", nums: [10, 11, 12] },
 ];
 
 const FINISHES = [
-  { name: "Silver", swatch: "radial-gradient(circle at 35% 32%, #ffffff 0%, #d6dade 35%, #a3a9ae 70%, #797f84 100%)" },
-  { name: "Golden", swatch: "radial-gradient(circle at 35% 32%, #fff6dd 0%, #eac36c 35%, #c9974e 70%, #8b5e34 100%)" },
-  { name: "Black",  swatch: "radial-gradient(circle at 35% 32%, #5a5852 0%, #2c2a26 40%, #131211 75%, #000000 100%)" },
+  {
+    name: "Silver",
+    swatch:
+      "radial-gradient(circle at 35% 32%, #ffffff 0%, #d6dade 35%, #a3a9ae 70%, #797f84 100%)",
+  },
+  {
+    name: "Golden",
+    swatch:
+      "radial-gradient(circle at 35% 32%, #fff6dd 0%, #eac36c 35%, #c9974e 70%, #8b5e34 100%)",
+  },
+  {
+    name: "Black",
+    swatch:
+      "radial-gradient(circle at 35% 32%, #5a5852 0%, #2c2a26 40%, #131211 75%, #000000 100%)",
+  },
 ];
 
 const HandrailController = ({
   applyHandrail,
   applySubHandrail,
-  // Parent (ElevatorDesigner3) just stores whatever is passed here, same as
-  // applySubHandrail. ModelPreview does the actual per-view S3 key building —
-  // so what we pass is a small { style, finish } descriptor, not a full key.
-  // Passing null turns the layer off (same pattern as applySubHandrail(null)).
   applyFrontHandrail,
   applySideHandrail,
 }) => {
@@ -37,9 +45,11 @@ const HandrailController = ({
   const [previewUrl, setPreviewUrl] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Completely independent layer state
   const [frontEnabled, setFrontEnabled] = useState(false);
   const [sideEnabled, setSideEnabled] = useState(false);
-  const [splitFinish, setSplitFinish] = useState("silver");
+  const [frontFinish, setFrontFinish] = useState("silver");
+  const [sideFinish, setSideFinish] = useState("silver");
 
   const previewContainerRef = useRef(null);
 
@@ -47,7 +57,9 @@ const HandrailController = ({
     const warm = async () => {
       try {
         setLoading(true);
-        await fetch("/api/images-by-prefix?prefix=previewHandrails").catch(() => null);
+        await fetch("/api/images-by-prefix?prefix=previewHandrails").catch(
+          () => null
+        );
       } finally {
         setLoading(false);
       }
@@ -72,17 +84,23 @@ const HandrailController = ({
     }
   }, [previewUrl]);
 
-  // Style / finish = UI ONLY — never touches the 3D model
   const handleMainSelect = (num) => {
     setSelectedHandrail(num);
     setPreviewUrl(getLocalHandrailImage(num));
+  };
 
-    const cat = HANDRAIL_CATEGORIES.find((c) => c.nums.includes(num));
-    if (cat) {
-      const finishIdx = cat.nums.indexOf(num);
-      const finishName = FINISHES[finishIdx]?.name?.toLowerCase();
-      if (finishName) setSplitFinish(finishName);
-    }
+  // Finish select for FRONT only
+  const handleFrontFinishSelect = (num, finishName) => {
+    setSelectedHandrail(num);
+    setPreviewUrl(getLocalHandrailImage(num));
+    setFrontFinish(finishName.toLowerCase());
+  };
+
+  // Finish select for SIDE only
+  const handleSideFinishSelect = (num, finishName) => {
+    setSelectedHandrail(num);
+    setPreviewUrl(getLocalHandrailImage(num));
+    setSideFinish(finishName.toLowerCase());
   };
 
   const handleCategoryClick = (idx) => {
@@ -90,14 +108,20 @@ const HandrailController = ({
     setSelectedCategory((prev) => (prev === idx ? null : idx));
 
     if (isOpeningNew) {
-      handleMainSelect(HANDRAIL_CATEGORIES[idx].nums[0]);
+      const firstNum = HANDRAIL_CATEGORIES[idx].nums[0];
+      handleMainSelect(firstNum);
+      // Reset both layers when opening a new style
+      setFrontFinish("silver");
+      setSideFinish("silver");
       setFrontEnabled(false);
       setSideEnabled(false);
     }
   };
 
   const activeCategoryIndex = selectedHandrail
-    ? HANDRAIL_CATEGORIES.findIndex((cat) => cat.nums.includes(selectedHandrail))
+    ? HANDRAIL_CATEGORIES.findIndex((cat) =>
+        cat.nums.includes(selectedHandrail)
+      )
     : -1;
 
   const openCategoryIndex =
@@ -108,10 +132,7 @@ const HandrailController = ({
       ? HANDRAIL_CATEGORIES[openCategoryIndex].label.toLowerCase()
       : null;
 
-  // FRONT — pass a { style, finish } descriptor, or null to turn the layer off.
-  // ModelPreview builds the actual SubMaterial/splithandrails/FrontHandrails/... key
-  // per-view from this, exactly like appliedHandrail/appliedCeiling/etc. are just
-  // identifiers and ModelPreview builds their per-view keys too.
+  // FRONT layer — independent
   useEffect(() => {
     if (!applyFrontHandrail) return;
 
@@ -120,10 +141,10 @@ const HandrailController = ({
       return;
     }
 
-    applyFrontHandrail({ style: selectedStyleKey, finish: splitFinish });
-  }, [frontEnabled, selectedStyleKey, splitFinish, applyFrontHandrail]);
+    applyFrontHandrail({ style: selectedStyleKey, finish: frontFinish });
+  }, [frontEnabled, selectedStyleKey, frontFinish, applyFrontHandrail]);
 
-  // SIDE — same pattern
+  // SIDE layer — independent
   useEffect(() => {
     if (!applySideHandrail) return;
 
@@ -132,14 +153,49 @@ const HandrailController = ({
       return;
     }
 
-    applySideHandrail({ style: selectedStyleKey, finish: splitFinish });
-  }, [sideEnabled, selectedStyleKey, splitFinish, applySideHandrail]);
+    applySideHandrail({ style: selectedStyleKey, finish: sideFinish });
+  }, [sideEnabled, selectedStyleKey, sideFinish, applySideHandrail]);
 
-  // Bumper — unchanged
   const toggleSubHandrail = () => {
     const next = !subHandrailEnabled;
     setSubHandrailEnabled(next);
     applySubHandrail(next ? "subhandrail" : null);
+  };
+
+  // Helper to render a finish row for one layer
+  const renderFinishRow = (currentFinish, onSelect) => {
+    if (openCategoryIndex === -1 || openCategoryIndex === null) return null;
+
+    return (
+      <div className="hrc-finish-panel">
+        <div className="hrc-finish-row">
+          {FINISHES.map((finish, i) => {
+            const num = HANDRAIL_CATEGORIES[openCategoryIndex].nums[i];
+            const isSelected = currentFinish === finish.name.toLowerCase();
+
+            return (
+              <div
+                key={finish.name}
+                className={`hrc-finish-swatch ${isSelected ? "selected" : ""}`}
+                onClick={() => onSelect(num, finish.name)}
+              >
+                <div
+                  className="hrc-finish-circle"
+                  style={{ background: finish.swatch }}
+                >
+                  {isSelected && (
+                    <div className="hrc-finish-check">
+                      <IoCheckmark size={11} />
+                    </div>
+                  )}
+                </div>
+                <div className="hrc-finish-name">{finish.name}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -523,7 +579,12 @@ const HandrailController = ({
           letter-spacing: 0.15em;
           color: #AA9154;
           text-transform: uppercase;
-          margin-top: 10px;
+          margin-top: 8px;
+          margin-bottom: 4px;
+        }
+
+        .hrc-layer-block {
+          margin-bottom: 8px;
         }
       `}</style>
 
@@ -600,7 +661,9 @@ const HandrailController = ({
                   return (
                     <div
                       key={cat.label}
-                      className={`hrc-category-card ${isExpanded ? "expanded" : ""}`}
+                      className={`hrc-category-card ${
+                        isExpanded ? "expanded" : ""
+                      }`}
                       onClick={() => handleCategoryClick(idx)}
                     >
                       <div className="hrc-category-image-wrap">
@@ -620,26 +683,28 @@ const HandrailController = ({
                 })}
               </div>
 
-              {/* 1. Click Add/Round/Flat/Oval → this section appears (nothing on model yet) */}
+              {/* ========== FRONT HANDRAIL (completely independent) ========== */}
               {selectedStyleKey && (
                 <>
-                  <div className="hrc-section-label" style={{ marginTop: 12 }}>
-                    <span>SPLIT HANDRAIL LAYERS</span>
+                  <div className="hrc-section-label" style={{ marginTop: 14 }}>
+                    <span>FRONT HANDRAIL</span>
                   </div>
 
-                  <div className="px-6 pb-4">
+                  <div className="px-6 hrc-layer-block">
                     <div className="grid grid-cols-2 gap-4">
-                      {/* 2. FRONT → parent gets { style, finish } for FrontHandrails */}
                       <div
-                        className={`hrc-luxury-btn ${frontEnabled ? "active" : ""}`}
+                        className={`hrc-luxury-btn ${
+                          frontEnabled ? "active" : ""
+                        }`}
                         onClick={() => setFrontEnabled(true)}
                       >
                         <div className="hrc-btn-glaze" />
-                        <div className="hrc-btn-text">FRONT</div>
+                        <div className="hrc-btn-text">FRONT ON</div>
                       </div>
-                      {/* 4. FRONT OFF → parent gets null */}
                       <div
-                        className={`hrc-luxury-btn clear-btn ${!frontEnabled ? "active" : ""}`}
+                        className={`hrc-luxury-btn clear-btn ${
+                          !frontEnabled ? "active" : ""
+                        }`}
                         onClick={() => setFrontEnabled(false)}
                       >
                         <div className="hrc-btn-glaze" />
@@ -647,16 +712,41 @@ const HandrailController = ({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4" style={{ marginTop: 10 }}>
+                    {/* Front finishes ONLY appear when Front is ON */}
+                    {frontEnabled && (
+                      <>
+                        <div className="hrc-split-hint">
+                          Front finish · {frontFinish} · {selectedStyleKey}
+                        </div>
+                        {renderFinishRow(frontFinish, handleFrontFinishSelect)}
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* ========== SIDE HANDRAIL (completely independent) ========== */}
+              {selectedStyleKey && (
+                <>
+                  <div className="hrc-section-label" style={{ marginTop: 10 }}>
+                    <span>SIDE HANDRAIL</span>
+                  </div>
+
+                  <div className="px-6 hrc-layer-block">
+                    <div className="grid grid-cols-2 gap-4">
                       <div
-                        className={`hrc-luxury-btn ${sideEnabled ? "active" : ""}`}
+                        className={`hrc-luxury-btn ${
+                          sideEnabled ? "active" : ""
+                        }`}
                         onClick={() => setSideEnabled(true)}
                       >
                         <div className="hrc-btn-glaze" />
-                        <div className="hrc-btn-text">SIDE</div>
+                        <div className="hrc-btn-text">SIDE ON</div>
                       </div>
                       <div
-                        className={`hrc-luxury-btn clear-btn ${!sideEnabled ? "active" : ""}`}
+                        className={`hrc-luxury-btn clear-btn ${
+                          !sideEnabled ? "active" : ""
+                        }`}
                         onClick={() => setSideEnabled(false)}
                       >
                         <div className="hrc-btn-glaze" />
@@ -664,52 +754,15 @@ const HandrailController = ({
                       </div>
                     </div>
 
-                    {(frontEnabled || sideEnabled) && (
-                      <div className="hrc-split-hint">
-                        Applying {splitFinish} · {selectedStyleKey}
-                        {frontEnabled && sideEnabled
-                          ? " · front + side"
-                          : frontEnabled
-                            ? " · front"
-                            : " · side"}
-                      </div>
+                    {/* Side finishes ONLY appear when Side is ON */}
+                    {sideEnabled && (
+                      <>
+                        <div className="hrc-split-hint">
+                          Side finish · {sideFinish} · {selectedStyleKey}
+                        </div>
+                        {renderFinishRow(sideFinish, handleSideFinishSelect)}
+                      </>
                     )}
-                  </div>
-                </>
-              )}
-
-              {/* 3. Golden finish → if Front/Side is on, parent gets updated { style, finish } */}
-              {openCategoryIndex !== -1 && openCategoryIndex !== null && (
-                <>
-                  <div className="hrc-section-label" style={{ marginTop: 18 }}>
-                    <span>Select Finish</span>
-                  </div>
-                  <div className="hrc-finish-panel">
-                    <div className="hrc-finish-row">
-                      {FINISHES.map((finish, i) => {
-                        const num = HANDRAIL_CATEGORIES[openCategoryIndex].nums[i];
-                        const isSelected = selectedHandrail === num;
-                        return (
-                          <div
-                            key={finish.name}
-                            className={`hrc-finish-swatch ${isSelected ? "selected" : ""}`}
-                            onClick={() => handleMainSelect(num)}
-                          >
-                            <div
-                              className="hrc-finish-circle"
-                              style={{ background: finish.swatch }}
-                            >
-                              {isSelected && (
-                                <div className="hrc-finish-check">
-                                  <IoCheckmark size={11} />
-                                </div>
-                              )}
-                            </div>
-                            <div className="hrc-finish-name">{finish.name}</div>
-                          </div>
-                        );
-                      })}
-                    </div>
                   </div>
                 </>
               )}
@@ -722,14 +775,18 @@ const HandrailController = ({
           <div className="px-6 pb-14">
             <div className="grid grid-cols-2 gap-4">
               <div
-                className={`hrc-luxury-btn ${subHandrailEnabled ? "active" : ""}`}
+                className={`hrc-luxury-btn ${
+                  subHandrailEnabled ? "active" : ""
+                }`}
                 onClick={toggleSubHandrail}
               >
                 <div className="hrc-btn-glaze" />
                 <div className="hrc-btn-text">BUMPER RAILS</div>
               </div>
               <div
-                className={`hrc-luxury-btn clear-btn ${!subHandrailEnabled ? "active" : ""}`}
+                className={`hrc-luxury-btn clear-btn ${
+                  !subHandrailEnabled ? "active" : ""
+                }`}
                 onClick={() => {
                   setSubHandrailEnabled(false);
                   applySubHandrail(null);
