@@ -14,6 +14,8 @@ const ModelPreview = forwardRef((props, ref) => {
     activeStep,
     highlightedPanels = [],
     activeZone,
+    setActiveZone,
+    togglePanel,
     appliedMaterials = {},
     presignedCache = {},
     setPresignedCache,
@@ -53,6 +55,15 @@ const ModelPreview = forwardRef((props, ref) => {
     if (!appliedSideHandrail) return null;
     const { style, finish } = appliedSideHandrail;
     return `SubMaterial/splithandrails/${SIDE_SPLIT_FOLDER}/${style}/${finish}/v${view}/1.png`;
+  };
+
+  // ── Clicking a node on the model IS the panel selector now ──
+  // Each node already knows its own zone + panelNum (from modelConfigs.panelMap),
+  // so this both switches the active zone to match and toggles that panel —
+  // exactly replacing what the old panel-cube-wrap buttons used to do.
+  const handleNodeClick = (zone, panelNum) => {
+    setActiveZone?.(zone);
+    togglePanel?.(zone, panelNum);
   };
 
   // ── GSAP Dynamic 3D Horizontal & Depth Tracking (X-Axis + Z-Axis) ──
@@ -187,6 +198,15 @@ const ModelPreview = forwardRef((props, ref) => {
             return (
               <div
                 key={`${zone}-${panel.panelNum}`}
+                onClick={() => handleNodeClick(zone, panel.panelNum)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleNodeClick(zone, panel.panelNum);
+                  }
+                }}
                 className={`spatial-node absolute flex items-center justify-center text-[10px] font-bold z-30 pointer-events-auto transition-colors duration-300 ${
                   isSelected ? "node-active text-[#000]" : "text-[#c9a96e]"
                 }`}
@@ -194,8 +214,9 @@ const ModelPreview = forwardRef((props, ref) => {
                   top: panel.top,
                   left: panel.left,
                 }}
+                aria-label={`Zone ${zone} panel ${panel.panelNum}`}
               >
-                {/* Sideways revolving structural node box */}
+                {/* Sideways revolving structural node box — now the actual click target */}
                 <div className="node-3d-box">
                   <div className="node-face face-front">
                     {isSelected ? panel.panelNum : zone}
@@ -275,9 +296,16 @@ const ModelPreview = forwardRef((props, ref) => {
         /* ── Sideways Structural 3D Interface Elements ── */
         .spatial-node {
           perspective: 500px;
-          width: 24px;
-          height: 24px;
+          width: 30px;
+          height: 30px;
           transform-style: preserve-3d;
+          cursor: pointer;
+        }
+
+        .spatial-node:focus-visible {
+          outline: 2px solid #d4a843;
+          outline-offset: 2px;
+          border-radius: 4px;
         }
 
         .node-3d-box {
@@ -319,9 +347,13 @@ const ModelPreview = forwardRef((props, ref) => {
           transform: rotateY(-90deg);
         }
 
-        /* Hover side twist animation for desktop users */
+        /* Hover side twist animation for desktop users — also signals clickability now */
         .spatial-node:hover .node-3d-box {
           box-shadow: 0 12px 24px rgba(184, 142, 47, 0.25); /* Shimmering Outer Ambient Shadow */
+        }
+
+        .spatial-node:hover .node-face.face-front {
+          border-color: #B88E2F;
         }
 
         /* Sidebar viewport thumbnail structure frames */

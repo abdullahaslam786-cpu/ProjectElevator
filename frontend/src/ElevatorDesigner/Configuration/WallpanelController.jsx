@@ -46,7 +46,6 @@ const WallpanelController = ({
   activeZone,
   setActiveZone,
   selectedPanels,
-  togglePanel,
   applyMaterial,
   selectedModelId,
   setSelectedPanels,
@@ -78,6 +77,10 @@ const WallpanelController = ({
   });
 
   const availableZones = Object.keys(zonePanelCounts).sort();
+  // Still needed for the auto-select-all-panels effect below, even though the
+  // old numbered panel-cube-wrap buttons that also used this are gone —
+  // panel selection now happens by clicking the nodes directly on the model
+  // (see ModelPreview.jsx's spatial-node / node-3d-box).
   const panelCount = zonePanelCounts[activeZone] || 0;
 
   const [materials, setMaterials] = useState([]);
@@ -97,7 +100,9 @@ const WallpanelController = ({
     setSearchTerm("");
   }, [selectedModelId]);
 
-  // Auto-select
+  // Auto-select — every panel in a freshly-activated zone starts selected;
+  // clicking a node on the model (in ModelPreview) toggles individual panels
+  // off/on from there.
   useEffect(() => {
     if (!activeZone || panelCount === 0) return;
     setSelectedPanels((prev) => {
@@ -257,28 +262,28 @@ const allowedGafCodes = useMemo(() => {
 
         .wpc-root {
           font-family: 'Jost', sans-serif;
-          color: #8E5A31; /* Rich Deep Bronze/Gold text */
-          background: #FCF9F4; /* Soft Champagne / Light Golden Veil */
+          color: #4A3B1B; /* Rich Deep Bronze/Gold text */
+          background: linear-gradient(180deg, #FFFDF9, #FAF3E0); /* Soft Champagne / Light Golden Veil */
           min-height: 100%;
         }
 
         /* ── Header strip ── */
         .wpc-header {
-          display: flex;
+         display: flex;
           align-items: center;
           justify-content: space-between;
           padding: 7px 24px;
-          background: #FCF9F4;
+          background: #FFFFFF;
           border-bottom: 1px solid #EADFC8;
           flex-shrink: 0;
         }
 
          .wpc-header-title {
-          font-family: 'Cormorant Garamond', serif;
+         font-family: 'Cormorant Garamond', serif;
           font-size: 13px;
           font-weight: 900;
           letter-spacing: 0.15em;
-          color: #8E5A31; /* Deep Studio Brown */
+          color: #4A3826;
         }
 
        
@@ -287,16 +292,16 @@ const allowedGafCodes = useMemo(() => {
           font-weight: 300;
           letter-spacing: 0.3em;
           text-transform: uppercase;
-          color:#BF9050 /* Bright Metallic Gold Accent */
+          color: #D4AF37; /* Bright Metallic Gold Accent */
         }
 
         /* ── Zone rail ── */
         .wpc-zone-rail {
           display: flex;
           gap: 6px;
-          background: #FCF9F4; /* Deep Gold Tinted Base */
+          background: linear-gradient(180deg, #F4EED4, #85612E); /* Deep Gold Tinted Base */
           padding: 6px 20px;
-          border-bottom: 1px solid #E3D7C5;
+          border-bottom: 1px solid #8C7335;
           overflow-x: auto;
           scrollbar-width: none;
         }
@@ -340,15 +345,15 @@ const allowedGafCodes = useMemo(() => {
 
         /* Zone Buttons Front/Bottom styling */
         .wpc-zone-cube .face.front {
-        background: linear-gradient(180deg, #8E5A31, #5C3A1E); /* Dark Brown Base */
-          color: #FCF9F4;
-          border: 1px solid #BF9050; /* Light Brown Frame */
+          background: linear-gradient(180deg, #705B29, #4A3B1B); /* Matte Gold-Bronze Base */
+          color: #FFF2CC; /* Liquid Light Gold Text */
+          border: 1px solid #AA8F4A; /* Brushed Gold Frame */
           transform: translateZ(20px);
         }
 
         .wpc-zone-cube .face.bottom {
-         background: linear-gradient(135deg, #DFB97D, #BF9050, #8E5A31); /* Light Brown Spectrum */
-          color: #FFFFFF;
+          background: linear-gradient(135deg, #FFF1C5, #D4AF37, #8C7335); /* Pure Gold Metallic Spectrum */
+          color: #1F190A; /* Deep Charcoal Contrast text */
           font-weight: 600;
           transform: rotateX(-90deg) translateZ(9px);
         }
@@ -362,14 +367,14 @@ const allowedGafCodes = useMemo(() => {
           transform: rotateX(90deg);
         }
 
-        /* ── Panel Row & 3D Panel Cubes ── */
+        /* ── Panel Row ── */
         .wpc-panel-row {
-        display: flex;
+          display: flex;
           align-items: center;
           gap: 12px;
           padding: 6px 20px;
-          background: #F8F2E8;
-          border-bottom: 1px solid #E3D7C5;
+          background: #F4EED4; /* Muted Champagne Cream */
+          border-bottom: 1px solid #D0C39A; /* Soft Warm Gold Border */
           flex-wrap: wrap;
         }
         .wpc-panel-label {
@@ -382,34 +387,50 @@ const allowedGafCodes = useMemo(() => {
           white-space: nowrap;
         }
 
+        .wpc-panel-hint {
+          font-size: 9px;
+          font-weight: 400;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          color: #AA945B;
+          padding: 2px 20px 4px;
+        }
+
         .mat-tab-row {
-display: flex;
-          flex-direction: row;
-          flex-wrap: wrap;
-          gap: 8px;
-          padding: 4px 14px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 14px;
 }
 
 .mat-tab-btn {
   padding: 7px 16px;
-          font-family: 'Jost', sans-serif;
-          font-size: 10px;
-          font-weight: 600;
-          letter-spacing: 0.15em;
-          text-transform: uppercase;
-          border: 1px solid #BF9050;
-          border-radius: 0px;
-          cursor: pointer;
-          transition: border-color 0.3s ease, background 0.3s ease, color 0.3s ease, transform 0.2s ease;
-          background: #FCF9F4;
-          color: #8E5A31;
-          box-shadow: 0 2px 8px rgba(142, 90, 49, 0.1);
+  font-family: 'Jost', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  
+  
+  border: 1px solid #E7DFCB;
+  border-radius: 0px;
+  cursor: pointer;
+  transition: border-color 0.3s ease, background 0.3s ease, color 0.3s ease, transform 0.2s ease;
+
+
+
+
+background: linear-gradient(135deg, #F7ECD8 0%, #EFDBAF 100%);
+  border-color: #C9974E;
+  color: #5C4A26;
+  box-shadow: 0 4px 12px rgba(201, 151, 78, 0.2);
 
 }
 
 .mat-tab-btn:hover {
-border-color: #8E5A31;
-          color: #8E5A31;
+  border-color: #D6C394;
+  color: #5C4A26;
 }
 
 .mat-tab-btn:active {
@@ -417,64 +438,32 @@ border-color: #8E5A31;
 }
 
 .mat-tab-btn.active {
-background: #8E5A31;
-          border-color: #BF9050;
-          color: #FCF9F4;
-          box-shadow: 0 4px 12px rgba(142, 90, 49, 0.25);
+  background: #85612E;
+  border-color: #C9974E;
+ color: #ffffff;
+  box-shadow: 0 4px 12px rgba(201, 151, 78, 0.2);
 }
-
-        .panel-cube-wrap {
-          perspective: 1000px;
-          perspective-origin: 50% 50%;
-          width: 26px;
-          height: 26px;
-        }
-
-        /* Panel Cube Front/Bottom Faces */
-        .wpc-panel-cube .face.front {
-       background: linear-gradient(180deg, #8E5A31, #5C3A1E); /* Dark Brown Core */
-          color: #FCF9F4;
-          border: 1px solid #BF9050; /* Light Brown Border */
-          font-weight: 500;
-          transform: translateZ(20px);
-        }
-
-        .wpc-panel-cube .face.bottom {
-        background: linear-gradient(135deg, #DFB97D, #BF9050, #8E5A31); /* Light Brown Metallic */
-          color: #FFFFFF;
-          font-weight: 700;
-          transform: rotateX(-90deg) translateZ(9px);
-          box-shadow: inset 0 0 8px rgba(0,0,0,0.12);
-        }
-
-        .panel-cube-wrap:hover .wpc-panel-cube {
-          transform: rotateX(30deg);
-        }
-
-        .panel-cube-wrap.active .wpc-panel-cube {
-          transform: rotateX(90deg);
-        }
 
         /* ── Advanced Luxury Search bar ── */
         .wpc-search {
-       display: flex;
+          display: flex;
           align-items: center;
           gap: 12px;
           padding: 0 24px;
           height: 38px;
-          background: linear-gradient(90deg, #8E5A31, #6E4423); /* Dark Brown Bar */
-          border-bottom: 1px solid #BF9050;
+          background: linear-gradient(90deg, #4A3B1B, #5A4822); /* Radiant Bronze-Gold Bar */
+          border-bottom: 1px solid #8C7335;
           position: relative;
           transition: background 0.3s ease;
         }
         .wpc-search::after {
-        content: '';
+          content: '';
           position: absolute;
           bottom: 0;
           left: 0;
           width: 100%;
           height: 1px;
-          background: linear-gradient(90deg, transparent, #BF9050, transparent);
+          background: linear-gradient(90deg, transparent, #E6CA73, transparent);
           transform: scaleX(0);
           transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
         }
@@ -490,45 +479,45 @@ background: #8E5A31;
           font-weight: 400;
           letter-spacing: 0.2em;
           text-transform: uppercase;
-          color: #FCF9F4;
+          color: #FFF9E6;
           background: transparent;
         }
         .wpc-search input::placeholder { 
-          color: #DFB97D; /* Pale Gold Placeholder */
+          color: #C2B085; /* Pale Gold Placeholder */
           transition: color 0.3s ease;
         }
         .wpc-search input:focus::placeholder {
-          color: #FCF9F4;
+          color: #FFF9E6;
         }
         .wpc-search-icon { 
-          color: #BF9050; 
-          flex-shrink: 0;
+          color: #D4AF37; 
+          flex-shrink: 0; 
           filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.3));
         }
         .wpc-search-divider {
           width: 1px;
           height: 16px;
-          background: #6E4423;
+          background: #705B29;
         }
         .wpc-search-action {
-         font-size: 9px;
+          font-size: 9px;
           font-weight: 500;
           letter-spacing: 0.15em;
-          color: #FCF9F4;
+          color: #E6CA73;
           cursor: pointer;
           padding: 4px 10px;
           display: flex;
           align-items: center;
           gap: 6px;
           border-radius: 20px;
-          background: #5C3A1E;
-          border: 1px solid #BF9050;
+          background: #5A4822;
+          border: 1px solid #8C7335;
           transition: all 0.3s ease;
         }
         .wpc-search-action:hover {
-         color: #FFFFFF;
-          border-color: #DFB97D;
-          background: #8E5A31;
+          color: #FFFFFF;
+          border-color: #D4AF37;
+          background: #705B29;
         }
 
         /* ── Immersive Architectural Preview area ── */
@@ -625,13 +614,13 @@ background: #8E5A31;
         .wpc-content {
           height: 390px;
           overflow-y: auto;
-          background: #FCF9F4;
+          background: linear-gradient(180deg, #FFFDF9, #FAF3E0);
           scrollbar-width: thin;
-          scrollbar-color: #BF9050 #FCF9F4;
+          scrollbar-color: #D0C39A #FAF3E0;
         }
         .wpc-content::-webkit-scrollbar { width: 4px; }
-       .wpc-content::-webkit-scrollbar-track { background: #FCF9F4; }
-        .wpc-content::-webkit-scrollbar-thumb { background: #BF9050; border-radius: 2px; }
+        .wpc-content::-webkit-scrollbar-track { background: #FAF3E0; }
+        .wpc-content::-webkit-scrollbar-thumb { background: #D0C39A; border-radius: 2px; }
 
         /* ── Section label ── */
         .wpc-section-label {
@@ -905,10 +894,8 @@ background: #8E5A31;
           ))}
         </div>
 
-        {/* ── Panel selector (3D Cubes) ── */}
+        {/* ── Material category tabs ── */}
         <div className="wpc-panel-row flex flex-col gap-2 items-baseline">
-          {/* <span className="wpc-panel-label">Panels</span> */}
-
 <div className="mat-tab-row">
   {materialsSelections.map((selection) => (
     <button
@@ -921,30 +908,15 @@ background: #8E5A31;
     </button>
   ))}
 </div>
-
-      <div className="flex items-center justify-center gap-2">
-            {panelCount > 0
-            ? Array.from({ length: panelCount }).map((_, i) => {
-                const num = i + 1;
-                const isSelected = selectedPanels[activeZone]?.includes(num);
-                return (
-                  <div 
-                    key={num} 
-                    className={`panel-cube-wrap ${isSelected ? "active" : ""}`}
-                  >
-                    <button
-                      onClick={() => togglePanel(activeZone, num)}
-                      className="cube wpc-panel-cube"
-                    >
-                      <div className="face front">{num}</div>
-                      <div className="face bottom">{num}</div>
-                    </button>
-                  </div>
-                );
-              })
-            : null}
-      </div>
         </div>
+
+        {/* Panel selection now happens by clicking the nodes directly on the
+            model preview (left viewport) instead of a numbered button row here. */}
+        {!isSpecialZone && panelCount > 0 && (
+          <div className="wpc-panel-hint">
+            Click the panel markers on the model to select which panels to apply this finish to
+          </div>
+        )}
 
         {/* ── Search bar (normal zones only) ── */}
         {!isSpecialZone && (

@@ -297,8 +297,12 @@ const SelectModel = ({
           overflow: hidden; /* nothing escapes the box */
         }
 
+
+
+      
+
         .smc-header {
-             display: flex;
+            display: flex;
           align-items: center;
           justify-content: space-between;
           padding: 7px 24px;
@@ -312,7 +316,7 @@ const SelectModel = ({
           font-size: 13px;
           font-weight: 900;
           letter-spacing: 0.15em;
-          color: #4A3826; /* Deep Studio Brown */
+          color: #4A3826;
         }
 
         /* ── 3D Projection Deck Hierarchy ── */

@@ -208,7 +208,7 @@ appliedSideHandrail,
     setAppliedLight(null);
     setAppliedSubHandrail(null);
     setAppliedFrontHandrail(null);
-    setAppliedSideHandrail(null);
+setAppliedSideHandrail(null);
     setAppliedDoor(null);
     setPresignedCache({});
     setSelectedPanels({ A: [], B: [], C: [], D: [], E: [], F: [], G: [] });
@@ -302,7 +302,7 @@ const handleApplySideHandrail = (value) => setAppliedSideHandrail(value);
         
        .ed3-root {
           font-family: 'Jost', sans-serif;
-          background:#F7F4EF;
+          background: #FAF7F1;
           height: 100vh;
           width: 100vw;
           overflow: hidden;
@@ -352,7 +352,7 @@ const handleApplySideHandrail = (value) => setAppliedSideHandrail(value);
             letter-spacing: 0.1em;
           }
           .ed3-step-button::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, #FFF2CC, #C9A245); clip-path: polygon(88% 0%, 100% 50%, 88% 100%, 0% 100%, 12% 50%, 0% 0%); z-index: -1; }
-          .ed3-step-inner-face { position: absolute; inset: 2px 3px 2px 3px; background: #FFFFFF; clip-path: polygon(88% 0%, 100% 50%, 88% 100%, 0% 100%, 12% 50%, 0% 0%); z-index: 1; pointer-events: none; transition: background 0.3s ease; }
+          .ed3-step-inner-face { position: absolute; inset: 2px 3px 2px 3px; background: #FFFBF8; clip-path: polygon(88% 0%, 100% 50%, 88% 100%, 0% 100%, 12% 50%, 0% 0%); z-index: 1; pointer-events: none; transition: background 0.3s ease; }
           .ed3-step-button:hover { color: #3D2C12; }
           .ed3-step-button:hover .ed3-step-inner-face { background: #EFE2C0; }
           .ed3-step-button.active { color: #FFFFFF; }
@@ -389,32 +389,7 @@ const handleApplySideHandrail = (value) => setAppliedSideHandrail(value);
           {/* Master Responsive Header Bar Matrix */}
           <div className="w-full bg-[#1c1615] lg:bg-transparent border-b border-[#dfb76c]/40 lg:border-b-0">
 
-            {/* Mobile Horizon Tabs System */}
-            <nav className="flex lg:hidden w-full items-center justify-between pt-18">
-              {steps.map((step, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => handleNavClick(index)}
-                  className={`flex-1 flex flex-col items-center justify-center pt-3 pb-2.5 transition-all duration-200 border-b-2 ${
-                    step.active
-                      ? "text-[#ffffff] bg-[#2b2120] border-[#dfb76c]"
-                      : "text-[#dfb76c]/60 border-transparent bg-transparent"
-                  }`}
-                >
-                  <img
-                    src={step.icon}
-                    alt={step.shortLabel}
-                    className={`object-contain w-5 h-5 mb-1 transition-all ${
-                      step.active ? "filter brightness-125" : "opacity-40 grayscale"
-                    }`}
-                  />
-                  <span className="text-[10px] font-bold tracking-wider uppercase">
-                    {step.shortLabel}
-                  </span>
-                </button>
-              ))}
-            </nav>
+
 
             {/* Premium Big Screen Geometric Hex Nav Track — WITH LABELS & ICONS, gold active material */}
             <div className="hidden lg:block ed3-navbar-wrapper">
@@ -454,13 +429,13 @@ const handleApplySideHandrail = (value) => setAppliedSideHandrail(value);
                 ))}
               </nav>
 
-             {/* Premium Big Screen Geometric Step Bar Track */}
-<div className="hidden lg:block w-full my-2 px-12">
+            {/* Premium Big Screen Geometric Step Bar Track */}
+<div className="hidden lg:block w-full my-3 px-12">
   {/* Step Navigation Container */}
   <div className="relative flex items-center justify-between">
     
     {/* 1. Permanent Track Line (Always Visible) */}
-    <div className="absolute left-6 right-6 h-[1px] bg-[#d3cbc0] top-1/2 -translate-y-1/2 z-0" />
+    <div className="absolute left-6 right-6 h-[2px] bg-[#d3cbc0] top-1/2 -translate-y-1/2 z-0" />
 
     {/* 2. Active Progress Line (Dynamic Fill) */}
     {(() => {
@@ -468,7 +443,7 @@ const handleApplySideHandrail = (value) => setAppliedSideHandrail(value);
       const progressPercent = steps.length > 1 ? (activeIdx / (steps.length - 1)) * 100 : 0;
       return (
         <div
-          className="absolute left-6 h-[1px] bg-[#b37a28] top-1/2 -translate-y-1/2 z-0 transition-all duration-500 ease-out"
+          className="absolute left-6 h-[2px] bg-[#b37a28] top-1/2 -translate-y-1/2 z-0 transition-all duration-500 ease-out"
           style={{ width: `calc(${progressPercent}% - ${progressPercent > 0 ? 24 : 0}px)` }}
         />
       );
@@ -489,27 +464,16 @@ const handleApplySideHandrail = (value) => setAppliedSideHandrail(value);
           className="relative z-10 flex flex-col items-center group focus:outline-none"
         >
           {/* Step Indicator Node */}
-          <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-[#FAF8F5] transition-all duration-300 group-hover:scale-110">
+          <div className="relative flex items-center justify-center w-4 h-4 rounded-full bg-[#FAF8F5] transition-all duration-300 group-hover:scale-110">
             <span
               className={`w-4 h-4 rounded-full transition-all duration-300 ${
                 isActive
-                  ? "bg-[#b37a28] ring-4 ring-[#b37a28]/20 scale-115"
+                  ? "bg-[#b37a28] ring-4 ring-[#b37a28]/20 scale-125"
                   : isPassed
                   ? "bg-[#b37a28]"
                   : "bg-white border-2 border-[#d3cbc0]"
               }`}
             />
-          </div>
-
-          {/* Icon & Text Label beneath node */}
-          <div className="absolute top-10 flex flex-col items-center pointer-events-none transition-all duration-300 whitespace-nowrap">
-            {/* <span
-              className={`text-[11px] font-semibold tracking-wider uppercase transition-colors duration-200 ${
-                isActive ? "text-[#583410]" : "text-[#8a7b6c]"
-              }`}
-            >
-              {step.label}
-            </span> */}
           </div>
         </button>
       );
@@ -540,7 +504,6 @@ const handleApplySideHandrail = (value) => setAppliedSideHandrail(value);
           activeZone={activeZone}
           setActiveZone={setActiveZone}
           selectedPanels={selectedPanels}
-          togglePanel={togglePanel}
           applyMaterial={applyMaterialToPanels}
           setSelectedPanels={setSelectedPanels}
           selectedModelId={selectedModelId}
@@ -598,6 +561,8 @@ appliedSideHandrail={appliedSideHandrail}
         activeStep={activeStep}
         onNext={handleNextStep}
         activeZone={activeZone}
+        setActiveZone={setActiveZone}
+        togglePanel={togglePanel}
         highlightedPanels={selectedPanels[activeZone] || []}
         appliedMaterials={appliedMaterials}
         presignedCache={presignedCache}

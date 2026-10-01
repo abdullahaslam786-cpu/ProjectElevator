@@ -11,8 +11,7 @@ import HowDoesItWork from "./Profile/components/HowDoesItWork";
 import ProjectDetail from "./Project/ProjectDetail";
 import Register from "./Auth/Register";
 import Login from "./Auth/Login";
-import ElevatorDesigner from "./ElevatorDesigner/ElevatorDesigner";
-import ElevatorDesigner2 from "./ElevatorDesigner/ElevatorDesigner2";
+
 import ElevatorDesigner3 from "./ElevatorDesigner/ElevatorDesigner3";
 import OTP from "./Auth/OTP";
 import FancyGoldButton from "./Project/FancyGoldButton";
@@ -118,11 +117,8 @@ const AppContent = () => {
         <Route path="/step3" element={<Step3 />} />
         <Route path="/step4" element={<Step4 />} />
         <Route path="/step5" element={<Step5 />} />
-        {/* <Route path="/step6" element={<Step6 />} />  */}
         <Route path="/cab-inspiration" element={<CabInspiration />} />
         <Route path="/project/:id" element={<ProjectDetail />} />
-        <Route path="/elevator-designer" element={<ElevatorDesigner />} />
-        <Route path="/elevator-designer2" element={<ElevatorDesigner2 />} />
         <Route path="/design/:id" element={<ElevatorDesigner3 />} />
         <Route path="/verify-otp" element={<OTP />} />
         <Route path="/button" element={<FancyGoldButton />} />

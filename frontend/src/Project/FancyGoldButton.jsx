@@ -31,6 +31,26 @@ const DockedGoldButton = ({ children, isActive, onClick }) => {
       <span className="relative z-10 block transition-transform duration-300 group-hover:translate-y-[-1px]">
         {children}
       </span>
+
+         <button
+      role="button"
+      onClick={onClick}
+      className="group relative inline-block overflow-hidden border border-[#18181a] bg-white px-[18px] pb-[17px] pt-[18px] text-[15px] leading-[15px] text-[#18181a] cursor-pointer select-none touch-none no-underline
+        after:content-[''] after:absolute after:-bottom-1/2 after:left-0 after:w-full after:h-full after:bg-black after:z-20
+        after:origin-bottom-center after:transition-transform after:duration-600 after:ease-[cubic-bezier(0.48,0,0.12,1)]
+        after:[transform:skewY(9.3deg)_scaleY(0)]
+        hover:after:[transform:skewY(9.3deg)_scaleY(2)]"
+    >
+      {/* Primary Text */}
+      <span className="relative z-10 transition-colors duration-600 ease-[cubic-bezier(0.48,0,0.12,1)]">
+        text
+      </span>
+
+      {/* Alternate Text */}
+      <span className="absolute left-1/2 top-1/2 z-50 h-[14px] text-white opacity-0 transition-all duration-500 ease-[cubic-bezier(0.48,0,0.12,1)] leading-[13px] -translate-x-1/2 translate-y-[225%] group-hover:-translate-x-1/2 group-hover:-translate-y-full group-hover:opacity-100 group-hover:duration-900">
+        alternateText
+      </span>
+    </button>
     </button>
   );
 };
@@ -72,6 +92,10 @@ const FancyGoldButtonRow = () => {
       <div className="mt-6 p-6 text-sm text-gray-400 font-light border border-dashed border-gray-800/60 rounded-sm">
         Active Viewport Canvas Details for Component Profile State ID: <span className="text-[#dfb76c] font-mono font-bold">{activeTab}</span>
       </div>
+
+
+
+   
     </div>
   );
 };
