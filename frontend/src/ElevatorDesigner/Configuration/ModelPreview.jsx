@@ -310,8 +310,8 @@ const ModelPreview = forwardRef((props, ref) => {
 
         .node-3d-box {
           position: relative;
-          width: 100%;
-          height: 100%;
+          width: 80%;
+          height: 80%;
           transform-style: preserve-3d;
           transform-origin: center center -12px;
           transition: transform 0.5s cubic-bezier(0.25, 1, 0.33, 1);
@@ -465,7 +465,7 @@ const ModelPreview = forwardRef((props, ref) => {
         <div
           ref={stageRef}
           className={`relative flex-1 flex items-center justify-center px-0 pt-6 pb-0 ${
-            showThumbnails ? "md:w-[57%]" : "w-full"
+            showThumbnails ? "md:w-[59%]" : "w-full"
           }`}
 style={{  
   backgroundImage: `url("/openmodelbg/openmodel.jpg")`,

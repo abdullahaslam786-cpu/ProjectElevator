@@ -39,7 +39,7 @@ const specialConfig = {
 };
 
 const materialsSelections = [
-  "VENEER", "METALS", "STONE", "LEATHER", "GLASS","PANELS"
+  "LAMINATES","VENEER", "METALS", "STONE", "LEATHER", "GLASS","PANELS"
 ]
 
 const WallpanelController = ({
@@ -299,9 +299,9 @@ const allowedGafCodes = useMemo(() => {
         .wpc-zone-rail {
           display: flex;
           gap: 6px;
-          background: linear-gradient(180deg, #F4EED4, #85612E); /* Deep Gold Tinted Base */
-          padding: 6px 20px;
-          border-bottom: 1px solid #8C7335;
+          background: #FEFBF6; /* Deep Gold Tinted Base */
+          padding: 6px 20px 2px 20px;
+         
           overflow-x: auto;
           scrollbar-width: none;
         }
@@ -345,15 +345,15 @@ const allowedGafCodes = useMemo(() => {
 
         /* Zone Buttons Front/Bottom styling */
         .wpc-zone-cube .face.front {
-          background: linear-gradient(180deg, #705B29, #4A3B1B); /* Matte Gold-Bronze Base */
-          color: #FFF2CC; /* Liquid Light Gold Text */
+          background: #FEF9F5; /* Matte Gold-Bronze Base */
+          color: #85612E; /* Liquid Light Gold Text */
           border: 1px solid #AA8F4A; /* Brushed Gold Frame */
           transform: translateZ(20px);
         }
 
         .wpc-zone-cube .face.bottom {
-          background: linear-gradient(135deg, #FFF1C5, #D4AF37, #8C7335); /* Pure Gold Metallic Spectrum */
-          color: #1F190A; /* Deep Charcoal Contrast text */
+          background: #85612E; /* Pure Gold Metallic Spectrum */
+          color: #FFFFFF; /* Deep Charcoal Contrast text */
           font-weight: 600;
           transform: rotateX(-90deg) translateZ(9px);
         }
@@ -373,8 +373,8 @@ const allowedGafCodes = useMemo(() => {
           align-items: center;
           gap: 12px;
           padding: 6px 20px;
-          background: #F4EED4; /* Muted Champagne Cream */
-          border-bottom: 1px solid #D0C39A; /* Soft Warm Gold Border */
+          background: #FEFBF6; /* Muted Champagne Cream */
+          border-bottom: 1px solid #efefef; /* Soft Warm Gold Border */
           flex-wrap: wrap;
         }
         .wpc-panel-label {
@@ -414,15 +414,15 @@ const allowedGafCodes = useMemo(() => {
   
   
   border: 1px solid #E7DFCB;
-  border-radius: 0px;
+  border-radius: 4px;
   cursor: pointer;
   transition: border-color 0.3s ease, background 0.3s ease, color 0.3s ease, transform 0.2s ease;
 
 
 
 
-background: linear-gradient(135deg, #F7ECD8 0%, #EFDBAF 100%);
-  border-color: #C9974E;
+background: #FEF9F5;
+
   color: #5C4A26;
   box-shadow: 0 4px 12px rgba(201, 151, 78, 0.2);
 
@@ -451,8 +451,8 @@ background: linear-gradient(135deg, #F7ECD8 0%, #EFDBAF 100%);
           gap: 12px;
           padding: 0 24px;
           height: 38px;
-          background: linear-gradient(90deg, #4A3B1B, #5A4822); /* Radiant Bronze-Gold Bar */
-          border-bottom: 1px solid #8C7335;
+          background: #FEFEFE; /* Radiant Bronze-Gold Bar */
+          border-bottom: 1px solid #efefef;
           position: relative;
           transition: background 0.3s ease;
         }
@@ -912,11 +912,11 @@ background: linear-gradient(135deg, #F7ECD8 0%, #EFDBAF 100%);
 
         {/* Panel selection now happens by clicking the nodes directly on the
             model preview (left viewport) instead of a numbered button row here. */}
-        {!isSpecialZone && panelCount > 0 && (
+        {/* {!isSpecialZone && panelCount > 0 && (
           <div className="wpc-panel-hint">
             Click the panel markers on the model to select which panels to apply this finish to
           </div>
-        )}
+        )} */}
 
         {/* ── Search bar (normal zones only) ── */}
         {!isSpecialZone && (

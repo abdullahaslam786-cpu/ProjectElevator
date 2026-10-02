@@ -195,15 +195,15 @@ useEffect(() => {
 
           /* Next Action Key Variant */
           .om-cube-next .om-face.front {
-            background: linear-gradient(135deg, #d4a843 0%, #f5d98a 50%, #b8841f 100%);
-            color: #000000;
+            background: #97713A;
+            color: #ffffff;
             font-weight: 600;
             transform: translateZ(19px);
           }
 
           .om-cube-next .om-face.bottom {
-            background: #000000;
-            color: #f5d98a;
+            background: #FEFBF6;
+            color: #000000;
             border: 1px solid #b8841f;
             transform: rotateX(-90deg) translateZ(19px);
           }

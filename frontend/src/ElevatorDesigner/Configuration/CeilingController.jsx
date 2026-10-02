@@ -10,13 +10,13 @@ const CEILINGS_WITH_LIGHT = [1, 5, 6, 7];
 const LIGHT_BUTTON_ICONS = ["/lights/yellow.png", "/lights/white.png"];
 
 const CeilingController = ({ applyCeiling, applyLight }) => {
-  const [selectedCeiling, setSelectedCeiling] = useState(1);
+  const [selectedCeiling, setSelectedCeiling] = useState(null);
   const [selectedLight, setSelectedLight] = useState(1);
 
   const [ceilingThumbnails, setCeilingThumbnails] = useState([]);
   const [lightThumbnails, setLightThumbnails] = useState([]);
 
-  const [ceilingPreviewUrl, setCeilingPreviewUrl] = useState(1);
+  const [ceilingPreviewUrl, setCeilingPreviewUrl] = useState(null);
   const [allCeilingImages, setAllCeilingImages] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,8 +51,30 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
 
         setAllCeilingImages(ceilingData);
 
-        setCeilingThumbnails(processImages(ceilingData.filter((i) => i.key.includes("/V1/"))));
+        const thumbs = processImages(ceilingData.filter((i) => i.key.includes("/V1/")));
+        setCeilingThumbnails(thumbs);
         setLightThumbnails(processImages(lightData.filter((i) => i.key.includes("/V1/"))));
+
+        // ── Auto-select the FIRST ceiling option on load ──
+        if (thumbs.length > 0) {
+          const first = thumbs[0];
+          setSelectedCeiling(first.num);
+          applyCeiling(first.num);
+
+          // If the first ceiling supports lights, keep default light selected
+          if (CEILINGS_WITH_LIGHT.includes(first.num)) {
+            setSelectedLight(1);
+            applyLight?.(1);
+          } else {
+            setSelectedLight(null);
+            applyLight?.(null);
+          }
+
+          const found = ceilingData.find((img) =>
+            img.key.includes(`/V1/${first.num}.png`)
+          );
+          if (found) setCeilingPreviewUrl(found.url);
+        }
       } catch (err) {
         console.error("Fetch error:", err);
       } finally {
@@ -60,7 +82,7 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
       }
     };
     fetchData();
-  }, [processImages]);
+  }, [processImages, applyCeiling, applyLight]);
 
   // GSAP: Dropdown Preview Animation
   useEffect(() => {
@@ -101,6 +123,12 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
     if (!CEILINGS_WITH_LIGHT.includes(num)) {
       setSelectedLight(null);
       applyLight(null);
+    } else {
+      // When switching to a ceiling that supports lights, restore default light if none selected
+      if (selectedLight === null) {
+        setSelectedLight(1);
+        applyLight(1);
+      }
     }
 
     const found = allCeilingImages.find((img) => img.key.includes(`/V1/${num}.png`));
@@ -115,7 +143,7 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
   return (
     <>
       <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Jost:wght=200;300;400;500&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Jost:wght@200;300;400;500&display=swap');
 
           .cec-root {
             font-family: 'Jost', sans-serif;
@@ -139,7 +167,7 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
             font-size: 13px;
             font-weight: 900;
             letter-spacing: 0.15em;
-            color: #4A3826; /* Deep Studio Brown */
+            color: #4A3826;
           }
 
           .cec-preview {
@@ -170,7 +198,7 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
           .cec-content {
             height: 600px;
             overflow-y: auto;
-            background: linear-gradient(180deg, #FFFDF6, #F7EFCF);
+            background: #FFFDF6;
             scrollbar-width: thin;
             scrollbar-color: #D4AF37 #F7EFCF;
           }
@@ -223,7 +251,7 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
             transform-style: preserve-3d;
           }
 
-          .cec-swatch-item-inner{
+          .cec-swatch-item-inner {
             width: 100%;
             height: 100%;
             background: #1F190A;
@@ -241,7 +269,7 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
             opacity: 0.75;
             transition: opacity 0.3s;
           }
-          .cec-swatch-item-inner img{
+          .cec-swatch-item-inner img {
             width: 100%;
             height: 200%;
             object-fit: center;
@@ -368,7 +396,7 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
               Please select the Ceiling according to your Elevator design
             </div>
           </div>
-          <div style={{ fontSize: 9, letterSpacing: '0.25em', color: '#d4a843', fontWeight: 600 }}>
+          <div style={{ fontSize: 9, letterSpacing: "0.25em", color: "#d4a843", fontWeight: 600 }}>
             PREMIUM SERIES
           </div>
         </div>
@@ -411,7 +439,7 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
               <>
                 <img src={ceilingPreviewUrl} alt="Preview" className="cec-preview-img" />
                 <div className="cec-preview-overlay">
-                  <div style={{ fontFamily: 'Cormorant Garamond', fontSize: 16, color: '#d4a843' }}>
+                  <div style={{ fontFamily: "Cormorant Garamond", fontSize: 16, color: "#d4a843" }}>
                     STRUCTURE OPTION 0{selectedCeiling}
                   </div>
                 </div>
@@ -431,7 +459,9 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
         </div>
 
         <div className="cec-content">
-          <div className="cec-section-label"><span>CEILING STRUCTURE</span></div>
+          <div className="cec-section-label">
+            <span>CEILING STRUCTURE</span>
+          </div>
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
               <RingLoader color="#d4a843" size={40} />

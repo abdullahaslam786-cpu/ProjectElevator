@@ -30,7 +30,21 @@ const FloorController = ({ applyFloor }) => {
         // Keep the full unfiltered list around so we can look up any /V1/{num}.png
         // for the preview panel, the same way CeilingController does.
         setAllFloorImages(floorData);
-        setFloorThumbnails(processImages(floorData.filter((i) => i.key.includes("/V1/"))));
+
+        const thumbs = processImages(floorData.filter((i) => i.key.includes("/V1/")));
+        setFloorThumbnails(thumbs);
+
+        // ── Open preview by default with the first floor ──
+        if (thumbs.length > 0) {
+          const first = thumbs[0];
+          setSelectedFloor(first.num);
+          applyFloor(first.num);
+
+          const found = floorData.find((img) =>
+            img.key.includes(`/V1/${first.num}.png`)
+          );
+          if (found) setFloorPreviewUrl(found.url);
+        }
       } catch (err) {
         console.error("Fetch error:", err);
       } finally {
@@ -38,7 +52,7 @@ const FloorController = ({ applyFloor }) => {
       }
     };
     fetchData();
-  }, [processImages]);
+  }, [processImages, applyFloor]);
 
   const handleFloorSelect = (num) => {
     setSelectedFloor(num);
@@ -67,7 +81,7 @@ const FloorController = ({ applyFloor }) => {
         }
 
         .flc-header {
-              display: flex;
+          display: flex;
           align-items: center;
           justify-content: space-between;
           padding: 7px 24px;
@@ -77,15 +91,14 @@ const FloorController = ({ applyFloor }) => {
         }
 
         .flc-header-title {
-        font-family: 'Cormorant Garamond', serif;
+          font-family: 'Cormorant Garamond', serif;
           font-size: 13px;
           font-weight: 900;
           letter-spacing: 0.15em;
-          color: #4A3826; /* Deep Studio Brown */
+          color: #4A3826;
         }
 
-        /* Pure-CSS reveal: no JS animation library involved, so the panel
-           is guaranteed to appear the instant floorPreviewUrl is set. */
+        /* Pure-CSS reveal: no JS animation library involved */
         .flc-preview {
           position: relative;
           overflow: hidden;
@@ -120,7 +133,7 @@ const FloorController = ({ applyFloor }) => {
         .flc-content {
           height: 600px;
           overflow-y: auto;
-          background: linear-gradient(180deg, #FFFDF6, #F7EFCF);
+          background: #FEFAF7;
           scrollbar-width: thin;
           scrollbar-color: #D4AF37 #F7EFCF;
         }
@@ -162,11 +175,12 @@ const FloorController = ({ applyFloor }) => {
           margin-bottom: 22px;
         }
 
+        /* ── Updated color theme ── */
         .flc-swatch-item {
           width: 100%;
           height: 100%;
-          background: #1F190A;
-          border: 1px solid #D6C394;
+          background: #000000;          /* ← new base color */    #97713A
+          border: 1px solid #B88E2F;
           border-radius: 4px;
           overflow: hidden;
           transition: all 0.4s cubic-bezier(0.25, 1, 0.33, 1);
@@ -201,7 +215,7 @@ const FloorController = ({ applyFloor }) => {
         .flc-swatch-wrap:hover .flc-swatch-item {
           transform: translateZ(25px);
           border-color: #B88E2F;
-          box-shadow: 0 6px 16px rgba(184, 142, 47, 0.15);
+          box-shadow: 0 6px 16px rgba(151, 113, 58, 0.25);
         }
 
         .flc-swatch-wrap:hover img {
@@ -215,8 +229,8 @@ const FloorController = ({ applyFloor }) => {
         .flc-swatch-wrap.selected .flc-swatch-item {
           border-color: #D4AF37;
           transform: translateZ(25px);
-          box-shadow: 0 10px 24px rgba(184, 142, 47, 0.3);
-          background: #FFF9E6;
+          box-shadow: 0 10px 24px rgba(151, 113, 58, 0.35);
+          background: #000000;          /* slightly lighter when selected */
         }
 
         .flc-swatch-wrap.selected .flc-swatch-badge {
@@ -234,20 +248,23 @@ const FloorController = ({ applyFloor }) => {
       <div className="flc-root">
         <div className="flc-header">
           <div className="flex-flex-col">
-          <div className="flc-header-title">FLOOR CONFIGURATOR</div>
-          <div className=" text-[11px] text-[#AA9154] tracking-[0.15em] font-light">Please select the floor to Enhance your Elevator floor.</div>
+            <div className="flc-header-title">FLOOR CONFIGURATOR</div>
+            <div className="text-[11px] text-[#AA9154] tracking-[0.15em] font-light">
+              Please select the floor to Enhance your Elevator floor.
+            </div>
           </div>
           <div style={{ fontSize: 9, letterSpacing: "0.25em", color: "#d4a843", fontWeight: 600 }}>
             PREMIUM SERIES
           </div>
         </div>
 
+        {/* Preview is open by default because floorPreviewUrl is set on load */}
         <div className={`flc-preview ${floorPreviewUrl ? "flc-preview-open" : ""}`}>
           {floorPreviewUrl && (
             <>
               <img src={floorPreviewUrl} alt="Preview" className="flc-preview-img" />
               <div className="flc-preview-overlay">
-                <div style={{ fontFamily: 'Cormorant Garamond', fontSize: 16, color: '#d4a843' }}>
+                <div style={{ fontFamily: "Cormorant Garamond", fontSize: 16, color: "#d4a843" }}>
                   BASE OPTION 0{selectedFloor}
                 </div>
               </div>

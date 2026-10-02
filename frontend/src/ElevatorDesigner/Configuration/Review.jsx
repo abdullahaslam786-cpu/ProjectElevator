@@ -312,7 +312,7 @@ const Review = ({
           height: 540px;
           overflow-y: auto;
           padding: 12px;
-          background: linear-gradient(180deg, #FFFDF6, #F7EFCF);
+          background: #FFFDF6;
           scrollbar-width: thin;
           scrollbar-color: #D4AF37 #F7EFCF;
         }

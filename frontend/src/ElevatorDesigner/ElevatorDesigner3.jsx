@@ -48,12 +48,12 @@ const [appliedSideHandrail, setAppliedSideHandrail] = useState(null);
     A: [], B: [], C: [], D: [], E: [], F: [], G: [],
   });
   const [steps, setSteps] = useState([
-    { label: "Configurations", shortLabel: "Config", icon: "/ConfigurationNavbar/Elevator.png",  active: true  },
-    { label: "Wall Panels",    shortLabel: "Walls",  icon: "/ConfigurationNavbar/Wallpanel.png", active: false },
-    { label: "Handrails",      shortLabel: "Rails",  icon: "/ConfigurationNavbar/handrail.png",  active: false },
-    { label: "Ceilings",       shortLabel: "Roof",   icon: "/ConfigurationNavbar/ceiling.png",   active: false },
-    { label: "Floors",         shortLabel: "Floor",  icon: "/ConfigurationNavbar/floor.png",     active: false },
-    { label: "Review",         shortLabel: "Review", icon: "/ConfigurationNavbar/review.png",    active: false },
+    { label: "Configurations", title: "Choose your elevator layout", shortLabel: "Config", icon: "/ConfigurationNavbar/Elevator.png",  active: true  },
+    { label: "Wall Panels",    title: "Select material and fininsh",    shortLabel: "Walls",  icon: "/ConfigurationNavbar/Wallpanel.png", active: false },
+    { label: "Handrails",      title: "Choose style and finish",      shortLabel: "Rails",  icon: "/ConfigurationNavbar/handrail.png",  active: false },
+    { label: "Ceilings",       title: "Pick your ceiling designs",       shortLabel: "Roof",   icon: "/ConfigurationNavbar/ceiling.png",   active: false },
+    { label: "Floors",         title: "Select floor material",         shortLabel: "Floor",  icon: "/ConfigurationNavbar/floor.png",     active: false },
+    { label: "Review",         title: "Review your selection",         shortLabel: "Review", icon: "/ConfigurationNavbar/review.png",    active: false },
   ]);
 
   const [pageLoading, setPageLoading] = useState(true);
@@ -347,11 +347,8 @@ const handleApplySideHandrail = (value) => setAppliedSideHandrail(value);
             transform-style: preserve-3d;
             transition: color 0.3s ease;
           }
-          .ed3-step-button span {
-            font-size: 10px;
-            letter-spacing: 0.1em;
-          }
-          .ed3-step-button::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, #FFF2CC, #C9A245); clip-path: polygon(88% 0%, 100% 50%, 88% 100%, 0% 100%, 12% 50%, 0% 0%); z-index: -1; }
+        
+          .ed3-step-button::before { content: ''; position: absolute; inset: 0;  clip-path: polygon(88% 0%, 100% 50%, 88% 100%, 0% 100%, 12% 50%, 0% 0%); z-index: -1; }
           .ed3-step-inner-face { position: absolute; inset: 2px 3px 2px 3px; background: #FFFBF8; clip-path: polygon(88% 0%, 100% 50%, 88% 100%, 0% 100%, 12% 50%, 0% 0%); z-index: 1; pointer-events: none; transition: background 0.3s ease; }
           .ed3-step-button:hover { color: #3D2C12; }
           .ed3-step-button:hover .ed3-step-inner-face { background: #EFE2C0; }
@@ -408,13 +405,7 @@ const handleApplySideHandrail = (value) => setAppliedSideHandrail(value);
                       <div className="ed3-step-inner-face">
                         <div className="ed3-step-spotlight" />
                       </div>
-
-                      {/* Name Label is permanently visible on desktop */}
-                      <span className="relative z-10 text-[11px] font-bold tracking-widest uppercase transition-colors duration-300 transform translate-z-[12px]">
-                        {step.label}
-                      </span>
-
-                      {/* Matching Graphical Icon Frame */}
+                        {/* Matching Graphical Icon Frame */}
                       <div className="relative flex items-center justify-center w-8 h-8 z-10 select-none">
                         <img
                           src={step.icon}
@@ -424,6 +415,18 @@ const handleApplySideHandrail = (value) => setAppliedSideHandrail(value);
                           }`}
                         />
                       </div>
+
+                      {/* Name Label is permanently visible on desktop */}
+                     <div className="flex flex-col items-center justify-center w-full h-full">
+                       <span className="relative z-10 text-[11px] font-bold tracking-widest uppercase transition-colors duration-300 transform translate-z-[12px]">
+                         {step.label}
+                       </span>
+                       <span className="relative z-10 text-[9px]   uppercase transition-colors duration-300 transform translate-z-[12px] mt-1">
+                         {step.title}
+                       </span>
+                     </div>
+
+                    
                     </button>
                   </div>
                 ))}
@@ -484,11 +487,11 @@ const handleApplySideHandrail = (value) => setAppliedSideHandrail(value);
           </div>
 
           {/* Master View Grid Layout Workspace Stack Matrix */}
-  <div className="grid grid-cols-1 lg:grid-cols-11 gap-0 sm:gap-4 lg:gap-2 w-full items-stretch">
-  
+  <div className="grid grid-cols-1 lg:grid-cols-11 gap-0 sm:gap-4 lg:gap-2 w-full items-stretch ">
+   
   {/* Right Controls Panel Sidebar */}
   {/* INCREASED FROM lg:col-span-8 TO lg:col-span-9 */}
-  <div className="col-span-1 lg:col-span-7 bg-white border-b lg:border border-[#e0dcd6] sm:rounded-xl shadow-sm overflow-hidden order-1 lg:order-2 w-full flex flex-col justify-between h-90vh lg:h-[560px]">
+  <div className="col-span-1 lg:col-span-7 bg-white border-b lg:border border-[#e0dcd6] sm:rounded-xl shadow-sm overflow-hidden order-1 lg:order-2 w-full flex flex-col justify-between h-90vh lg:h-[580px]">
     <div className="w-full h-full">
       {activeStep === "Configurations" && (
         <SelectModel
