@@ -8,6 +8,18 @@ import { modelConfigs } from "../config/modelConfigs";
 const FRONT_SPLIT_FOLDER = "FrontHandrails";
 const SIDE_SPLIT_FOLDER = "SideHandrials";
 
+// Which image files exist inside each Side handrail view folder (v1 / v2 / v3).
+// This is keyed by VIEW only — it applies the same way to every shape
+// (round / flat / oval) and every finish (silver / golden / black).
+//   v1 → 1.png
+//   v2 → 1.png + 2.png
+//   v3 → 1.png
+const SIDE_HANDRAIL_FILES_BY_VIEW = {
+  1: ["1.png"],
+  2: ["1.png", "2.png"],
+  3: ["1.png"],
+};
+
 const ModelPreview = forwardRef((props, ref) => {
   const {
     selectedView,
@@ -44,17 +56,22 @@ const ModelPreview = forwardRef((props, ref) => {
   const shouldShowPanelIndicators = !showThumbnails && activeStep === "Wall Panels";
 
   // Front only has assets for v1/v2 (view 1 and 2) — filename matches the version number.
-  // Side has assets for v1/v2/v3 (view 1, 2 and 3) — always using the folder's "1.png".
   const getFrontHandrailKey = (view) => {
     if (!appliedFrontHandrail || view === 3) return null;
     const { style, finish } = appliedFrontHandrail;
     return `SubMaterial/splithandrails/${FRONT_SPLIT_FOLDER}/${style}/${finish}/v${view}/${view}.png`;
   };
 
-  const getSideHandrailKey = (view) => {
-    if (!appliedSideHandrail) return null;
+  // Side has assets for v1/v2/v3. A view folder can hold more than one image
+  // (v2 has 1.png and 2.png), so this returns ALL keys for that view.
+  const getSideHandrailKeys = (view) => {
+    if (!appliedSideHandrail) return [];
     const { style, finish } = appliedSideHandrail;
-    return `SubMaterial/splithandrails/${SIDE_SPLIT_FOLDER}/${style}/${finish}/v${view}/1.png`;
+    const files = SIDE_HANDRAIL_FILES_BY_VIEW[view] || ["1.png"];
+    return files.map(
+      (file) =>
+        `SubMaterial/splithandrails/${SIDE_SPLIT_FOLDER}/${style}/${finish}/v${view}/${file}`
+    );
   };
 
   // ── Clicking a node on the model IS the panel selector now ──
@@ -141,7 +158,8 @@ const ModelPreview = forwardRef((props, ref) => {
     if (appliedLight) [1, 2, 3].forEach((v) => { const key = `SubMaterial/lights/V${v}/${appliedLight}.png`; if (!presignedCache[key]) overlaysToFetch.push(key); });
     if (appliedSubHandrail) [1, 2, 3].forEach((v) => { const key = `SubMaterial/subhandrail/V${v}/${v}.png`; if (!presignedCache[key]) overlaysToFetch.push(key); });
     if (appliedFrontHandrail) [1, 2].forEach((v) => { const key = getFrontHandrailKey(v); if (key && !presignedCache[key]) overlaysToFetch.push(key); });
-    if (appliedSideHandrail) [1, 2, 3].forEach((v) => { const key = getSideHandrailKey(v); if (key && !presignedCache[key]) overlaysToFetch.push(key); });
+    // Side: every image for every view (v2 now includes both 1.png and 2.png)
+    if (appliedSideHandrail) [1, 2, 3].forEach((v) => { getSideHandrailKeys(v).forEach((key) => { if (!presignedCache[key]) overlaysToFetch.push(key); }); });
     if (appliedDoor) { const key = `SubMaterial/doors/${appliedDoor}.png`; if (!presignedCache[key]) overlaysToFetch.push(key); }
 
     overlaysToFetch.forEach((key) => {
@@ -259,12 +277,24 @@ const ModelPreview = forwardRef((props, ref) => {
     return <img src={src} alt="Front Handrail" className="absolute inset-0 w-full h-full object-contain pointer-events-none z-[36]" />;
   };
 
+  // Renders every Side handrail image for the current view
+  // (view 2 → 1.png and 2.png stacked; views 1 and 3 → 1.png only).
   const renderSideHandrailOverlay = () => {
-    const key = getSideHandrailKey(selectedView);
-    if (!key) return null;
-    const src = presignedCache[key];
-    if (!src) return null;
-    return <img src={src} alt="Side Handrail" className="absolute inset-0 w-full h-full object-contain pointer-events-none z-[37]" />;
+    const keys = getSideHandrailKeys(selectedView);
+    if (keys.length === 0) return null;
+
+    return keys.map((key, i) => {
+      const src = presignedCache[key];
+      if (!src) return null;
+      return (
+        <img
+          key={key}
+          src={src}
+          alt={`Side Handrail ${i + 1}`}
+          className="absolute inset-0 w-full h-full object-contain pointer-events-none z-[37]"
+        />
+      );
+    });
   };
 
   const renderDoorOverlay = () => {

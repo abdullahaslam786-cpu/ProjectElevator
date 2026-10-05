@@ -3,34 +3,18 @@ import { IoClose, IoCheckmark } from "react-icons/io5";
 import { RingLoader } from "react-spinners";
 import gsap from "gsap";
 
-// Local preview thumbs (UI only) — public/previewHandrails/1.png … 12.png
 const getLocalHandrailImage = (num) => `/previewHandrails/${num}.png`;
 
-// Only four styles under SubMaterial/splithandrails/
-// Within each category: index 0 = Silver, 1 = Golden, 2 = Black
 const HANDRAIL_CATEGORIES = [
   { label: "Round", nums: [1, 2, 3] },
   { label: "Flat", nums: [13, 14, 15] },
   { label: "Oval", nums: [7, 8, 9] },
-  { label: "Add", nums: [10, 11, 12] },
 ];
 
 const FINISHES = [
-  {
-    name: "Silver",
-    swatch:
-      "radial-gradient(circle at 35% 32%, #ffffff 0%, #d6dade 35%, #a3a9ae 70%, #797f84 100%)",
-  },
-  {
-    name: "Golden",
-    swatch:
-      "radial-gradient(circle at 35% 32%, #fff6dd 0%, #eac36c 35%, #c9974e 70%, #8b5e34 100%)",
-  },
-  {
-    name: "Black",
-    swatch:
-      "radial-gradient(circle at 35% 32%, #5a5852 0%, #2c2a26 40%, #131211 75%, #000000 100%)",
-  },
+  { name: "Silver", classKey: "silver-shine" },
+  { name: "Gold", classKey: "gold-shine" },
+  { name: "Black", classKey: "black-shine" },
 ];
 
 const HandrailController = ({
@@ -45,11 +29,12 @@ const HandrailController = ({
   const [previewUrl, setPreviewUrl] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Completely independent layer state
   const [frontEnabled, setFrontEnabled] = useState(false);
   const [sideEnabled, setSideEnabled] = useState(false);
   const [frontFinish, setFrontFinish] = useState("silver");
   const [sideFinish, setSideFinish] = useState("silver");
+
+  const [activeLayer, setActiveLayer] = useState(null);
 
   const previewContainerRef = useRef(null);
 
@@ -89,18 +74,18 @@ const HandrailController = ({
     setPreviewUrl(getLocalHandrailImage(num));
   };
 
-  // Finish select for FRONT only
   const handleFrontFinishSelect = (num, finishName) => {
     setSelectedHandrail(num);
     setPreviewUrl(getLocalHandrailImage(num));
     setFrontFinish(finishName.toLowerCase());
+    setFrontEnabled(true);
   };
 
-  // Finish select for SIDE only
   const handleSideFinishSelect = (num, finishName) => {
     setSelectedHandrail(num);
     setPreviewUrl(getLocalHandrailImage(num));
     setSideFinish(finishName.toLowerCase());
+    setSideEnabled(true);
   };
 
   const handleCategoryClick = (idx) => {
@@ -110,7 +95,6 @@ const HandrailController = ({
     if (isOpeningNew) {
       const firstNum = HANDRAIL_CATEGORIES[idx].nums[0];
       handleMainSelect(firstNum);
-      // Reset both layers when opening a new style
       setFrontFinish("silver");
       setSideFinish("silver");
       setFrontEnabled(false);
@@ -132,7 +116,6 @@ const HandrailController = ({
       ? HANDRAIL_CATEGORIES[openCategoryIndex].label.toLowerCase()
       : null;
 
-  // FRONT layer — independent
   useEffect(() => {
     if (!applyFrontHandrail) return;
 
@@ -144,7 +127,6 @@ const HandrailController = ({
     applyFrontHandrail({ style: selectedStyleKey, finish: frontFinish });
   }, [frontEnabled, selectedStyleKey, frontFinish, applyFrontHandrail]);
 
-  // SIDE layer — independent
   useEffect(() => {
     if (!applySideHandrail) return;
 
@@ -162,16 +144,20 @@ const HandrailController = ({
     applySubHandrail(next ? "subhandrail" : null);
   };
 
-  // Helper to render a finish row for one layer
-  const renderFinishRow = (currentFinish, onSelect) => {
+  const handleLayerTab = (layer) => {
+    setActiveLayer((prev) => (prev === layer ? null : layer));
+  };
+
+  const renderFinishRow = (currentFinish, layerEnabled, onSelect, onOff) => {
     if (openCategoryIndex === -1 || openCategoryIndex === null) return null;
 
     return (
       <div className="hrc-finish-panel">
-        <div className="hrc-finish-row">
+        <div className="hrc-finish-row has-off">
           {FINISHES.map((finish, i) => {
             const num = HANDRAIL_CATEGORIES[openCategoryIndex].nums[i];
-            const isSelected = currentFinish === finish.name.toLowerCase();
+            const isSelected =
+              layerEnabled && currentFinish === finish.name.toLowerCase();
 
             return (
               <div
@@ -179,10 +165,9 @@ const HandrailController = ({
                 className={`hrc-finish-swatch ${isSelected ? "selected" : ""}`}
                 onClick={() => onSelect(num, finish.name)}
               >
-                <div
-                  className="hrc-finish-circle"
-                  style={{ background: finish.swatch }}
-                >
+                {/* Shining Metallic Radial Button */}
+                <div className={`hrc-shine-button ${finish.classKey}`}>
+                  <div className="hrc-shine-text">{finish.name}</div>
                   {isSelected && (
                     <div className="hrc-finish-check">
                       <IoCheckmark size={11} />
@@ -193,15 +178,38 @@ const HandrailController = ({
               </div>
             );
           })}
+
+          {/* Off Button */}
+          <div
+            className={`hrc-finish-swatch ${!layerEnabled ? "selected" : ""}`}
+            onClick={onOff}
+          >
+            <div className="hrc-finish-circle off">
+              <IoClose size={20} />
+              {!layerEnabled && (
+                <div className="hrc-finish-check">
+                  <IoCheckmark size={11} />
+                </div>
+              )}
+            </div>
+            <div className="hrc-finish-name">Off</div>
+          </div>
         </div>
       </div>
     );
   };
 
+  const renderStatus = (on) => (
+    <div className={`hrc-tab-status ${on ? "on" : ""}`}>
+      <span className="hrc-tab-dot" />
+      {on ? "ON" : "OFF"}
+    </div>
+  );
+
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght=300;400;500&family=Jost:wght=200;300;400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght=300;400;500&family=Jost:wght=200;300;400;500;600;700&display=swap');
 
         .hrc-root {
           font-family: 'Jost', sans-serif;
@@ -310,6 +318,8 @@ const HandrailController = ({
           border: 1px solid #E7DFCB;
           border-radius: 10px;
           overflow: hidden;
+          width: 86%;
+          margin: 0 auto;
           transition: border-color 0.3s ease, transform 0.3s cubic-bezier(0.25, 1, 0.33, 1), box-shadow 0.3s ease;
         }
 
@@ -343,7 +353,7 @@ const HandrailController = ({
         }
 
         .hrc-category-label {
-          padding: 6px 4px;
+          padding: 5px 4px;
           text-align: center;
           font-size: 9px;
           font-weight: 600;
@@ -393,6 +403,11 @@ const HandrailController = ({
           justify-items: center;
         }
 
+        .hrc-finish-row.has-off {
+          grid-template-columns: repeat(4, 1fr);
+          gap: 10px;
+        }
+
         .hrc-finish-swatch {
           display: flex;
           flex-direction: column;
@@ -401,29 +416,161 @@ const HandrailController = ({
           cursor: pointer;
         }
 
-        .hrc-finish-circle {
+        /* ───────── High-Shine Metallic Conical Buttons ───────── */
+        .hrc-shine-button {
+          position: relative;
+          width: 56px;
+          height: 56px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          user-select: none;
+          transition: transform 0.2s cubic-bezier(0.25, 1, 0.33, 1), box-shadow 0.2s ease;
+        }
+
+        .hrc-shine-text {
+          font-family: 'Jost', sans-serif;
+          font-size: 8px;
+          font-weight: 700;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          z-index: 2;
+          pointer-events: none;
+        }
+
+        .hrc-finish-swatch:hover .hrc-shine-button {
+          transform: translateY(-2px) scale(1.05);
+        }
+
+        .hrc-finish-swatch.selected .hrc-shine-button {
+          transform: scale(1.05);
+        }
+
+        /* SILVER SHINE */
+        .hrc-shine-button.silver-shine {
+          background: conic-gradient(
+            from 180deg at 50% 50%,
+            #e6ecef 0deg,
+            #7d8b94 45deg,
+            #ffffff 90deg,
+            #8c9aa3 135deg,
+            #e6ecef 180deg,
+            #7d8b94 225deg,
+            #ffffff 270deg,
+            #8c9aa3 315deg,
+            #e6ecef 360deg
+          );
+          border: 2px solid #b3bec4;
+          box-shadow: 
+            0 8px 16px rgba(0, 0, 0, 0.35),
+            inset 0 2px 3px rgba(255, 255, 255, 0.8),
+            inset 0 -2px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .hrc-shine-button.silver-shine .hrc-shine-text {
+          color: #1a2730;
+          text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+        }
+
+        .hrc-finish-swatch.selected .hrc-shine-button.silver-shine {
+          box-shadow: 
+            0 0 0 3px #C9974E,
+            0 10px 20px rgba(0, 0, 0, 0.4),
+            inset 0 2px 3px rgba(255, 255, 255, 0.8);
+        }
+
+        /* GOLD SHINE */
+        .hrc-shine-button.gold-shine {
+          background: conic-gradient(
+            from 180deg at 50% 50%,
+            #f9e380 0deg,
+            #9e7016 45deg,
+            #fffcd6 90deg,
+            #b2801b 135deg,
+            #f9e380 180deg,
+            #9e7016 225deg,
+            #fffcd6 270deg,
+            #b2801b 315deg,
+            #f9e380 360deg
+          );
+          border: 2px solid #d4a73b;
+          box-shadow: 
+            0 8px 16px rgba(0, 0, 0, 0.35),
+            inset 0 2px 3px rgba(255, 255, 220, 0.9),
+            inset 0 -2px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .hrc-shine-button.gold-shine .hrc-shine-text {
+          color: #3d2700;
+          text-shadow: 0 1px 0 rgba(255, 248, 204, 0.8);
+        }
+
+        .hrc-finish-swatch.selected .hrc-shine-button.gold-shine {
+          box-shadow: 
+            0 0 0 3px #C9974E,
+            0 10px 20px rgba(0, 0, 0, 0.4),
+            inset 0 2px 3px rgba(255, 255, 220, 0.9);
+        }
+
+        /* BLACK SHINE */
+        .hrc-shine-button.black-shine {
+          background: conic-gradient(
+            from 180deg at 50% 50%,
+            #3a3f47 0deg,
+            #0f1115 45deg,
+            #6c7685 90deg,
+            #15181e 135deg,
+            #3a3f47 180deg,
+            #0f1115 225deg,
+            #6c7685 270deg,
+            #15181e 315deg,
+            #3a3f47 360deg
+          );
+          border: 2px solid #484f59;
+          box-shadow: 
+            0 8px 16px rgba(0, 0, 0, 0.45),
+            inset 0 2px 3px rgba(255, 255, 255, 0.3),
+            inset 0 -2px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        .hrc-shine-button.black-shine .hrc-shine-text {
+          color: #ffffff;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+        }
+
+        .hrc-finish-swatch.selected .hrc-shine-button.black-shine {
+          box-shadow: 
+            0 0 0 3px #C9974E,
+            0 10px 20px rgba(0, 0, 0, 0.5),
+            inset 0 2px 3px rgba(255, 255, 255, 0.4);
+        }
+
+        .hrc-finish-circle.off {
           position: relative;
           width: 56px;
           height: 56px;
           border-radius: 50%;
           border: 2px solid #E7DFCB;
-          box-shadow: inset 0 2px 5px rgba(0,0,0,0.15), 0 3px 8px rgba(92,74,38,0.12);
+          box-shadow: inset 0 2px 5px rgba(0,0,0,0.15), 0 4px 10px rgba(92,74,38,0.12);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #FFFDF6;
+          color: #AA9154;
           transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .hrc-finish-swatch:hover .hrc-finish-circle {
-          transform: translateY(-2px) scale(1.05);
-        }
-
-        .hrc-finish-swatch.selected .hrc-finish-circle {
+        .hrc-finish-swatch.selected .hrc-finish-circle.off {
+          background: linear-gradient(135deg, #F7ECD8 0%, #F0DEB8 100%);
+          color: #5C4A26;
           border-color: #C9974E;
-          box-shadow: inset 0 2px 5px rgba(0,0,0,0.15), 0 0 0 3px rgba(201,151,78,0.2), 0 6px 14px rgba(201,151,78,0.3);
         }
 
         .hrc-finish-check {
           position: absolute;
-          bottom: -4px;
-          right: -4px;
+          bottom: -2px;
+          right: -2px;
           width: 18px;
           height: 18px;
           border-radius: 50%;
@@ -434,6 +581,7 @@ const HandrailController = ({
           justify-content: center;
           box-shadow: 0 2px 6px rgba(74, 56, 38, 0.35);
           border: 2px solid #FFFDF8;
+          z-index: 5;
         }
 
         .hrc-finish-name {
@@ -516,17 +664,71 @@ const HandrailController = ({
           font-weight: 700;
         }
 
-        .hrc-luxury-btn.clear-btn.active {
-          border-color: #C8BEA4;
-          background: #FBF9F3;
+        .hrc-tab-row {
+          display: flex;
+          align-items: stretch;
+          justify-content: center;
+          flex-wrap: nowrap;
+          gap: 8px;
+          padding: 4px 14px 0;
         }
 
-        .hrc-luxury-btn.clear-btn.active .hrc-btn-glaze {
-          background: linear-gradient(135deg, #EDE7D6 0%, #E1D8BE 100%);
+        .hrc-luxury-btn.hrc-tab {
+          flex: 1 1 0;
+          min-width: 0;
+          height: auto;
+          min-height: 46px;
+          padding: 5px 6px;
         }
 
-        .hrc-luxury-btn.clear-btn.active .hrc-btn-text {
-          color: #5C4A26;
+        .hrc-tab-content {
+          position: relative;
+          z-index: 2;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 3px;
+          text-align: center;
+        }
+
+        .hrc-tab .hrc-btn-text {
+          font-size: 9px;
+          letter-spacing: 0.1em;
+          line-height: 1.25;
+        }
+
+        .hrc-tab-status {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 8px;
+          font-weight: 600;
+          letter-spacing: 0.2em;
+          color: #B9AD8C;
+          transition: color 0.3s ease;
+        }
+
+        .hrc-tab-status.on {
+          color: #B27B1F;
+        }
+
+        .hrc-tab-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #DDD3B8;
+          transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .hrc-tab-status.on .hrc-tab-dot {
+          background: #C9974E;
+          box-shadow: 0 0 0 3px rgba(201, 151, 78, 0.22);
+        }
+
+        @media (max-width: 420px) {
+          .hrc-tab-row { gap: 6px; padding: 4px 10px 0; }
+          .hrc-tab .hrc-btn-text { font-size: 8px; letter-spacing: 0.05em; }
         }
 
         .hrc-apply-btn {
@@ -579,7 +781,7 @@ const HandrailController = ({
           letter-spacing: 0.15em;
           color: #AA9154;
           text-transform: uppercase;
-          margin-top: 8px;
+          margin-top: 10px;
           margin-bottom: 4px;
         }
 
@@ -653,150 +855,134 @@ const HandrailController = ({
               </p>
             </div>
           ) : (
-            <>
-              <div className="hrc-category-grid">
-                {HANDRAIL_CATEGORIES.map((cat, idx) => {
-                  const isExpanded = openCategoryIndex === idx;
-                  const isAppliedHere = activeCategoryIndex === idx;
-                  return (
-                    <div
-                      key={cat.label}
-                      className={`hrc-category-card ${
-                        isExpanded ? "expanded" : ""
-                      }`}
-                      onClick={() => handleCategoryClick(idx)}
-                    >
-                      <div className="hrc-category-image-wrap">
-                        <img
-                          src={getLocalHandrailImage(cat.nums[0])}
-                          alt={cat.label}
-                        />
-                        {isAppliedHere && (
-                          <div className="hrc-category-check">
-                            <IoCheckmark size={12} />
-                          </div>
-                        )}
-                      </div>
-                      <div className="hrc-category-label">{cat.label}</div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* ========== FRONT HANDRAIL (completely independent) ========== */}
-              {selectedStyleKey && (
-                <>
-                  <div className="hrc-section-label" style={{ marginTop: 14 }}>
-                    <span>FRONT HANDRAIL</span>
-                  </div>
-
-                  <div className="px-6 hrc-layer-block">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div
-                        className={`hrc-luxury-btn ${
-                          frontEnabled ? "active" : ""
-                        }`}
-                        onClick={() => setFrontEnabled(true)}
-                      >
-                        <div className="hrc-btn-glaze" />
-                        <div className="hrc-btn-text">FRONT ON</div>
-                      </div>
-                      <div
-                        className={`hrc-luxury-btn clear-btn ${
-                          !frontEnabled ? "active" : ""
-                        }`}
-                        onClick={() => setFrontEnabled(false)}
-                      >
-                        <div className="hrc-btn-glaze" />
-                        <div className="hrc-btn-text">FRONT OFF</div>
-                      </div>
-                    </div>
-
-                    {/* Front finishes ONLY appear when Front is ON */}
-                    {frontEnabled && (
-                      <>
-                        <div className="hrc-split-hint">
-                          Front finish · {frontFinish} · {selectedStyleKey}
+            <div className="hrc-category-grid">
+              {HANDRAIL_CATEGORIES.map((cat, idx) => {
+                const isExpanded = openCategoryIndex === idx;
+                const isAppliedHere = activeCategoryIndex === idx;
+                return (
+                  <div
+                    key={cat.label}
+                    className={`hrc-category-card ${
+                      isExpanded ? "expanded" : ""
+                    }`}
+                    onClick={() => handleCategoryClick(idx)}
+                  >
+                    <div className="hrc-category-image-wrap">
+                      <img
+                        src={getLocalHandrailImage(cat.nums[0])}
+                        alt={cat.label}
+                      />
+                      {isAppliedHere && (
+                        <div className="hrc-category-check">
+                          <IoCheckmark size={12} />
                         </div>
-                        {renderFinishRow(frontFinish, handleFrontFinishSelect)}
-                      </>
-                    )}
-                  </div>
-                </>
-              )}
-
-              {/* ========== SIDE HANDRAIL (completely independent) ========== */}
-              {selectedStyleKey && (
-                <>
-                  <div className="hrc-section-label" style={{ marginTop: 10 }}>
-                    <span>SIDE HANDRAIL</span>
-                  </div>
-
-                  <div className="px-6 hrc-layer-block">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div
-                        className={`hrc-luxury-btn ${
-                          sideEnabled ? "active" : ""
-                        }`}
-                        onClick={() => setSideEnabled(true)}
-                      >
-                        <div className="hrc-btn-glaze" />
-                        <div className="hrc-btn-text">SIDE ON</div>
-                      </div>
-                      <div
-                        className={`hrc-luxury-btn clear-btn ${
-                          !sideEnabled ? "active" : ""
-                        }`}
-                        onClick={() => setSideEnabled(false)}
-                      >
-                        <div className="hrc-btn-glaze" />
-                        <div className="hrc-btn-text">SIDE OFF</div>
-                      </div>
+                      )}
                     </div>
-
-                    {/* Side finishes ONLY appear when Side is ON */}
-                    {sideEnabled && (
-                      <>
-                        <div className="hrc-split-hint">
-                          Side finish · {sideFinish} · {selectedStyleKey}
-                        </div>
-                        {renderFinishRow(sideFinish, handleSideFinishSelect)}
-                      </>
-                    )}
+                    <div className="hrc-category-label">{cat.label}</div>
                   </div>
-                </>
-              )}
-            </>
+                );
+              })}
+            </div>
           )}
 
-          <div className="hrc-section-label" style={{ marginTop: 18 }}>
-            <span>SECONDARY PERIMETER GUARD</span>
+          <div className="hrc-section-label" style={{ marginTop: 14 }}>
+            <span>HANDRAIL OPTIONS</span>
           </div>
-          <div className="px-6 pb-14">
-            <div className="grid grid-cols-2 gap-4">
-              <div
-                className={`hrc-luxury-btn ${
-                  subHandrailEnabled ? "active" : ""
-                }`}
-                onClick={toggleSubHandrail}
-              >
-                <div className="hrc-btn-glaze" />
-                <div className="hrc-btn-text">BUMPER RAILS</div>
+
+          <div className="hrc-tab-row flex items-center justify-center">
+            <div
+              role="button"
+              tabIndex={0}
+              aria-pressed={activeLayer === "front"}
+              className={`hrc-luxury-btn hrc-tab ${
+                activeLayer === "front" ? "active" : ""
+              }`}
+              onClick={() => handleLayerTab("front")}
+              onKeyDown={(e) =>
+                (e.key === "Enter" || e.key === " ") && handleLayerTab("front")
+              }
+            >
+              <div className="hrc-btn-glaze" />
+              <div className="hrc-tab-content">
+                <div className="hrc-btn-text">Front Handrail</div>
+                {renderStatus(frontEnabled)}
               </div>
-              <div
-                className={`hrc-luxury-btn clear-btn ${
-                  !subHandrailEnabled ? "active" : ""
-                }`}
-                onClick={() => {
-                  setSubHandrailEnabled(false);
-                  applySubHandrail(null);
-                }}
-              >
-                <div className="hrc-btn-glaze" />
-                <div className="hrc-btn-text">NONE</div>
+            </div>
+
+            <div
+              role="button"
+              tabIndex={0}
+              aria-pressed={activeLayer === "side"}
+              className={`hrc-luxury-btn hrc-tab ${
+                activeLayer === "side" ? "active" : ""
+              }`}
+              onClick={() => handleLayerTab("side")}
+              onKeyDown={(e) =>
+                (e.key === "Enter" || e.key === " ") && handleLayerTab("side")
+              }
+            >
+              <div className="hrc-btn-glaze" />
+              <div className="hrc-tab-content">
+                <div className="hrc-btn-text">Side Handrail</div>
+                {renderStatus(sideEnabled)}
+              </div>
+            </div>
+
+            <div
+              role="switch"
+              tabIndex={0}
+              aria-checked={subHandrailEnabled}
+              className={`hrc-luxury-btn hrc-tab ${
+                subHandrailEnabled ? "active" : ""
+              }`}
+              onClick={toggleSubHandrail}
+              onKeyDown={(e) =>
+                (e.key === "Enter" || e.key === " ") && toggleSubHandrail()
+              }
+            >
+              <div className="hrc-btn-glaze" />
+              <div className="hrc-tab-content">
+                <div className="hrc-btn-text">Secondary Perimeter Guard</div>
+                {renderStatus(subHandrailEnabled)}
               </div>
             </div>
           </div>
+
+          {activeLayer && !selectedStyleKey && (
+            <div className="hrc-split-hint">
+              Select a handrail style above to choose a finish
+            </div>
+          )}
+
+          {activeLayer === "front" && selectedStyleKey && (
+            <div className="px-6 hrc-layer-block">
+              <div className="hrc-split-hint">
+                Front · {frontEnabled ? frontFinish : "off"} · {selectedStyleKey}
+              </div>
+              {renderFinishRow(
+                frontFinish,
+                frontEnabled,
+                handleFrontFinishSelect,
+                () => setFrontEnabled(false)
+              )}
+            </div>
+          )}
+
+          {activeLayer === "side" && selectedStyleKey && (
+            <div className="px-6 hrc-layer-block">
+              <div className="hrc-split-hint">
+                Side · {sideEnabled ? sideFinish : "off"} · {selectedStyleKey}
+              </div>
+              {renderFinishRow(
+                sideFinish,
+                sideEnabled,
+                handleSideFinishSelect,
+                () => setSideEnabled(false)
+              )}
+            </div>
+          )}
+
+          <div className="pb-14" />
         </div>
       </div>
     </>

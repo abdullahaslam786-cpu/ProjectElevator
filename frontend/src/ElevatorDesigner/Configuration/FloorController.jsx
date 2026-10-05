@@ -1,15 +1,16 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { IoClose } from "react-icons/io5";
+import { IoClose, IoCheckmark } from "react-icons/io5";
 import { RingLoader } from "react-spinners";
+
+const pad = (n) => String(n).padStart(2, "0");
 
 const FloorController = ({ applyFloor }) => {
   const [selectedFloor, setSelectedFloor] = useState(null);
   const [floorThumbnails, setFloorThumbnails] = useState([]);
-  const [allFloorImages, setAllFloorImages] = useState([]);
   const [floorPreviewUrl, setFloorPreviewUrl] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ── Robust Image Processing Engine (same logic as CeilingController) ──
+  // ── Robust Image Processing Engine ──
   const processImages = useCallback((data) => {
     return data
       .filter((item) => item.key.endsWith(".png"))
@@ -27,26 +28,41 @@ const FloorController = ({ applyFloor }) => {
         const res = await fetch("/api/images-by-prefix?prefix=SubMaterial/floor");
         const floorData = await res.json();
 
-        // Keep the full unfiltered list around so we can look up any /V1/{num}.png
-        // for the preview panel, the same way CeilingController does.
-        setAllFloorImages(floorData);
+        // Process the list so we know which floor numbers exist
+        const thumbs = processImages(
+          floorData.filter((i) => i.key.includes("/V1/"))
+        );
 
-        const thumbs = processImages(floorData.filter((i) => i.key.includes("/V1/")));
-        setFloorThumbnails(thumbs);
+        // ── Override every image URL to point to local public/floor/ ──
+        const localThumbs = thumbs.map((item) => ({
+          ...item,
+          url: `/floor/${item.num}.png`, // ← local image
+        }));
 
-        // ── Open preview by default with the first floor ──
-        if (thumbs.length > 0) {
-          const first = thumbs[0];
+        setFloorThumbnails(localThumbs);
+
+        // Auto-select first floor + open preview
+        if (localThumbs.length > 0) {
+          const first = localThumbs[0];
           setSelectedFloor(first.num);
           applyFloor(first.num);
-
-          const found = floorData.find((img) =>
-            img.key.includes(`/V1/${first.num}.png`)
-          );
-          if (found) setFloorPreviewUrl(found.url);
+          setFloorPreviewUrl(`/floor/${first.num}.png`); // ← local preview
         }
       } catch (err) {
         console.error("Fetch error:", err);
+
+        // Fallback: hard-code 1-10 if API fails
+        const fallback = Array.from({ length: 10 }, (_, i) => ({
+          num: i + 1,
+          url: `/floor/${i + 1}.png`,
+        }));
+        setFloorThumbnails(fallback);
+
+        if (fallback.length > 0) {
+          setSelectedFloor(1);
+          applyFloor(1);
+          setFloorPreviewUrl(`/floor/1.png`);
+        }
       } finally {
         setLoading(false);
       }
@@ -57,9 +73,8 @@ const FloorController = ({ applyFloor }) => {
   const handleFloorSelect = (num) => {
     setSelectedFloor(num);
     applyFloor(num);
-
-    const found = allFloorImages.find((img) => img.key.includes(`/V1/${num}.png`));
-    if (found) setFloorPreviewUrl(found.url);
+    // Always use the local image for the preview
+    setFloorPreviewUrl(`/floor/${num}.png`);
   };
 
   const handleClearPreview = () => {
@@ -75,9 +90,11 @@ const FloorController = ({ applyFloor }) => {
 
         .flc-root {
           font-family: 'Jost', sans-serif;
-          background: linear-gradient(180deg, #FFFDF6, #F7EFCF);
           color: #5C4A26;
-          min-height: 100%;
+          background: linear-gradient(180deg, #FFFDF8, #F7F1E4);
+          height: 100%;
+          display: flex;
+          flex-direction: column;
         }
 
         .flc-header {
@@ -98,51 +115,104 @@ const FloorController = ({ applyFloor }) => {
           color: #4A3826;
         }
 
-        /* Pure-CSS reveal: no JS animation library involved */
+        /* ── Preview banner (matches handrail) ── */
         .flc-preview {
           position: relative;
           overflow: hidden;
-          background: #1F190A;
-          max-height: 0;
-          transition: max-height 0.45s ease;
+          background: #F7F1E4;
+          height: 0;
+          flex-shrink: 0;
+          transition: height 0.5s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
         .flc-preview.flc-preview-open {
-          max-height: 260px;
+          height: 250px;
         }
 
         .flc-preview-img {
           width: 100%;
-          height: 200px;
-          object-fit: contain;
-          padding: 60px;
-          opacity: 0.95;
-          filter: sepia(0.15) saturate(1.05);
+          height: 100%;
+          object-fit: cover;
         }
 
         .flc-preview-overlay {
           position: absolute;
           inset: 0;
-          background: linear-gradient(to top, rgba(41,32,11,0.95) 0%, transparent 60%);
+          background: linear-gradient(to top, rgba(74,56,38,0.85) 0%, transparent 55%);
           display: flex;
           flex-direction: column;
           justify-content: flex-end;
           padding: 20px;
         }
 
+        .flc-preview-name {
+          font-family: 'Cormorant Garamond', serif;
+          font-size: 16px;
+          font-weight: 400;
+          color: #FFFDF6;
+          letter-spacing: 0.1em;
+        }
+
+        .flc-apply-btn {
+          padding: 8px 20px;
+          background: transparent;
+          border: 1px solid #FFF3D6;
+          font-family: 'Jost', sans-serif;
+          font-size: 9px;
+          font-weight: 500;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          color: #FFF3D6;
+          cursor: pointer;
+          border-radius: 3px;
+          transition: all 0.3s;
+        }
+
+        .flc-apply-btn:hover {
+          background: linear-gradient(135deg, #E7A94C 0%, #C9974E 100%);
+          border-color: #C9974E;
+          color: #FFFFFF;
+          box-shadow: 0 4px 12px rgba(184, 142, 47, 0.25);
+        }
+
+        .flc-preview-close {
+          position: absolute;
+          top: 16px;
+          right: 16px;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: rgba(255, 253, 246, 0.9);
+          border: 1px solid #E7DFCB;
+          color: #5C4A26;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.3s;
+        }
+
+        .flc-preview-close:hover {
+          background: #FFFFFF;
+          border-color: #C9974E;
+        }
+
+        /* ── Scroll area ── */
         .flc-content {
-          height: 600px;
+          flex: 1 1 auto;
+          min-height: 0;
           overflow-y: auto;
-          background: #FEFAF7;
+          overflow-x: hidden;
+          background: linear-gradient(180deg, #FFFDF8, #F7F1E4);
           scrollbar-width: thin;
-          scrollbar-color: #D4AF37 #F7EFCF;
+          scrollbar-color: #C9974E #F7F1E4;
         }
 
         .flc-section-label {
           display: flex;
           align-items: center;
           gap: 12px;
-          padding: 14px 14px 6px 14px;
+          padding: 6px 14px;
         }
 
         .flc-section-label span {
@@ -157,121 +227,137 @@ const FloorController = ({ applyFloor }) => {
           content: '';
           flex: 1;
           height: 1px;
-          background: #E8D8A7;
+          background: #EADFC8;
         }
 
+        /* ── Option cards (matches handrail style cards) ── */
         .flc-grid {
           display: grid;
-          grid-template-columns: repeat(8, 1fr);
-          gap: 4px;
-          padding: 0px 24px 20px 20px;
+          grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+          gap: 12px;
+          padding: 0 14px;
         }
 
-        .flc-swatch-wrap {
+        .flc-card {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          cursor: pointer;
+          background: #FFFFFF;
+          border: 1px solid #E7DFCB;
+          border-radius: 10px;
+          overflow: hidden;
+          transition: border-color 0.3s ease, transform 0.3s cubic-bezier(0.25, 1, 0.33, 1), box-shadow 0.3s ease;
+        }
+
+        .flc-card-image-wrap {
           position: relative;
           aspect-ratio: 1;
-          cursor: pointer;
-          perspective: 900px;
-          margin-bottom: 22px;
+          background: #FBF7EC;
         }
 
-        /* ── Updated color theme ── */
-        .flc-swatch-item {
+        .flc-card-image-wrap img {
           width: 100%;
           height: 100%;
-          background: #000000;          /* ← new base color */    #97713A
-          border: 1px solid #B88E2F;
-          border-radius: 4px;
-          overflow: hidden;
-          transition: all 0.4s cubic-bezier(0.25, 1, 0.33, 1);
-          transform-style: preserve-3d;
+          object-fit: cover;
+          opacity: 0.92;
+          transition: opacity 0.3s ease, transform 0.3s ease;
         }
 
-        .flc-swatch-item img {
-          width: 120%;
-          height: 100%;
-          padding-bottom: -20px;
-          object-fit: center;
-          opacity: 0.75;
-          transition: opacity 0.3s;
-        }
-
-        .flc-swatch-badge {
+        .flc-card-check {
           position: absolute;
-          bottom: -20px;
-          left: 0;
-          right: 0;
+          top: 6px;
+          right: 6px;
+          width: 18px;
           height: 18px;
-          background: linear-gradient(135deg, #E6C262 0%, #B88E2F 100%);
-          color: #241A03;
-          font-size: 8px;
-          font-weight: 800;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #E7A94C 0%, #C9974E 100%);
+          color: #FFFFFF;
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: bottom 0.3s ease;
+          box-shadow: 0 2px 6px rgba(74, 56, 38, 0.35);
         }
 
-        .flc-swatch-wrap:hover .flc-swatch-item {
-          transform: translateZ(25px);
-          border-color: #B88E2F;
-          box-shadow: 0 6px 16px rgba(151, 113, 58, 0.25);
+        .flc-card-label {
+          padding: 6px 4px;
+          text-align: center;
+          font-size: 9px;
+          font-weight: 600;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: #8F7A4F;
+          background: #FFFDF6;
+          border-top: 1px solid #F0E8D2;
+          transition: background 0.3s ease, color 0.3s ease;
         }
 
-        .flc-swatch-wrap:hover img {
+        .flc-card:hover {
+          border-color: #C9974E;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 18px rgba(180, 140, 70, 0.18);
+        }
+
+        .flc-card:hover img {
+          opacity: 1;
+          transform: scale(1.03);
+        }
+
+        .flc-card.selected {
+          border-color: #C9974E;
+          box-shadow: 0 8px 20px rgba(201, 151, 78, 0.3);
+        }
+
+        .flc-card.selected img {
           opacity: 1;
         }
 
-        .flc-swatch-wrap:hover .flc-swatch-badge {
-          bottom: 0;
-        }
-
-        .flc-swatch-wrap.selected .flc-swatch-item {
-          border-color: #D4AF37;
-          transform: translateZ(25px);
-          box-shadow: 0 10px 24px rgba(151, 113, 58, 0.35);
-          background: #000000;          /* slightly lighter when selected */
-        }
-
-        .flc-swatch-wrap.selected .flc-swatch-badge {
-          bottom: 0;
-          background: linear-gradient(135deg, #FFFFFF 0%, #FFF2CC 100%);
+        .flc-card.selected .flc-card-label {
+          background: linear-gradient(135deg, #F7ECD8 0%, #F0DEB8 100%);
           color: #5C4A26;
-          border-top: 1px solid #E6C262;
-        }
-
-        .flc-swatch-wrap.selected img {
-          opacity: 1;
         }
       `}</style>
 
       <div className="flc-root">
         <div className="flc-header">
-          <div className="flex-flex-col">
+          <div className="flex flex-col">
             <div className="flc-header-title">FLOOR CONFIGURATOR</div>
             <div className="text-[11px] text-[#AA9154] tracking-[0.15em] font-light">
               Please select the floor to Enhance your Elevator floor.
             </div>
           </div>
-          <div style={{ fontSize: 9, letterSpacing: "0.25em", color: "#d4a843", fontWeight: 600 }}>
-            PREMIUM SERIES
+          <div
+            style={{
+              fontSize: 9,
+              letterSpacing: "0.25em",
+              color: "#C9974E",
+              textTransform: "uppercase",
+              fontWeight: 700,
+            }}
+          >
+            Premium Series
           </div>
         </div>
 
-        {/* Preview is open by default because floorPreviewUrl is set on load */}
+        {/* Preview banner */}
         <div className={`flc-preview ${floorPreviewUrl ? "flc-preview-open" : ""}`}>
           {floorPreviewUrl && (
             <>
               <img src={floorPreviewUrl} alt="Preview" className="flc-preview-img" />
               <div className="flc-preview-overlay">
-                <div style={{ fontFamily: "Cormorant Garamond", fontSize: 16, color: "#d4a843" }}>
-                  BASE OPTION 0{selectedFloor}
+                <div className="flc-preview-name">
+                  BASE OPTION {pad(selectedFloor ?? 0)}
+                </div>
+                <div style={{ marginTop: "12px" }}>
+                  <button
+                    className="flc-apply-btn"
+                    onClick={() => setFloorPreviewUrl(null)}
+                  >
+                    CONFIRM LAYER
+                  </button>
                 </div>
               </div>
-              <button
-                className="absolute top-4 right-4 w-8 h-8 bg-black/60 text-white rounded-full flex items-center justify-center border border-[#332a15]"
-                onClick={handleClearPreview}
-              >
+              <button className="flc-preview-close" onClick={handleClearPreview}>
                 <IoClose size={16} />
               </button>
             </>
@@ -285,24 +371,32 @@ const FloorController = ({ applyFloor }) => {
 
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
-              <RingLoader color="#d4a843" size={40} />
+              <RingLoader color="#C9974E" size={40} />
             </div>
           ) : (
             <div className="flc-grid">
               {floorThumbnails.map((item) => (
                 <div
                   key={item.num}
-                  className={`flc-swatch-wrap ${selectedFloor === item.num ? "selected" : ""}`}
+                  className={`flc-card ${selectedFloor === item.num ? "selected" : ""}`}
                   onClick={() => handleFloorSelect(item.num)}
                 >
-                  <div className="flc-swatch-item">
-                    <img src={item.url} alt={`Floor ${item.num}`} />
-                    <div className="flc-swatch-badge">BASE 0{item.num}</div>
+                  <div className="flc-card-image-wrap">
+                    {/* Local image from public/floor/ */}
+                    <img src={`/floor/${item.num}.png`} alt={`Floor ${item.num}`} />
+                    {selectedFloor === item.num && (
+                      <div className="flc-card-check">
+                        <IoCheckmark size={12} />
+                      </div>
+                    )}
                   </div>
+                  <div className="flc-card-label">Base {pad(item.num)}</div>
                 </div>
               ))}
             </div>
           )}
+
+          <div className="pb-14" />
         </div>
       </div>
     </>
