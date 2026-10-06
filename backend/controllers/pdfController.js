@@ -115,7 +115,7 @@ function formatRevisionTimestamp(date = new Date()) {
 // ══════════════════════════════════════════════════════════════════════════
 // Header
 // ══════════════════════════════════════════════════════════════════════════
-function drawHeader(doc, { jobName, location, designName, designId }) {
+function drawHeader(doc, { jobName, designName, designId }) {
   // Logo
   if (fs.existsSync(LOGO_PATH)) {
     doc.image(LOGO_PATH, MARGIN, 14, { width: 262 });
@@ -159,7 +159,6 @@ function drawHeader(doc, { jobName, location, designName, designId }) {
   const colW = CONTENT_W / 4;
   const cols = [
     ["JOB NAME", jobName],
-    ["LOCATION", location],
     ["DESIGN", designName],
     ["DESIGN ID", designId],
   ];
@@ -441,7 +440,6 @@ export const generateModelPDF = async (req, res) => {
       imageUrlsGroups,
       modelName,
       projectName,
-      location,
       designName,
       selectedView,
       dimensions = {},
@@ -481,7 +479,6 @@ export const generateModelPDF = async (req, res) => {
       await drawSummaryPage(doc, {
         header: {
           jobName: projectName || "",
-          location: location || "",
           designName: designName || modelName || "",
           designId: designId || "",
         },

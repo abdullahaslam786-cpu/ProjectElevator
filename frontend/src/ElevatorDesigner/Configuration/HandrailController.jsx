@@ -3,6 +3,10 @@ import { IoClose, IoCheckmark } from "react-icons/io5";
 import { RingLoader } from "react-spinners";
 import gsap from "gsap";
 
+// ═══════════════════════════════════════════════════════════════════════════
+// Handrail data & AWS layout — everything handrail-specific lives in this file.
+// ═══════════════════════════════════════════════════════════════════════════
+
 const getLocalHandrailImage = (num) => `/previewHandrails/${num}.png`;
 
 const HANDRAIL_CATEGORIES = [
@@ -12,31 +16,92 @@ const HANDRAIL_CATEGORIES = [
 ];
 
 const FINISHES = [
-  { name: "Silver", classKey: "silver-shine" },
-  { name: "Gold", classKey: "gold-shine" },
-  { name: "Black", classKey: "black-shine" },
+  { name: "Silver", finish: "silver", image: "/buttons/silver.jpg" },
+  { name: "Gold", finish: "golden", image: "/buttons/golden.jpg" },
+  { name: "Black", finish: "black", image: "/buttons/black.jpg" },
 ];
 
+const FRONT_SPLIT_FOLDER = "FrontHandrails";
+const SIDE_SPLIT_FOLDER = "SideHandrials";
+
+const ALL_VIEWS = [1, 2, 3];
+const FRONT_VIEWS = [1, 2];
+
+const SIDE_HANDRAIL_FILES_BY_VIEW = {
+  1: ["1.png"],
+  2: ["1.png", "2.png"],
+  3: ["1.png"],
+};
+
+const makeFrontSelection = (style, finish) => ({
+  style,
+  finish,
+  keys: Object.fromEntries(
+    FRONT_VIEWS.map((v) => [
+      v,
+      [`SubMaterial/splithandrails/${FRONT_SPLIT_FOLDER}/${style}/${finish}/v${v}/${v}.png`],
+    ])
+  ),
+});
+
+const makeSideSelection = (style, finish) => ({
+  style,
+  finish,
+  keys: Object.fromEntries(
+    ALL_VIEWS.map((v) => [
+      v,
+      (SIDE_HANDRAIL_FILES_BY_VIEW[v] || ["1.png"]).map(
+        (file) =>
+          `SubMaterial/splithandrails/${SIDE_SPLIT_FOLDER}/${style}/${finish}/v${v}/${file}`
+      ),
+    ])
+  ),
+});
+
+const makeSubSelection = () => ({
+  keys: Object.fromEntries(
+    ALL_VIEWS.map((v) => [v, [`SubMaterial/subhandrail/V${v}/${v}.png`]])
+  ),
+});
+
+const getInitialStyleState = (front, side) => {
+  const applied = side || front;
+  if (!applied?.style) return { categoryIdx: null, num: null };
+  const ci = HANDRAIL_CATEGORIES.findIndex(
+    (c) => c.label.toLowerCase() === applied.style
+  );
+  if (ci < 0) return { categoryIdx: null, num: null };
+  const fi = FINISHES.findIndex((f) => f.finish === applied.finish);
+  return {
+    categoryIdx: ci,
+    num: HANDRAIL_CATEGORIES[ci].nums[fi >= 0 ? fi : 0],
+  };
+};
+
 const HandrailController = ({
-  applyHandrail,
   applySubHandrail,
   applyFrontHandrail,
   applySideHandrail,
+  appliedFrontHandrail,
+  appliedSideHandrail,
+  appliedSubHandrail,
+  presignedCache = {},
+  setPresignedCache,
 }) => {
-  const [selectedHandrail, setSelectedHandrail] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [subHandrailEnabled, setSubHandrailEnabled] = useState(false);
+  const [initial] = useState(() =>
+    getInitialStyleState(appliedFrontHandrail, appliedSideHandrail)
+  );
+  const [selectedHandrail, setSelectedHandrail] = useState(initial.num);
+  const [selectedCategory, setSelectedCategory] = useState(initial.categoryIdx);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  const [frontEnabled, setFrontEnabled] = useState(false);
-  const [sideEnabled, setSideEnabled] = useState(false);
-  const [frontFinish, setFrontFinish] = useState("silver");
-  const [sideFinish, setSideFinish] = useState("silver");
-
   const [activeLayer, setActiveLayer] = useState(null);
 
   const previewContainerRef = useRef(null);
+
+  const frontEnabled = !!appliedFrontHandrail;
+  const sideEnabled = !!appliedSideHandrail;
+  const subHandrailEnabled = !!appliedSubHandrail;
 
   useEffect(() => {
     const warm = async () => {
@@ -69,23 +134,55 @@ const HandrailController = ({
     }
   }, [previewUrl]);
 
+  const cacheRef = useRef(presignedCache);
+  cacheRef.current = presignedCache;
+  const inFlightRef = useRef(new Set());
+
+  useEffect(() => {
+    if (!setPresignedCache) return;
+
+    const keys = [appliedFrontHandrail, appliedSideHandrail, appliedSubHandrail]
+      .flatMap((applied) => (applied?.keys ? Object.values(applied.keys).flat() : []));
+
+    keys.forEach((key) => {
+      if (cacheRef.current[key] || inFlightRef.current.has(key)) return;
+      inFlightRef.current.add(key);
+
+      fetch(`/api/presign-single?key=${encodeURIComponent(key)}`)
+        .then((r) => (r.ok ? r.json() : Promise.reject()))
+        .then((data) => {
+          if (data.url) setPresignedCache((prev) => ({ ...prev, [key]: data.url }));
+        })
+        .catch(() => {})
+        .finally(() => inFlightRef.current.delete(key));
+    });
+  }, [appliedFrontHandrail, appliedSideHandrail, appliedSubHandrail, setPresignedCache]);
+
+  useEffect(() => {
+    if (appliedFrontHandrail && !appliedFrontHandrail.keys && appliedFrontHandrail.style) {
+      applyFrontHandrail?.(
+        makeFrontSelection(appliedFrontHandrail.style, appliedFrontHandrail.finish)
+      );
+    }
+  }, [appliedFrontHandrail, applyFrontHandrail]);
+
+  useEffect(() => {
+    if (appliedSideHandrail && !appliedSideHandrail.keys && appliedSideHandrail.style) {
+      applySideHandrail?.(
+        makeSideSelection(appliedSideHandrail.style, appliedSideHandrail.finish)
+      );
+    }
+  }, [appliedSideHandrail, applySideHandrail]);
+
+  useEffect(() => {
+    if (appliedSubHandrail && !appliedSubHandrail.keys) {
+      applySubHandrail?.(makeSubSelection());
+    }
+  }, [appliedSubHandrail, applySubHandrail]);
+
   const handleMainSelect = (num) => {
     setSelectedHandrail(num);
     setPreviewUrl(getLocalHandrailImage(num));
-  };
-
-  const handleFrontFinishSelect = (num, finishName) => {
-    setSelectedHandrail(num);
-    setPreviewUrl(getLocalHandrailImage(num));
-    setFrontFinish(finishName.toLowerCase());
-    setFrontEnabled(true);
-  };
-
-  const handleSideFinishSelect = (num, finishName) => {
-    setSelectedHandrail(num);
-    setPreviewUrl(getLocalHandrailImage(num));
-    setSideFinish(finishName.toLowerCase());
-    setSideEnabled(true);
   };
 
   const handleCategoryClick = (idx) => {
@@ -95,10 +192,8 @@ const HandrailController = ({
     if (isOpeningNew) {
       const firstNum = HANDRAIL_CATEGORIES[idx].nums[0];
       handleMainSelect(firstNum);
-      setFrontFinish("silver");
-      setSideFinish("silver");
-      setFrontEnabled(false);
-      setSideEnabled(false);
+      applyFrontHandrail?.(null);
+      applySideHandrail?.(null);
     }
   };
 
@@ -116,32 +211,20 @@ const HandrailController = ({
       ? HANDRAIL_CATEGORIES[openCategoryIndex].label.toLowerCase()
       : null;
 
-  useEffect(() => {
-    if (!applyFrontHandrail) return;
+  const handleFrontFinishSelect = (num, finish) => {
+    setSelectedHandrail(num);
+    setPreviewUrl(getLocalHandrailImage(num));
+    applyFrontHandrail?.(makeFrontSelection(selectedStyleKey, finish));
+  };
 
-    if (!frontEnabled || !selectedStyleKey) {
-      applyFrontHandrail(null);
-      return;
-    }
-
-    applyFrontHandrail({ style: selectedStyleKey, finish: frontFinish });
-  }, [frontEnabled, selectedStyleKey, frontFinish, applyFrontHandrail]);
-
-  useEffect(() => {
-    if (!applySideHandrail) return;
-
-    if (!sideEnabled || !selectedStyleKey) {
-      applySideHandrail(null);
-      return;
-    }
-
-    applySideHandrail({ style: selectedStyleKey, finish: sideFinish });
-  }, [sideEnabled, selectedStyleKey, sideFinish, applySideHandrail]);
+  const handleSideFinishSelect = (num, finish) => {
+    setSelectedHandrail(num);
+    setPreviewUrl(getLocalHandrailImage(num));
+    applySideHandrail?.(makeSideSelection(selectedStyleKey, finish));
+  };
 
   const toggleSubHandrail = () => {
-    const next = !subHandrailEnabled;
-    setSubHandrailEnabled(next);
-    applySubHandrail(next ? "subhandrail" : null);
+    applySubHandrail?.(subHandrailEnabled ? null : makeSubSelection());
   };
 
   const handleLayerTab = (layer) => {
@@ -154,32 +237,33 @@ const HandrailController = ({
     return (
       <div className="hrc-finish-panel">
         <div className="hrc-finish-row has-off">
-          {FINISHES.map((finish, i) => {
+          {FINISHES.map((item, i) => {
             const num = HANDRAIL_CATEGORIES[openCategoryIndex].nums[i];
-            const isSelected =
-              layerEnabled && currentFinish === finish.name.toLowerCase();
+            const isSelected = layerEnabled && currentFinish === item.finish;
 
             return (
               <div
-                key={finish.name}
+                key={item.name}
                 className={`hrc-finish-swatch ${isSelected ? "selected" : ""}`}
-                onClick={() => onSelect(num, finish.name)}
+                onClick={() => onSelect(num, item.finish)}
               >
-                {/* Shining Metallic Radial Button */}
-                <div className={`hrc-shine-button ${finish.classKey}`}>
-                  <div className="hrc-shine-text">{finish.name}</div>
-                  {isSelected && (
-                    <div className="hrc-finish-check">
-                      <IoCheckmark size={11} />
-                    </div>
-                  )}
+                <div className="swatch-button">
+                  <div
+                    className="hrc-finish-circle"
+                    style={{ backgroundImage: `url(${item.image})` }}
+                  >
+                    {isSelected && (
+                      <div className="hrc-finish-check">
+                        <IoCheckmark size={11} />
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="hrc-finish-name">{finish.name}</div>
+                <div className="hrc-finish-name">{item.name}</div>
               </div>
             );
           })}
 
-          {/* Off Button */}
           <div
             className={`hrc-finish-swatch ${!layerEnabled ? "selected" : ""}`}
             onClick={onOff}
@@ -404,7 +488,7 @@ const HandrailController = ({
         }
 
         .hrc-finish-row.has-off {
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: repeat(6, 1fr);
           gap: 10px;
         }
 
@@ -412,165 +496,66 @@ const HandrailController = ({
           display: flex;
           flex-direction: column;
           align-items: center;
+          justify-content: center;
           gap: 8px;
           cursor: pointer;
         }
 
-        /* ───────── High-Shine Metallic Conical Buttons ───────── */
-        .hrc-shine-button {
+        /* Swatch button container allowed to render badge overlay outside bounds */
+        .swatch-button {
           position: relative;
-          width: 56px;
-          height: 56px;
-          border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          user-select: none;
-          transition: transform 0.2s cubic-bezier(0.25, 1, 0.33, 1), box-shadow 0.2s ease;
         }
 
-        .hrc-shine-text {
-          font-family: 'Jost', sans-serif;
-          font-size: 8px;
-          font-weight: 700;
-          letter-spacing: 0.15em;
-          text-transform: uppercase;
-          z-index: 2;
-          pointer-events: none;
-        }
-
-        .hrc-finish-swatch:hover .hrc-shine-button {
-          transform: translateY(-2px) scale(1.05);
-        }
-
-        .hrc-finish-swatch.selected .hrc-shine-button {
-          transform: scale(1.05);
-        }
-
-        /* SILVER SHINE */
-        .hrc-shine-button.silver-shine {
-          background: conic-gradient(
-            from 180deg at 50% 50%,
-            #e6ecef 0deg,
-            #7d8b94 45deg,
-            #ffffff 90deg,
-            #8c9aa3 135deg,
-            #e6ecef 180deg,
-            #7d8b94 225deg,
-            #ffffff 270deg,
-            #8c9aa3 315deg,
-            #e6ecef 360deg
-          );
-          border: 2px solid #b3bec4;
-          box-shadow: 
-            0 8px 16px rgba(0, 0, 0, 0.35),
-            inset 0 2px 3px rgba(255, 255, 255, 0.8),
-            inset 0 -2px 4px rgba(0, 0, 0, 0.4);
-        }
-
-        .hrc-shine-button.silver-shine .hrc-shine-text {
-          color: #1a2730;
-          text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
-        }
-
-        .hrc-finish-swatch.selected .hrc-shine-button.silver-shine {
-          box-shadow: 
-            0 0 0 3px #C9974E,
-            0 10px 20px rgba(0, 0, 0, 0.4),
-            inset 0 2px 3px rgba(255, 255, 255, 0.8);
-        }
-
-        /* GOLD SHINE */
-        .hrc-shine-button.gold-shine {
-          background: conic-gradient(
-            from 180deg at 50% 50%,
-            #f9e380 0deg,
-            #9e7016 45deg,
-            #fffcd6 90deg,
-            #b2801b 135deg,
-            #f9e380 180deg,
-            #9e7016 225deg,
-            #fffcd6 270deg,
-            #b2801b 315deg,
-            #f9e380 360deg
-          );
-          border: 2px solid #d4a73b;
-          box-shadow: 
-            0 8px 16px rgba(0, 0, 0, 0.35),
-            inset 0 2px 3px rgba(255, 255, 220, 0.9),
-            inset 0 -2px 4px rgba(0, 0, 0, 0.4);
-        }
-
-        .hrc-shine-button.gold-shine .hrc-shine-text {
-          color: #3d2700;
-          text-shadow: 0 1px 0 rgba(255, 248, 204, 0.8);
-        }
-
-        .hrc-finish-swatch.selected .hrc-shine-button.gold-shine {
-          box-shadow: 
-            0 0 0 3px #C9974E,
-            0 10px 20px rgba(0, 0, 0, 0.4),
-            inset 0 2px 3px rgba(255, 255, 220, 0.9);
-        }
-
-        /* BLACK SHINE */
-        .hrc-shine-button.black-shine {
-          background: conic-gradient(
-            from 180deg at 50% 50%,
-            #3a3f47 0deg,
-            #0f1115 45deg,
-            #6c7685 90deg,
-            #15181e 135deg,
-            #3a3f47 180deg,
-            #0f1115 225deg,
-            #6c7685 270deg,
-            #15181e 315deg,
-            #3a3f47 360deg
-          );
-          border: 2px solid #484f59;
-          box-shadow: 
-            0 8px 16px rgba(0, 0, 0, 0.45),
-            inset 0 2px 3px rgba(255, 255, 255, 0.3),
-            inset 0 -2px 4px rgba(0, 0, 0, 0.7);
-        }
-
-        .hrc-shine-button.black-shine .hrc-shine-text {
-          color: #ffffff;
-          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
-        }
-
-        .hrc-finish-swatch.selected .hrc-shine-button.black-shine {
-          box-shadow: 
-            0 0 0 3px #C9974E,
-            0 10px 20px rgba(0, 0, 0, 0.5),
-            inset 0 2px 3px rgba(255, 255, 255, 0.4);
+        /* Round finish button frame holding the background texture */
+        .hrc-finish-circle {
+          position: relative;
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          border: 2px solid #E7DFCB;
+          background-color: #FBF7EC;
+          background-position: center;
+          background-repeat: no-repeat;
+          
+          /* Scaled up background image to crop out the embedded black border */
+          background-size: 180% 125%;
+          
+          /* Prevent badge overflow cutoff issue on checkmark */
+          overflow: visible;
+          box-shadow: 0 3px 8px rgba(92, 74, 38, 0.12);
+          transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .hrc-finish-circle.off {
-          position: relative;
-          width: 56px;
-          height: 56px;
-          border-radius: 50%;
-          border: 2px solid #E7DFCB;
-          box-shadow: inset 0 2px 5px rgba(0,0,0,0.15), 0 4px 10px rgba(92,74,38,0.12);
           display: flex;
           align-items: center;
           justify-content: center;
           background: #FFFDF6;
           color: #AA9154;
-          transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+          background-size: cover;
+        }
+
+        .hrc-finish-swatch:hover .hrc-finish-circle {
+          transform: translateY(-2px);
+        }
+
+        .hrc-finish-swatch.selected .hrc-finish-circle {
+          border-color: #C9974E;
+          box-shadow: 0 0 0 3px rgba(201, 151, 78, 0.25);
         }
 
         .hrc-finish-swatch.selected .hrc-finish-circle.off {
           background: linear-gradient(135deg, #F7ECD8 0%, #F0DEB8 100%);
           color: #5C4A26;
-          border-color: #C9974E;
         }
 
         .hrc-finish-check {
           position: absolute;
-          bottom: -2px;
-          right: -2px;
+          bottom: -4px;
+          right: -4px;
           width: 18px;
           height: 18px;
           border-radius: 50%;
@@ -957,13 +942,13 @@ const HandrailController = ({
           {activeLayer === "front" && selectedStyleKey && (
             <div className="px-6 hrc-layer-block">
               <div className="hrc-split-hint">
-                Front · {frontEnabled ? frontFinish : "off"} · {selectedStyleKey}
+                Front · {frontEnabled ? appliedFrontHandrail.finish : "off"} · {selectedStyleKey}
               </div>
               {renderFinishRow(
-                frontFinish,
+                appliedFrontHandrail?.finish,
                 frontEnabled,
                 handleFrontFinishSelect,
-                () => setFrontEnabled(false)
+                () => applyFrontHandrail?.(null)
               )}
             </div>
           )}
@@ -971,13 +956,13 @@ const HandrailController = ({
           {activeLayer === "side" && selectedStyleKey && (
             <div className="px-6 hrc-layer-block">
               <div className="hrc-split-hint">
-                Side · {sideEnabled ? sideFinish : "off"} · {selectedStyleKey}
+                Side · {sideEnabled ? appliedSideHandrail.finish : "off"} · {selectedStyleKey}
               </div>
               {renderFinishRow(
-                sideFinish,
+                appliedSideHandrail?.finish,
                 sideEnabled,
                 handleSideFinishSelect,
-                () => setSideEnabled(false)
+                () => applySideHandrail?.(null)
               )}
             </div>
           )}

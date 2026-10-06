@@ -3,23 +3,6 @@ import { RingLoader } from "react-spinners";
 import gsap from "gsap";
 import { modelConfigs } from "../config/modelConfigs";
 
-// Real S3 folder for Side is spelled "SideHandrials" (not "SideHandrails") — keep this
-// exact spelling in sync with the bucket, per SubMaterial/splithandrails/SideHandrials/...
-const FRONT_SPLIT_FOLDER = "FrontHandrails";
-const SIDE_SPLIT_FOLDER = "SideHandrials";
-
-// Which image files exist inside each Side handrail view folder (v1 / v2 / v3).
-// This is keyed by VIEW only — it applies the same way to every shape
-// (round / flat / oval) and every finish (silver / golden / black).
-//   v1 → 1.png
-//   v2 → 1.png + 2.png
-//   v3 → 1.png
-const SIDE_HANDRAIL_FILES_BY_VIEW = {
-  1: ["1.png"],
-  2: ["1.png", "2.png"],
-  3: ["1.png"],
-};
-
 const ModelPreview = forwardRef((props, ref) => {
   const {
     selectedView,
@@ -38,9 +21,9 @@ const ModelPreview = forwardRef((props, ref) => {
     appliedCeiling,
     appliedFloor,
     appliedLight,
-    appliedSubHandrail,
-    appliedFrontHandrail, // { style, finish } | null
-    appliedSideHandrail,  // { style, finish } | null
+    appliedSubHandrail,   // { keys } | null            (set by HandrailController)
+    appliedFrontHandrail, // { style, finish, keys } | null
+    appliedSideHandrail,  // { style, finish, keys } | null
     selectedModelId,
     isDesignLoading = false,
     appliedDoor,
@@ -54,25 +37,6 @@ const ModelPreview = forwardRef((props, ref) => {
   const config = modelConfigs[selectedModelId];
   const activeLayers = config?.skeletonViews?.[selectedView] || [];
   const shouldShowPanelIndicators = !showThumbnails && activeStep === "Wall Panels";
-
-  // Front only has assets for v1/v2 (view 1 and 2) — filename matches the version number.
-  const getFrontHandrailKey = (view) => {
-    if (!appliedFrontHandrail || view === 3) return null;
-    const { style, finish } = appliedFrontHandrail;
-    return `SubMaterial/splithandrails/${FRONT_SPLIT_FOLDER}/${style}/${finish}/v${view}/${view}.png`;
-  };
-
-  // Side has assets for v1/v2/v3. A view folder can hold more than one image
-  // (v2 has 1.png and 2.png), so this returns ALL keys for that view.
-  const getSideHandrailKeys = (view) => {
-    if (!appliedSideHandrail) return [];
-    const { style, finish } = appliedSideHandrail;
-    const files = SIDE_HANDRAIL_FILES_BY_VIEW[view] || ["1.png"];
-    return files.map(
-      (file) =>
-        `SubMaterial/splithandrails/${SIDE_SPLIT_FOLDER}/${style}/${finish}/v${view}/${file}`
-    );
-  };
 
   // ── Clicking a node on the model IS the panel selector now ──
   // Each node already knows its own zone + panelNum (from modelConfigs.panelMap),
@@ -156,10 +120,7 @@ const ModelPreview = forwardRef((props, ref) => {
     if (appliedCeiling) [1, 2, 3].forEach((v) => { const key = `SubMaterial/ceiling/V${v}/${appliedCeiling}.png`; if (!presignedCache[key]) overlaysToFetch.push(key); });
     if (appliedFloor) [1, 2, 3].forEach((v) => { const key = `SubMaterial/floor/V${v}/${appliedFloor}.png`; if (!presignedCache[key]) overlaysToFetch.push(key); });
     if (appliedLight) [1, 2, 3].forEach((v) => { const key = `SubMaterial/lights/V${v}/${appliedLight}.png`; if (!presignedCache[key]) overlaysToFetch.push(key); });
-    if (appliedSubHandrail) [1, 2, 3].forEach((v) => { const key = `SubMaterial/subhandrail/V${v}/${v}.png`; if (!presignedCache[key]) overlaysToFetch.push(key); });
-    if (appliedFrontHandrail) [1, 2].forEach((v) => { const key = getFrontHandrailKey(v); if (key && !presignedCache[key]) overlaysToFetch.push(key); });
-    // Side: every image for every view (v2 now includes both 1.png and 2.png)
-    if (appliedSideHandrail) [1, 2, 3].forEach((v) => { getSideHandrailKeys(v).forEach((key) => { if (!presignedCache[key]) overlaysToFetch.push(key); }); });
+    // Front / Side / Secondary Perimeter Guard are fetched by HandrailController.
     if (appliedDoor) { const key = `SubMaterial/doors/${appliedDoor}.png`; if (!presignedCache[key]) overlaysToFetch.push(key); }
 
     overlaysToFetch.forEach((key) => {
@@ -168,7 +129,7 @@ const ModelPreview = forwardRef((props, ref) => {
         .then((data) => { if (data.url) setPresignedCache((prev) => ({ ...prev, [key]: data.url })); })
         .catch(() => {});
     });
-  }, [appliedHandrail, appliedCeiling, appliedFloor, appliedLight, appliedSubHandrail, appliedFrontHandrail, appliedSideHandrail, appliedDoor]);
+  }, [appliedHandrail, appliedCeiling, appliedFloor, appliedLight, appliedDoor]);
 
   // ── Render a single skeleton layer ──
   const renderLayer = (layer) => {
@@ -261,27 +222,12 @@ const ModelPreview = forwardRef((props, ref) => {
     );
   };
 
-  const renderSubHandrailOverlay = () => {
-    if (!appliedSubHandrail) return null;
-    const key = `SubMaterial/subhandrail/V${selectedView}/${selectedView}.png`;
-    const src = presignedCache[key];
-    if (!src) return null;
-    return <img src={src} alt="Sub Handrail" className="absolute inset-0 w-full h-full object-contain pointer-events-none z-[35]" />;
-  };
-
-  const renderFrontHandrailOverlay = () => {
-    const key = getFrontHandrailKey(selectedView);
-    if (!key) return null;
-    const src = presignedCache[key];
-    if (!src) return null;
-    return <img src={src} alt="Front Handrail" className="absolute inset-0 w-full h-full object-contain pointer-events-none z-[36]" />;
-  };
-
-  // Renders every Side handrail image for the current view
-  // (view 2 → 1.png and 2.png stacked; views 1 and 3 → 1.png only).
-  const renderSideHandrailOverlay = () => {
-    const keys = getSideHandrailKeys(selectedView);
-    if (keys.length === 0) return null;
+  // Handrail layers (Secondary Perimeter Guard, Front, Side) are described by
+  // HandrailController: each applied value carries `keys: { [view]: [s3Key, ...] }`.
+  // This component only looks up the presigned URLs and draws them.
+  const renderHandrailLayer = (applied, zIndex, label) => {
+    const keys = applied?.keys?.[selectedView];
+    if (!keys || keys.length === 0) return null;
 
     return keys.map((key, i) => {
       const src = presignedCache[key];
@@ -290,8 +236,9 @@ const ModelPreview = forwardRef((props, ref) => {
         <img
           key={key}
           src={src}
-          alt={`Side Handrail ${i + 1}`}
-          className="absolute inset-0 w-full h-full object-contain pointer-events-none z-[37]"
+          alt={`${label} ${i + 1}`}
+          className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+          style={{ zIndex }}
         />
       );
     });
@@ -523,9 +470,9 @@ style={{
             {renderOverlay(appliedHandrail, "handrails", 20)}
             {renderOverlay(appliedCeiling,  "ceiling",   25)}
             {renderOverlay(appliedLight,    "lights",    30)}
-            {renderSubHandrailOverlay()}
-            {renderFrontHandrailOverlay()}
-            {renderSideHandrailOverlay()}
+            {renderHandrailLayer(appliedSubHandrail,   35, "Secondary Perimeter Guard")}
+            {renderHandrailLayer(appliedFrontHandrail, 36, "Front Handrail")}
+            {renderHandrailLayer(appliedSideHandrail,  37, "Side Handrail")}
             {renderDoorOverlay()}
           </div>
         </div>

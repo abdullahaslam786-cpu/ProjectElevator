@@ -34,7 +34,9 @@ async function buildViewUrls({
   appliedFloor,
   appliedLight,
   appliedDoor,
-  origin,
+  origin,  // { keys } | null            (set by HandrailController)
+  appliedFrontHandrail,   // ← new
+  appliedSideHandrail,    // ← new
 }) {
   const urls = [];
   const layers = config.skeletonViews?.[viewNum] || [];
@@ -91,6 +93,40 @@ async function buildViewUrls({
     else console.warn(`[BuildView] Floor MISSING: ${key}`);
   }
 
+  // ── Front Handrail (new system) ──
+  if (appliedFrontHandrail?.keys?.[viewNum]) {
+    for (const key of appliedFrontHandrail.keys[viewNum]) {
+      const url = await presign(key);
+      if (url) urls.push(url);
+      else console.warn(`[BuildView] FrontHandrail MISSING: ${key}`);
+    }
+  }
+
+  // ── Side Handrail (new system) ──
+  if (appliedSideHandrail?.keys?.[viewNum]) {
+    for (const key of appliedSideHandrail.keys[viewNum]) {
+      const url = await presign(key);
+      if (url) urls.push(url);
+      else console.warn(`[BuildView] SideHandrail MISSING: ${key}`);
+    }
+  }
+
+  if (appliedSubHandrail) {
+    if (appliedSubHandrail.keys?.[viewNum]) {
+      for (const key of appliedSubHandrail.keys[viewNum]) {
+        const url = await presign(key);
+        if (url) urls.push(url);
+        else console.warn(`[BuildView] SubHandrail MISSING: ${key}`);
+      }
+    } else {
+      // legacy fallback
+      const key = `SubMaterial/subhandrail/V${viewNum}/${viewNum}.png`;
+      const url = await presign(key);
+      if (url) urls.push(url);
+      else console.warn(`[BuildView] SubHandrail MISSING: ${key}`);
+    }
+  }
+
   if (appliedHandrail) {
     const key = `SubMaterial/handrails/V${viewNum}/${appliedHandrail}.png`;
     const url = await presign(key);
@@ -138,7 +174,8 @@ const Review = ({
   selectedView,
   subprojectId,
   appliedMaterials,
-  appliedHandrail,
+appliedFrontHandrail,   // ← add
+  appliedSideHandrail,
   appliedSubHandrail,
   appliedCeiling,
   appliedFloor,
@@ -183,7 +220,9 @@ const Review = ({
 
     console.log("=== PDF DOWNLOAD INITIATED ===");
     console.log("selectedModelId:", selectedModelId);
-    console.log("appliedHandrail:", appliedHandrail);
+   console.log("appliedFrontHandrail:", appliedFrontHandrail);
+console.log("appliedSideHandrail:", appliedSideHandrail);
+console.log("appliedSubHandrail:", appliedSubHandrail);
     console.log("appliedSubHandrail:", appliedSubHandrail);
     console.log("appliedCeiling:", appliedCeiling);
     console.log("appliedFloor:", appliedFloor);
@@ -201,8 +240,9 @@ const Review = ({
           viewNum,
           config,
           appliedMaterials: appliedMaterials || {},
-          appliedHandrail,
-          appliedSubHandrail,
+        appliedFrontHandrail,
+appliedSideHandrail,
+appliedSubHandrail,
           appliedCeiling,
           appliedFloor,
           appliedLight,
@@ -249,8 +289,9 @@ const Review = ({
           designId: subprojectId,
           userEmail,
           appliedMaterials,
-          appliedHandrail,
-          appliedSubHandrail,
+        appliedFrontHandrail,
+appliedSideHandrail,
+appliedSubHandrail,
           appliedCeiling,
           appliedFloor,
           appliedLight,

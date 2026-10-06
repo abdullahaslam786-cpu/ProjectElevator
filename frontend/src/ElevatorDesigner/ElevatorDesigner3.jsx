@@ -8,7 +8,7 @@ import HandrailController from "./Configuration/HandrailController";
 import CeilingController from "./Configuration/CeilingController";
 import FloorController from "./Configuration/FloorController";
 import Review from "./Configuration/Review";
-import { saveDesignState, loadDesignState } from "../redux/features/Project/projectSlice";
+import { saveDesignState } from "../redux/features/Project/projectSlice";
 import gsap from "gsap";
 
 // ─── Debounce helper ──────────────────────────────────────────────────────
@@ -513,14 +513,24 @@ const handleApplySideHandrail = (value) => setAppliedSideHandrail(value);
           onDesignLoad={setIsDesignLoading}
         />
       )}
-      {activeStep === "Handrails" && (
+
+      {/* Handrails — kept mounted (just hidden on other steps) so its AWS loading
+          keeps running and a saved design's handrails appear in the preview
+          without opening this tab first. The applied handrail state itself
+          lives here in the parent; HandrailController reads it via props. */}
+      <div className={activeStep === "Handrails" ? "w-full h-full" : "hidden"}>
         <HandrailController
-          applyHandrail={handleApplyHandrail}
           applySubHandrail={handleApplySubHandrail}
           applyFrontHandrail={handleApplyFrontHandrail}
-    applySideHandrail={handleApplySideHandrail}
+          applySideHandrail={handleApplySideHandrail}
+          appliedFrontHandrail={appliedFrontHandrail}
+          appliedSideHandrail={appliedSideHandrail}
+          appliedSubHandrail={appliedSubHandrail}
+          presignedCache={presignedCache}
+          setPresignedCache={setPresignedCache}
         />
-      )}
+      </div>
+
       {activeStep === "Ceilings" && (
         <CeilingController
           applyCeiling={setAppliedCeiling}
