@@ -25,10 +25,16 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
   const previewContainerRef = useRef(null);
   const lightsSectionRef = useRef(null);
 
-  // Status for the conditional Light Options container
   const lightsEnabled = CEILINGS_WITH_LIGHT.includes(selectedCeiling);
 
-  // ── Robust Image Processing Engine ──
+  // Split into the two groups the user asked for
+  const lightCeilings = ceilingThumbnails.filter((t) =>
+    CEILINGS_WITH_LIGHT.includes(t.num)
+  );
+  const standardCeilings = ceilingThumbnails.filter(
+    (t) => !CEILINGS_WITH_LIGHT.includes(t.num)
+  );
+
   const processImages = useCallback((data) => {
     return data
       .filter((item) => item.key.endsWith(".png"))
@@ -53,17 +59,20 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
 
         setAllCeilingImages(ceilingData);
 
-        const thumbs = processImages(ceilingData.filter((i) => i.key.includes("/V1/")));
+        const thumbs = processImages(
+          ceilingData.filter((i) => i.key.includes("/V1/"))
+        );
         setCeilingThumbnails(thumbs);
-        setLightThumbnails(processImages(lightData.filter((i) => i.key.includes("/V1/"))));
+        setLightThumbnails(
+          processImages(lightData.filter((i) => i.key.includes("/V1/")))
+        );
 
-        // ── Auto-select the FIRST ceiling option on load ──
+        // Auto-select the FIRST ceiling option on load
         if (thumbs.length > 0) {
           const first = thumbs[0];
           setSelectedCeiling(first.num);
           applyCeiling(first.num);
 
-          // If the first ceiling supports lights, keep default light selected
           if (CEILINGS_WITH_LIGHT.includes(first.num)) {
             setSelectedLight(1);
             applyLight?.(1);
@@ -86,7 +95,7 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
     fetchData();
   }, [processImages, applyCeiling, applyLight]);
 
-  // GSAP: Preview banner open / close (same behaviour as the handrail preview)
+  // GSAP: Preview banner
   useEffect(() => {
     if (!previewContainerRef.current) return;
     if (ceilingPreviewUrl) {
@@ -104,7 +113,7 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
     }
   }, [ceilingPreviewUrl]);
 
-  // GSAP: Lights Section Reveal
+  // GSAP: Lights section
   useEffect(() => {
     if (lightsSectionRef.current) {
       if (lightsEnabled) {
@@ -133,14 +142,15 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
       setSelectedLight(null);
       applyLight(null);
     } else {
-      // When switching to a ceiling that supports lights, restore default light if none selected
       if (selectedLight === null) {
         setSelectedLight(1);
         applyLight(1);
       }
     }
 
-    const found = allCeilingImages.find((img) => img.key.includes(`/V1/${num}.png`));
+    const found = allCeilingImages.find((img) =>
+      img.key.includes(`/V1/${num}.png`)
+    );
     if (found) setCeilingPreviewUrl(found.url);
   };
 
@@ -148,6 +158,25 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
     setSelectedLight(null);
     applyLight(null);
   }, [applyLight]);
+
+  // Reusable card renderer
+  const renderCeilingCard = (item) => (
+    <div
+      key={item.num}
+      className={`cec-card ${selectedCeiling === item.num ? "selected" : ""}`}
+      onClick={() => handleCeilingSelect(item.num)}
+    >
+      <div className="cec-card-image-wrap">
+        <img src={item.url} alt={`Ceiling ${item.num}`} />
+        {selectedCeiling === item.num && (
+          <div className="cec-card-check">
+            <IoCheckmark size={12} />
+          </div>
+        )}
+      </div>
+      <div className="cec-card-label">Ceiling {pad(item.num)}</div>
+    </div>
+  );
 
   return (
     <>
@@ -181,7 +210,6 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
           color: #4A3826;
         }
 
-        /* ── Preview banner (matches handrail) ── */
         .cec-preview {
           position: relative;
           overflow: hidden;
@@ -259,7 +287,6 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
           border-color: #C9974E;
         }
 
-        /* ── Scroll area ── */
         .cec-content {
           flex: 1 1 auto;
           min-height: 0;
@@ -292,7 +319,6 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
           background: #EADFC8;
         }
 
-        /* ── Option cards (matches handrail style cards) ── */
         .cec-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
@@ -380,7 +406,6 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
           color: #5C4A26;
         }
 
-        /* ── Luxury button (matches handrail ON/OFF buttons) ── */
         .cec-luxury-btn {
           position: relative;
           height: 35px;
@@ -471,7 +496,6 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
           flex-shrink: 0;
         }
 
-        /* Lights sit in the narrow left column: 2 cards per row, like before */
         .cec-lights-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
@@ -500,7 +524,7 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
           </div>
         </div>
 
-        {/* Top row: lights on the LEFT (2 cols), preview on the RIGHT (4 cols) — original positioning */}
+        {/* Top row: lights LEFT, preview RIGHT */}
         <div className="grid grid-cols-6 cec-top-row">
           <div className="col-span-2 p-3 flex flex-col justify-between">
             <div ref={lightsSectionRef} className="cec-lights-section w-full">
@@ -511,7 +535,9 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
                 {lightThumbnails.slice(0, 8).map((item, idx) => (
                   <div
                     key={item.num}
-                    className={`cec-card ${selectedLight === item.num ? "selected" : ""}`}
+                    className={`cec-card ${
+                      selectedLight === item.num ? "selected" : ""
+                    }`}
                     onClick={() => {
                       setSelectedLight(item.num);
                       applyLight(item.num);
@@ -541,7 +567,10 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
                   onClick={handleNoneLight}
                 >
                   <div className="cec-btn-glaze" />
-                  <div className="cec-btn-text" style={{ fontSize: 9, textAlign: "center", padding: "0 4px" }}>
+                  <div
+                    className="cec-btn-text"
+                    style={{ fontSize: 9, textAlign: "center", padding: "0 4px" }}
+                  >
                     Deactivate Illumination
                   </div>
                 </div>
@@ -549,67 +578,73 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
             </div>
           </div>
 
-        <div ref={previewContainerRef} className="cec-preview col-span-4">
-          {ceilingPreviewUrl && (
-            <>
-              <img src={ceilingPreviewUrl} alt="Preview" className="cec-preview-img" />
-              <div className="cec-preview-overlay">
-                <div className="cec-preview-name">
-                  STRUCTURE OPTION {pad(selectedCeiling ?? 0)}
+          <div ref={previewContainerRef} className="cec-preview col-span-4">
+            {ceilingPreviewUrl && (
+              <>
+                <img
+                  src={ceilingPreviewUrl}
+                  alt="Preview"
+                  className="cec-preview-img"
+                />
+                <div className="cec-preview-overlay">
+                  <div className="cec-preview-name">
+                    STRUCTURE OPTION {pad(selectedCeiling ?? 0)}
+                  </div>
+                  <div style={{ marginTop: "12px" }}>
+                    <button
+                      className="cec-apply-btn"
+                      onClick={() => setCeilingPreviewUrl(null)}
+                    >
+                      CONFIRM LAYER
+                    </button>
+                  </div>
                 </div>
-                <div style={{ marginTop: "12px" }}>
-                  <button
-                    className="cec-apply-btn"
-                    onClick={() => setCeilingPreviewUrl(null)}
-                  >
-                    CONFIRM LAYER
-                  </button>
-                </div>
-              </div>
-              <button
-                className="cec-preview-close"
-                onClick={() => {
-                  setCeilingPreviewUrl(null);
-                  setSelectedCeiling(null);
-                  applyCeiling(null);
-                }}
-              >
-                <IoClose size={16} />
-              </button>
-            </>
-          )}
-        </div>
+                <button
+                  className="cec-preview-close"
+                  onClick={() => {
+                    setCeilingPreviewUrl(null);
+                    setSelectedCeiling(null);
+                    applyCeiling(null);
+                  }}
+                >
+                  <IoClose size={16} />
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         <div className="cec-content">
-          <div className="cec-section-label">
-            <span>CEILING STRUCTURE</span>
-          </div>
-
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
               <RingLoader color="#C9974E" size={40} />
             </div>
           ) : (
-            <div className="cec-grid">
-              {ceilingThumbnails.map((item) => (
-                <div
-                  key={item.num}
-                  className={`cec-card ${selectedCeiling === item.num ? "selected" : ""}`}
-                  onClick={() => handleCeilingSelect(item.num)}
-                >
-                  <div className="cec-card-image-wrap">
-                    <img src={item.url} alt={`Ceiling ${item.num}`} />
-                    {selectedCeiling === item.num && (
-                      <div className="cec-card-check">
-                        <IoCheckmark size={12} />
-                      </div>
-                    )}
+            <>
+              {/* ── Group 1: Ceilings that support lights (1, 5, 6, 7) ── */}
+              {lightCeilings.length > 0 && (
+                <>
+                  <div className="cec-section-label">
+                    <span>WITH INTEGRATED LIGHTING</span>
                   </div>
-                  <div className="cec-card-label">Ceiling {pad(item.num)}</div>
-                </div>
-              ))}
-            </div>
+                  <div className="cec-grid">
+                    {lightCeilings.map(renderCeilingCard)}
+                  </div>
+                </>
+              )}
+
+              {/* ── Group 2: Standard ceilings (2, 3, 4, …) ── */}
+              {standardCeilings.length > 0 && (
+                <>
+                  <div className="cec-section-label" style={{ marginTop: 14 }}>
+                    <span>STANDARD STRUCTURE</span>
+                  </div>
+                  <div className="cec-grid">
+                    {standardCeilings.map(renderCeilingCard)}
+                  </div>
+                </>
+              )}
+            </>
           )}
 
           <div className="pb-14" />

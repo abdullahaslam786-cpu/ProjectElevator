@@ -765,7 +765,7 @@ appliedSubHandrail,
                     <option value="">Select an Option</option>
                     <option value="New Construction">New Construction</option>
                     <option value="Modernization">Modernization</option>
-                    <option value="Retrofit">Retrofit</option>
+                    <option value="Retrofit">Upgrade</option>
                   </select>
                 </div>
 
@@ -807,8 +807,10 @@ appliedSubHandrail,
                     <option value="">Select an Option</option>
                     <option value="Otis">Otis</option>
                     <option value="Schindler">Mitsubishi</option>
-                    <option value="KONE">Fuji tech</option>
-                    <option value="ThyssenKrupp">Other</option>
+                    <option value="KONE">Fujitech</option>
+                    <option value="ThyssenKrupp">Kone</option>
+                    <option value="ThyssenKrupp">TKE</option>
+                    <option value="ThyssenKrupp">Schindler</option>
                   </select>
                 </div>
               </div>

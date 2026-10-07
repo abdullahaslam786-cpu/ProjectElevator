@@ -14,6 +14,13 @@ const PUBLIC_DIR = path.resolve(__dirname, "../../client/public");
 // controller, or change this path to wherever you keep it.
 const LOGO_PATH = path.resolve(__dirname, "meds-logo.png");
 
+// Dimension images (H1 / H2 / D1 / W1 markers), one per page, kept in the SAME
+// folder as this controller:  page 1 → front.png, page 2 → straight.png,
+// page 3 → back.png (optional — if the file is missing that page just has no overlay).
+// They are laid over the model as an extra top layer, so they should be
+// transparent PNGs on the same canvas size as the model renders.
+const DIMENSION_OVERLAYS = ["front.png", "straight.png", "back.png"];
+
 // ─── Brand / layout constants ─────────────────────────────────────────────
 const TAGLINE = "ELEVATE IDEAS.   BUILD REALITY.";
 const WEBSITE = "MyElevatorDesignStudio.com";
@@ -32,21 +39,13 @@ const COLORS = {
 
 const OPENING_LABELS = { 1: "Front", 2: "Straight", 3: "Back" };
 
-// Where the cab render sits (right column) and where the floor corners sit
-// *inside the render* as fractions of its width/height. Tweak these if your
-// 3D renders have different padding around the cab.
+// Box (right column) the model + its dimension overlay is fitted into.
+// The dimension markers are now part of the image, so the whole column is used.
 const CAB = {
-  x: 215,
-  y: 224,
-  maxW: 327,
-  maxH: 392,
-  // vertical extent of the wall edges (H1 / H2 lines)
-  wallTop: 0.1,
-  wallBottom: 0.835,
-  // floor corners: left, bottom (front), right
-  floorLeft: { x: 0.02, y: 0.835 },
-  floorFront: { x: 0.5, y: 1.0 },
-  floorRight: { x: 0.98, y: 0.835 },
+  x: 185,
+  y: 214,
+  maxW: 387,
+  maxH: 482,
 };
 
 // ─── Fetch a buffer — disk for skeleton files, HTTP for S3 ───────────────
@@ -73,6 +72,26 @@ async function fetchBuffer(urlOrPath) {
     timeout: 15000,
   });
   return Buffer.from(response.data, "binary");
+}
+
+// ─── Load the dimension overlay image for a page (front / straight / back) ──
+const overlayCache = new Map();
+
+async function loadDimensionOverlay(pageIndex) {
+  const file = DIMENSION_OVERLAYS[pageIndex];
+  if (!file) return null;
+
+  const filePath = path.resolve(__dirname, file);
+  if (overlayCache.has(filePath)) return overlayCache.get(filePath);
+
+  if (!fs.existsSync(filePath)) {
+    console.warn(`[PDF] Dimension image not found, skipping: ${filePath}`);
+    return null; // not cached, so adding the file later works without a restart
+  }
+
+  const buffer = await fs.promises.readFile(filePath);
+  overlayCache.set(filePath, buffer);
+  return buffer;
 }
 
 // ─── Composite ordered PNG buffers into one image ─────────────────────────
@@ -302,115 +321,11 @@ function drawLeftColumn(doc, data) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// Dimension annotations (vector, drawn around the cab render)
-// ══════════════════════════════════════════════════════════════════════════
-function arrowHead(doc, tipX, tipY, dirX, dirY, size = 4.5) {
-  // dir = unit vector pointing from the line toward the tip
-  const bx = tipX - dirX * size;
-  const by = tipY - dirY * size;
-  const px = -dirY * (size * 0.38);
-  const py = dirX * (size * 0.38);
-  doc
-    .moveTo(tipX, tipY)
-    .lineTo(bx + px, by + py)
-    .lineTo(bx - px, by - py)
-    .closePath()
-    .fillColor(COLORS.dim)
-    .fill();
-}
-
-function dimLine(doc, x1, y1, x2, y2) {
-  doc.moveTo(x1, y1).lineTo(x2, y2).lineWidth(0.6).strokeColor(COLORS.dim).stroke();
-  const len = Math.hypot(x2 - x1, y2 - y1) || 1;
-  const ux = (x2 - x1) / len;
-  const uy = (y2 - y1) / len;
-  arrowHead(doc, x1, y1, -ux, -uy);
-  arrowHead(doc, x2, y2, ux, uy);
-}
-
-function dimLabel(doc, cx, cy, tag, value) {
-  const boxW = 22;
-  const boxH = 14;
-  doc.rect(cx - boxW / 2, cy - boxH / 2, boxW, boxH).fillColor("#ffffff").fill();
-  doc
-    .rect(cx - boxW / 2, cy - boxH / 2, boxW, boxH)
-    .lineWidth(0.6)
-    .strokeColor(COLORS.dim)
-    .stroke();
-  doc
-    .font("Helvetica")
-    .fontSize(8)
-    .fillColor(COLORS.ink)
-    .text(tag, cx - boxW / 2, cy - boxH / 2 + 3.5, { width: boxW, align: "center", lineBreak: false });
-  doc
-    .font("Helvetica")
-    .fontSize(9)
-    .fillColor(COLORS.ink)
-    .text(value || "", cx - 30, cy + boxH / 2 + 3, { width: 60, align: "center", lineBreak: false });
-}
-
-function drawDimensions(doc, rect, dims) {
-  const { x, y, w, h } = rect;
-  const top = y + h * CAB.wallTop;
-  const bottom = y + h * CAB.wallBottom;
-  const midY = (top + bottom) / 2 - 20;
-
-  // H1 — left of the cab
-  const h1x = x - 16;
-  dimLine(doc, h1x, top, h1x, bottom);
-  dimLabel(doc, h1x, midY, "H1", dims.H1);
-
-  // H2 — right of the cab
-  const h2x = x + w + 16;
-  dimLine(doc, h2x, top, h2x, bottom);
-  dimLabel(doc, h2x, midY, "H2", dims.H2);
-
-  // Floor edges
-  const L = { x: x + w * CAB.floorLeft.x, y: y + h * CAB.floorLeft.y };
-  const F = { x: x + w * CAB.floorFront.x, y: y + h * CAB.floorFront.y };
-  const R = { x: x + w * CAB.floorRight.x, y: y + h * CAB.floorRight.y };
-  const OFFSET = 14;
-
-  const offsetLine = (a, b) => {
-    const dx = b.x - a.x;
-    const dy = b.y - a.y;
-    const len = Math.hypot(dx, dy) || 1;
-    const nx = -dy / len; // outward normal (down-left for left edge, down-right for right edge)
-    const ny = dx / len;
-    return {
-      a: { x: a.x + nx * OFFSET, y: a.y + ny * OFFSET },
-      b: { x: b.x + nx * OFFSET, y: b.y + ny * OFFSET },
-      n: { x: nx, y: ny },
-    };
-  };
-
-  // D1 — front-left floor edge (L → F)
-  const d1 = offsetLine(L, F);
-  dimLine(doc, d1.a.x, d1.a.y, d1.b.x, d1.b.y);
-  dimLabel(
-    doc,
-    (d1.a.x + d1.b.x) / 2 + d1.n.x * 22,
-    (d1.a.y + d1.b.y) / 2 + d1.n.y * 12,
-    "D1",
-    dims.D1
-  );
-
-  // W1 — front-right floor edge (F → R)
-  const w1 = offsetLine(F, R);
-  dimLine(doc, w1.a.x, w1.a.y, w1.b.x, w1.b.y);
-  dimLabel(
-    doc,
-    (w1.a.x + w1.b.x) / 2 + w1.n.x * 22,
-    (w1.a.y + w1.b.y) / 2 + w1.n.y * 12,
-    "W1",
-    dims.W1
-  );
-}
-
-// ══════════════════════════════════════════════════════════════════════════
 // One full page (one per view)
+// The model image already has the dimension overlay (front / straight / back
+// .png) composited on top of it, so it is simply fitted into the right column.
 // ══════════════════════════════════════════════════════════════════════════
-async function drawSummaryPage(doc, { header, left, imageBuffer, dimensions, designId }) {
+async function drawSummaryPage(doc, { header, left, imageBuffer, designId }) {
   doc.addPage({ size: "LETTER", margin: 0 });
 
   drawHeader(doc, header);
@@ -425,7 +340,6 @@ async function drawSummaryPage(doc, { header, left, imageBuffer, dimensions, des
     const y = CAB.y + (CAB.maxH - h) / 2;
 
     doc.image(imageBuffer, x, y, { width: w, height: h });
-    drawDimensions(doc, { x, y, w, h }, dimensions);
   }
 
   drawFooter(doc, { designId });
@@ -457,11 +371,18 @@ export const generateModelPDF = async (req, res) => {
 
     const viewGroups = imageUrlsGroups.slice(0, 3);
 
-    // Composite the layered renders for each view
+    // Composite the layered renders for each view, then put that page's
+    // dimension image (front.png / straight.png / back.png) on top.
     const compositeImages = [];
     for (let i = 0; i < viewGroups.length; i++) {
       const results = await Promise.allSettled(viewGroups[i].map((url) => fetchBuffer(url)));
       const buffers = results.filter((r) => r.status === "fulfilled").map((r) => r.value);
+
+      if (buffers.length) {
+        const dimensionOverlay = await loadDimensionOverlay(i);
+        if (dimensionOverlay) buffers.push(dimensionOverlay);
+      }
+
       compositeImages.push(buffers.length ? await compositeBuffers(buffers) : null);
     }
 
@@ -492,7 +413,6 @@ export const generateModelPDF = async (req, res) => {
           comments,
         },
         imageBuffer: compositeImages[i],
-        dimensions,
         designId,
       });
     }

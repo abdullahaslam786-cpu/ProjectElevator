@@ -66,6 +66,7 @@ export const materialsCollection = {
   },
   glass: {
     1: "GAF-093", 2: "GAF-094", 3: "GAF-095", 4: "GAF-096", 5: "GAF-097",
-    6: "GAF-098", 7: "GAF-099", 8: "GAF-100", 9: "GAF-101", 10: "GAF-102"
+    6: "GAF-098", 7: "GAF-099"
+    
   }
 };
