@@ -14,11 +14,12 @@ const PUBLIC_DIR = path.resolve(__dirname, "../../client/public");
 // controller, or change this path to wherever you keep it.
 const LOGO_PATH = path.resolve(__dirname, "meds-logo.png");
 
-// Dimension images (H1 / H2 / D1 / W1 markers), one per page, kept in the SAME
-// folder as this controller:  page 1 → front.png, page 2 → straight.png,
-// page 3 → back.png (optional — if the file is missing that page just has no overlay).
-// They are laid over the model as an extra top layer, so they should be
-// transparent PNGs on the same canvas size as the model renders.
+// Dimension images, kept in the SAME folder as this controller:
+//   page 1 → front.png, page 2 → straight.png, page 3 → back.png (optional).
+// Each one is a transparent PNG of the dimension frame (H1 / H2 lines, D1 / W1 lines
+// and their boxes). The frame is the CANVAS: the model is scaled to sit inside the
+// lines (see fitModelIntoDimensionFrame), so the lines always surround the model.
+// If a file is missing, that page is printed with the model only.
 const DIMENSION_OVERLAYS = ["front.png", "straight.png", "back.png"];
 
 // ─── Brand / layout constants ─────────────────────────────────────────────
@@ -39,13 +40,28 @@ const COLORS = {
 
 const OPENING_LABELS = { 1: "Front", 2: "Straight", 3: "Back" };
 
-// Box (right column) the model + its dimension overlay is fitted into.
-// The dimension markers are now part of the image, so the whole column is used.
+// Box (right column) the model + its dimension frame is fitted into.
 const CAB = {
   x: 185,
   y: 214,
   maxW: 387,
   maxH: 482,
+};
+
+// How the model is placed inside the dimension frame. The H1 / H2 lines are found
+// automatically from the overlay image; these numbers only control the spacing.
+// Lower number = bigger model, closer to the lines.
+const DIMENSION_FIT = {
+  // gap between each vertical H line and the model, as a fraction of the H1↔H2 distance
+  sideGap: 0.02,
+  // gap between the model's lowest point and the lowest D1 / W1 line point (same unit)
+  bottomGap: 0.035,
+  // a column is treated as an H1 / H2 line if it is opaque over this fraction of the image height
+  lineCoverage: 0.25,
+  // pixels with alpha above this count as "drawn"
+  alphaThreshold: 40,
+  // used only if the H1 / H2 lines can't be detected (fractions of the overlay size)
+  fallback: { left: 0.07, right: 0.07, top: 0.03, bottom: 0.1 },
 };
 
 // ─── Fetch a buffer — disk for skeleton files, HTTP for S3 ───────────────
@@ -74,7 +90,7 @@ async function fetchBuffer(urlOrPath) {
   return Buffer.from(response.data, "binary");
 }
 
-// ─── Load the dimension overlay image for a page (front / straight / back) ──
+// ─── Load the dimension image for a page (front / straight / back) ────────
 const overlayCache = new Map();
 
 async function loadDimensionOverlay(pageIndex) {
@@ -118,6 +134,127 @@ async function compositeBuffers(buffers) {
   }
 
   return base;
+}
+
+// ─── Read raw RGBA + alpha bounds ─────────────────────────────────────────
+async function readRaw(buffer) {
+  const { data, info } = await sharp(buffer)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  return { data, width: info.width, height: info.height, channels: info.channels };
+}
+
+function alphaBounds({ data, width, height, channels }, threshold) {
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  const columnCount = new Uint32Array(width);
+
+  for (let y = 0; y < height; y++) {
+    const rowStart = y * width * channels;
+    for (let x = 0; x < width; x++) {
+      if (data[rowStart + x * channels + 3] > threshold) {
+        columnCount[x]++;
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  return { minX, minY, maxX, maxY, columnCount };
+}
+
+// ─── Put the model INSIDE the dimension frame ─────────────────────────────
+// The dimension image is the canvas. We find its H1 / H2 vertical lines and its
+// lowest point (where the D1 / W1 lines meet), then scale the model to fit between
+// them, so the lines surround the model like the original design.
+async function fitModelIntoDimensionFrame(modelBuffer, overlayBuffer) {
+  const { sideGap, bottomGap, lineCoverage, alphaThreshold, fallback } = DIMENSION_FIT;
+
+  const overlayRaw = await readRaw(overlayBuffer);
+  const OW = overlayRaw.width;
+  const OH = overlayRaw.height;
+  const ob = alphaBounds(overlayRaw, alphaThreshold);
+
+  // Model: crop away any empty transparent margin so we fit the cab itself
+  const modelRaw = await readRaw(modelBuffer);
+  const mb = alphaBounds(modelRaw, 10);
+  let model = modelBuffer;
+  let mW = modelRaw.width;
+  let mH = modelRaw.height;
+  if (mb.maxX >= 0) {
+    const cw = mb.maxX - mb.minX + 1;
+    const ch = mb.maxY - mb.minY + 1;
+    if (cw < mW || ch < mH) {
+      model = await sharp(modelBuffer)
+        .extract({ left: mb.minX, top: mb.minY, width: cw, height: ch })
+        .png()
+        .toBuffer();
+      mW = cw;
+      mH = ch;
+    }
+  }
+
+  // H1 = left-most tall vertical line, H2 = right-most tall vertical line
+  const tall = OH * lineCoverage;
+  let h1 = -1;
+  let h2 = -1;
+  for (let x = 0; x < OW; x++) {
+    if (ob.columnCount[x] >= tall) { h1 = x; break; }
+  }
+  for (let x = OW - 1; x >= 0; x--) {
+    if (ob.columnCount[x] >= tall) { h2 = x; break; }
+  }
+
+  let rectLeft;
+  let rectRight;
+  let rectTop;
+  let rectBottom;
+
+  if (h1 >= 0 && h2 - h1 > OW * 0.3) {
+    const span = h2 - h1;
+    rectLeft = h1 + span * sideGap;
+    rectRight = h2 - span * sideGap;
+    rectTop = 0;
+    rectBottom = ob.maxY - span * bottomGap;
+  } else {
+    console.warn("[PDF] H1/H2 lines not detected in dimension image, using fallback spacing");
+    rectLeft = OW * fallback.left;
+    rectRight = OW * (1 - fallback.right);
+    rectTop = OH * fallback.top;
+    rectBottom = OH * (1 - fallback.bottom);
+  }
+
+  const availW = Math.max(1, rectRight - rectLeft);
+  const availH = Math.max(1, rectBottom - rectTop);
+  const scale = Math.min(availW / mW, availH / mH);
+  const w = Math.max(1, Math.round(mW * scale));
+  const h = Math.max(1, Math.round(mH * scale));
+  const left = Math.max(0, Math.round(rectLeft + (availW - w) / 2));
+  const top = Math.max(0, Math.round(rectBottom - h));
+
+  const resizedModel = await sharp(model)
+    .resize(w, h, { fit: "fill", kernel: "lanczos3" })
+    .png()
+    .toBuffer();
+
+  return sharp({
+    create: {
+      width: OW,
+      height: OH,
+      channels: 4,
+      background: { r: 255, g: 255, b: 255, alpha: 0 },
+    },
+  })
+    .composite([
+      { input: resizedModel, left, top },
+      { input: overlayBuffer, left: 0, top: 0 },
+    ])
+    .png()
+    .toBuffer();
 }
 
 // ─── "10.24.2024 01:52 PM" ────────────────────────────────────────────────
@@ -277,7 +414,7 @@ function drawSimpleBlock(doc, y, label, value) {
     .font("Helvetica")
     .fontSize(9)
     .fillColor(COLORS.ink)
-    .text(String(value ?? ""), MARGIN, y + 13, { width: LEFT_W, lineBreak: false, ellipsis: true });
+    .text(String(value ?? ""), MARGIN, y + 15, { width: LEFT_W, lineBreak: false, ellipsis: true });
   drawRule(doc, y + 33);
   return y + 49;
 }
@@ -290,23 +427,6 @@ function drawLeftColumn(doc, data) {
   y = drawSimpleBlock(doc, y, "CAB SHELL MATERIAL", data.cabShellMaterial);
   y = drawSimpleBlock(doc, y, "QUANTITY", data.quantity);
 
-  // Dimensions
-  drawLabel(doc, "DIMENSIONS", y);
-  const rows = [
-    ["D1:", data.dimensions.D1],
-    ["W1:", data.dimensions.W1],
-    ["H1:", data.dimensions.H1],
-    ["H2:", data.dimensions.H2],
-  ];
-  let ry = y + 14;
-  rows.forEach(([k, v]) => {
-    doc.font("Helvetica").fontSize(8.5).fillColor(COLORS.ink).text(k, MARGIN, ry, { lineBreak: false });
-    doc.font("Helvetica").fontSize(8.5).fillColor(COLORS.ink).text(v || "", MARGIN + 38, ry, { lineBreak: false });
-    ry += 19;
-  });
-  drawRule(doc, ry - 2);
-  y = ry + 14;
-
   y = drawSimpleBlock(doc, y, "JOB TYPE", data.jobType);
 
   // Comments (no rule below)
@@ -316,14 +436,14 @@ function drawLeftColumn(doc, data) {
       .font("Helvetica")
       .fontSize(8)
       .fillColor(COLORS.ink)
-      .text(data.comments, MARGIN, y + 13, { width: LEFT_W, height: 70, lineGap: 1.5, ellipsis: true });
+      .text(data.comments, MARGIN, y + 14, { width: LEFT_W, height: 70, lineGap: 1.7, ellipsis: true });
   }
 }
 
 // ══════════════════════════════════════════════════════════════════════════
 // One full page (one per view)
-// The model image already has the dimension overlay (front / straight / back
-// .png) composited on top of it, so it is simply fitted into the right column.
+// The model image already sits inside its dimension frame (front / straight / back
+// .png), so it is simply fitted into the right column.
 // ══════════════════════════════════════════════════════════════════════════
 async function drawSummaryPage(doc, { header, left, imageBuffer, designId }) {
   doc.addPage({ size: "LETTER", margin: 0 });
@@ -336,8 +456,8 @@ async function drawSummaryPage(doc, { header, left, imageBuffer, designId }) {
     const scale = Math.min(CAB.maxW / meta.width, CAB.maxH / meta.height);
     const w = meta.width * scale;
     const h = meta.height * scale;
-    const x = CAB.x + (CAB.maxW - w) / 2;
-    const y = CAB.y + (CAB.maxH - h) / 2;
+    const x = CAB.x + (CAB.maxW - w) / 3;
+    const y = CAB.y + (CAB.maxH - h) / 3;
 
     doc.image(imageBuffer, x, y, { width: w, height: h });
   }
@@ -371,19 +491,32 @@ export const generateModelPDF = async (req, res) => {
 
     const viewGroups = imageUrlsGroups.slice(0, 3);
 
-    // Composite the layered renders for each view, then put that page's
-    // dimension image (front.png / straight.png / back.png) on top.
+    // Composite the layered renders for each view, then fit the model inside that
+    // page's dimension frame (front.png / straight.png / back.png).
     const compositeImages = [];
     for (let i = 0; i < viewGroups.length; i++) {
       const results = await Promise.allSettled(viewGroups[i].map((url) => fetchBuffer(url)));
       const buffers = results.filter((r) => r.status === "fulfilled").map((r) => r.value);
 
-      if (buffers.length) {
-        const dimensionOverlay = await loadDimensionOverlay(i);
-        if (dimensionOverlay) buffers.push(dimensionOverlay);
+      if (!buffers.length) {
+        compositeImages.push(null);
+        continue;
       }
 
-      compositeImages.push(buffers.length ? await compositeBuffers(buffers) : null);
+      const modelImage = await compositeBuffers(buffers);
+      const dimensionOverlay = await loadDimensionOverlay(i);
+
+      if (!dimensionOverlay) {
+        compositeImages.push(modelImage);
+        continue;
+      }
+
+      try {
+        compositeImages.push(await fitModelIntoDimensionFrame(modelImage, dimensionOverlay));
+      } catch (err) {
+        console.warn(`[PDF] Could not fit dimension frame on page ${i + 1}:`, err.message);
+        compositeImages.push(modelImage);
+      }
     }
 
     const doc = new PDFDocument({ autoFirstPage: false, size: "LETTER" });

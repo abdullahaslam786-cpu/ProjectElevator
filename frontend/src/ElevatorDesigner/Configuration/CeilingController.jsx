@@ -167,7 +167,7 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
       onClick={() => handleCeilingSelect(item.num)}
     >
       <div className="cec-card-image-wrap">
-        <img src={item.url} alt={`Ceiling ${item.num}`} />
+        <img src={item.url} alt={`Ceiling ${item.num}`}  className="cec-card-image"/>
         {selectedCeiling === item.num && (
           <div className="cec-card-check">
             <IoCheckmark size={12} />
@@ -547,6 +547,7 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
                       <img
                         src={LIGHT_BUTTON_ICONS[idx] || item.url}
                         alt={`Light ${item.num}`}
+                        className="cec-card-image" style={{ objectFit: "contain", background: "#FBF7EC", width: "100%", height: "100%" }}
                       />
                       {selectedLight === item.num && (
                         <div className="cec-card-check">
@@ -585,6 +586,7 @@ const CeilingController = ({ applyCeiling, applyLight }) => {
                   src={ceilingPreviewUrl}
                   alt="Preview"
                   className="cec-preview-img"
+                  style={{ objectFit: "cover", objectPosition: "center top",  }}
                 />
                 <div className="cec-preview-overlay">
                   <div className="cec-preview-name">
