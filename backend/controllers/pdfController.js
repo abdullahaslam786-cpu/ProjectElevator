@@ -76,10 +76,20 @@ async function fetchBuffer(urlOrPath) {
     if (!filePath.startsWith(PUBLIC_DIR)) {
       throw new Error(`Forbidden path: ${filePath}`);
     }
-    if (!fs.existsSync(filePath)) {
-      throw new Error(`Skeleton file not found: ${filePath}`);
+    if (fs.existsSync(filePath)) {
+      return fs.promises.readFile(filePath);
     }
-    return fs.promises.readFile(filePath);
+
+    // Not on this server's disk (e.g. the API runs on a different machine than the
+    // frontend) — try to download it from the URL the browser used instead.
+    console.warn(`[PDF] Skeleton file not on disk (PUBLIC_DIR = ${PUBLIC_DIR}): ${relativePath} — trying HTTP`);
+    const httpUrl = encodeURI(decodeURI(urlOrPath));
+    const fallback = await axios.get(httpUrl, {
+      responseType: "arraybuffer",
+      maxRedirects: 5,
+      timeout: 15000,
+    });
+    return Buffer.from(fallback.data, "binary");
   }
 
   const response = await axios.get(urlOrPath, {
@@ -113,10 +123,35 @@ async function loadDimensionOverlay(pageIndex) {
 // ─── Composite ordered PNG buffers into one image ─────────────────────────
 async function compositeBuffers(buffers) {
   if (buffers.length === 0) return null;
+  if (buffers.length === 1) return sharp(buffers[0]).png().toBuffer();
 
+  const { width, height } = await sharp(buffers[0]).metadata();
+
+  // Fast path: put every layer on in ONE pass (no PNG re-encode between layers)
+  try {
+    const layers = await Promise.all(
+      buffers.slice(1).map(async (buf, idx) => {
+        try {
+          const meta = await sharp(buf).metadata();
+          if (meta.width === width && meta.height === height) return { input: buf, blend: "over" };
+          const resized = await sharp(buf)
+            .resize(width, height, { fit: "fill", kernel: "lanczos3" })
+            .png()
+            .toBuffer();
+          return { input: resized, blend: "over" };
+        } catch (err) {
+          console.warn(`[PDF] Skipping unreadable layer ${idx + 1}:`, err.message);
+          return null;
+        }
+      })
+    );
+    return await sharp(buffers[0]).composite(layers.filter(Boolean)).png().toBuffer();
+  } catch (err) {
+    console.warn("[PDF] One-pass composite failed, using layer-by-layer fallback:", err.message);
+  }
+
+  // Safety net: the original slower, layer-by-layer way
   let base = await sharp(buffers[0]).png().toBuffer();
-  const { width, height } = await sharp(base).metadata();
-
   for (let i = 1; i < buffers.length; i++) {
     try {
       const overlay = await sharp(buffers[i])
@@ -271,7 +306,8 @@ function formatRevisionTimestamp(date = new Date()) {
 // ══════════════════════════════════════════════════════════════════════════
 // Header
 // ══════════════════════════════════════════════════════════════════════════
-function drawHeader(doc, { jobName, designName, designId }) {
+// Logo + tagline + top rule (shared by every page)
+function drawBrandHeader(doc) {
   // Logo
   if (fs.existsSync(LOGO_PATH)) {
     doc.image(LOGO_PATH, MARGIN, 14, { width: 262 });
@@ -302,6 +338,10 @@ function drawHeader(doc, { jobName, designName, designId }) {
     .lineWidth(0.6)
     .strokeColor(COLORS.rule)
     .stroke();
+}
+
+function drawHeader(doc, { jobName, designName, designId }) {
+  drawBrandHeader(doc);
 
   // Title
   doc
@@ -466,9 +506,538 @@ async function drawSummaryPage(doc, { header, left, imageBuffer, designId }) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
+// CONFIGURATION PAGES (after the 3 view pages)
+//   • Configuration Overview  – lettered swatches + the model
+//   • One section per element – wall panels, handrails, ceiling, flooring,
+//     lighting, door – each material with its details and a large image
+// ══════════════════════════════════════════════════════════════════════════
+
+const IMAGE_BG = "#efece4";
+const CONTENT_TOP = 176;
+const CONTENT_BOTTOM = 696;
+
+// Handrail folders / preview photos (same naming the Handrail configurator uses)
+const FRONT_SPLIT_FOLDER = "FrontHandrails";
+const SIDE_SPLIT_FOLDER = "SideHandrials";
+const PREVIEW_HANDRAIL_NUMS = { round: [1, 2, 3], flat: [13, 14, 15], oval: [7, 8, 9] }; // silver, golden, black
+const FINISH_INDEX = { silver: 0, golden: 1, gold: 1, black: 2 };
+const FINISH_LABELS = { silver: "Silver", golden: "Gold", gold: "Gold", black: "Black" };
+const LIGHT_LOCAL_ICONS = ["lights/yellow.png", "lights/white.png"];
+
+const pad2 = (n) => String(n).padStart(2, "0");
+
+const prettify = (value) =>
+  String(value)
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .replace(/^./, (c) => c.toUpperCase());
+
+function letterFor(n) {
+  if (n < 26) return String.fromCharCode(65 + n);
+  return String.fromCharCode(64 + Math.floor(n / 26)) + String.fromCharCode(65 + (n % 26));
+}
+
+// ─── Readable label from a stored material keyPrefix ──────────────────────
+function parseMaterialLabel(keyPrefix = "") {
+  const gaf = keyPrefix.match(/GAF-\d{3}/i);
+  if (gaf) return gaf[0].toUpperCase();
+  if (keyPrefix.includes("goldenLayers")) return "Golden Accent Panel";
+  if (keyPrefix.includes("blackLayers")) return "Black Base Panel";
+  if (keyPrefix.includes("silverReveals")) return "Silver Reveal";
+  if (keyPrefix.includes("blackReveals")) return "Black Reveal";
+  return "Custom Finish";
+}
+
+// ─── Path ("S3 key") of a URL, decoded ─────────────────────────────────────
+function urlPathKey(u) {
+  try {
+    return decodeURIComponent(new URL(u).pathname).replace(/^\//, "");
+  } catch {
+    return "";
+  }
+}
+
+// The frontend already sends the exact (presigned) layer URLs of view 1. For a
+// material, pick one of those — that is a file we know exists.
+function findLayerUrl(layerUrls, keyPrefix) {
+  const needle = `${keyPrefix}/V1/`;
+  return (layerUrls || []).find((u) => typeof u === "string" && urlPathKey(u).startsWith(needle)) || null;
+}
+
+// ─── S3 key of the swatch image for one applied wall-panel material ───────
+function swatchKeyForPanel(applied, panelNum) {
+  if (!applied?.keyPrefix) return null;
+  if (applied.keyPrefix.includes("Reveals")) return `${applied.keyPrefix}/V1/1.png`;
+  return `${applied.keyPrefix}/V1/${panelNum}.png`;
+}
+
+// ─── Turn whatever details are stored on an applied material into text lines ──
+const SKIP_DETAIL_KEYS = new Set([
+  "keyPrefix", "url", "image", "img", "imageUrl", "thumbnail", "thumb", "src", "key", "keys", "presignedUrl",
+]);
+
+function describeApplied(applied) {
+  const lines = [];
+  const walk = (obj, depth) => {
+    Object.entries(obj || {}).forEach(([k, v]) => {
+      if (SKIP_DETAIL_KEYS.has(k) || v === null || v === undefined || v === "") return;
+      if (typeof v === "object") {
+        if (!Array.isArray(v) && depth < 1) walk(v, depth + 1);
+        return;
+      }
+      lines.push(`${prettify(k)}: ${v}`);
+    });
+  };
+  walk(applied, 0);
+  return lines;
+}
+
+// ─── Build the list of sections / items from what the user selected ────────
+function buildPanelItems(appliedMaterials = {}, layerUrls = []) {
+  const byMaterial = new Map();
+
+  Object.entries(appliedMaterials || {}).forEach(([zone, panels]) => {
+    Object.entries(panels || {}).forEach(([panelNum, applied]) => {
+      const fallbackKey = swatchKeyForPanel(applied, panelNum);
+      if (!fallbackKey) return;
+
+      if (!byMaterial.has(applied.keyPrefix)) {
+        // Layer file names are layer numbers (GAF-010 → 7.png … 12.png), not the
+        // panel number inside the zone, so also try the file name stored on the material.
+        const isReveal = applied.keyPrefix.includes("Reveals");
+        const storedFile = applied.url ? urlPathKey(applied.url).split("/").pop() : "";
+        const fromStoredFile =
+          !isReveal && /\.png$/i.test(storedFile) ? `${applied.keyPrefix}/V1/${storedFile}` : null;
+
+        byMaterial.set(applied.keyPrefix, {
+          applied,
+          image: {
+            url: findLayerUrl(layerUrls, applied.keyPrefix),
+            keys: [...new Set([fromStoredFile, fallbackKey].filter(Boolean))],
+          },
+          refs: [],
+        });
+      }
+      byMaterial.get(applied.keyPrefix).refs.push(`${zone}${panelNum}`);
+    });
+  });
+
+  return [...byMaterial.values()].map(({ applied, image, refs }) => {
+    const sorted = [...refs].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    return {
+      heading: `Panels ${sorted.join(", ")}`,
+      shortRef: sorted.length > 4 ? `${sorted.slice(0, 4).join(", ")}…` : sorted.join(", "),
+      lines: [`Material: ${parseMaterialLabel(applied.keyPrefix)}`, ...describeApplied(applied)],
+      image,
+    };
+  });
+}
+
+function buildSplitHandrailItem(kind, applied) {
+  if (!applied) return null;
+  const style = applied.style || "";
+  const finish = applied.finish || "";
+  const idx = FINISH_INDEX[finish];
+  const num = PREVIEW_HANDRAIL_NUMS[style]?.[idx];
+  const folder = kind === "Front" ? FRONT_SPLIT_FOLDER : SIDE_SPLIT_FOLDER;
+  const key =
+    applied.keys?.[1]?.[0] ||
+    (style && finish ? `SubMaterial/splithandrails/${folder}/${style}/${finish}/v1/1.png` : null);
+
+  return {
+    heading: `${kind} Handrail`,
+    shortRef: `${kind} handrail`,
+    lines: [
+      `Placement: ${kind} Handrail`,
+      style ? `Shape: ${prettify(style)}` : null,
+      finish ? `Finish: ${FINISH_LABELS[finish] || prettify(finish)}` : null,
+    ].filter(Boolean),
+    image: { local: num ? `previewHandrails/${num}.png` : null, key },
+  };
+}
+
+function buildSections(sel, layerUrls = []) {
+  const sections = [];
+
+  const panelItems = buildPanelItems(sel.appliedMaterials, layerUrls);
+  if (panelItems.length) sections.push({ title: "WALL PANELS", items: panelItems });
+
+  const handrails = [
+    buildSplitHandrailItem("Front", sel.appliedFrontHandrail),
+    buildSplitHandrailItem("Side", sel.appliedSideHandrail),
+  ].filter(Boolean);
+
+  if (sel.appliedSubHandrail) {
+    handrails.push({
+      heading: "Secondary Perimeter Guard",
+      shortRef: "Perimeter guard",
+      lines: ["Placement: Secondary Perimeter Guard", "Type: Bumper Rails", "Status: On"],
+      image: { key: "SubMaterial/subhandrail/V1/1.png" },
+    });
+  }
+  if (sel.appliedHandrail) {
+    handrails.push({
+      heading: "Handrail",
+      shortRef: "Handrail",
+      lines: [`Handrail style: ${pad2(sel.appliedHandrail)}`],
+      image: { key: `SubMaterial/handrails/V1/${sel.appliedHandrail}.png` },
+    });
+  }
+  if (handrails.length) sections.push({ title: "HANDRAILS", items: handrails });
+
+  // Ceiling, flooring, lighting and door: each has its own heading, details and image
+  const otherElements = [];
+
+  if (sel.appliedCeiling) {
+    otherElements.push({
+      heading: "Ceiling",
+      shortRef: "Ceiling",
+      lines: [`Structure: Ceiling ${pad2(sel.appliedCeiling)}`, "Applied in all views"],
+      image: { key: `SubMaterial/ceiling/V1/${sel.appliedCeiling}.png` },
+    });
+  }
+
+  if (sel.appliedFloor) {
+    otherElements.push({
+      heading: "Flooring",
+      shortRef: "Flooring",
+      lines: [`Flooring finish: Base ${pad2(sel.appliedFloor)}`, "Applied in all views"],
+      image: { local: `floor/${sel.appliedFloor}.png`, key: `SubMaterial/floor/V1/${sel.appliedFloor}.png` },
+    });
+  }
+
+  if (sel.appliedLight) {
+    otherElements.push({
+      heading: "Lighting",
+      shortRef: "Lighting",
+      lines: [`Integrated lighting: Glow ${pad2(sel.appliedLight)}`, "Applied in all views"],
+      image: {
+        local: LIGHT_LOCAL_ICONS[Number(sel.appliedLight) - 1] || null,
+        key: `SubMaterial/lights/V1/${sel.appliedLight}.png`,
+      },
+    });
+  }
+
+  if (sel.appliedDoor) {
+    otherElements.push({
+      heading: "Door",
+      shortRef: "Door",
+      lines: [`Door style: Door ${pad2(sel.appliedDoor)}`, "Shown in the back view"],
+      image: { local: `doors/${sel.appliedDoor}.png`, key: `SubMaterial/doors/${sel.appliedDoor}.png` },
+    });
+  }
+
+  if (otherElements.length) sections.push({ title: "OTHER ELEMENTS", items: otherElements });
+
+  // Letters A, B, C… run across every item, panels first
+  let n = 0;
+  sections.forEach((section) => section.items.forEach((item) => { item.letter = letterFor(n++); }));
+  return sections;
+}
+
+// ─── Image loading for the configuration pages ────────────────────────────
+// Base URL of THIS server. Behind the Vite dev proxy / nginx the Host header is the
+// browser's address (e.g. localhost:5173), which this machine cannot call — so use the
+// port this server actually received the request on. Override with PDF_INTERNAL_URL.
+function selfBaseUrl(req) {
+  if (process.env.PDF_INTERNAL_URL) return process.env.PDF_INTERNAL_URL.replace(/\/$/, "");
+  const port = req.socket?.localPort;
+  if (port) return `http://127.0.0.1:${port}`;
+  return `${req.protocol}://${req.get("host")}`;
+}
+
+async function presignKey(req, key) {
+  try {
+    const headers = {};
+    if (req.headers?.authorization) headers.Authorization = req.headers.authorization;
+    if (req.headers?.cookie) headers.Cookie = req.headers.cookie;
+
+    const url = `${selfBaseUrl(req)}/api/presign-single?key=${encodeURIComponent(key)}`;
+    const res = await axios.get(url, { timeout: 15000, headers });
+    return res.data?.url || null;
+  } catch (err) {
+    console.warn(`[PDF] Presign failed for ${key}:`, err.message);
+    return null;
+  }
+}
+
+// Crop transparent margins and put the picture on a light background
+async function prepareForPdf(buffer) {
+  try {
+    const raw = await readRaw(buffer);
+    const b = alphaBounds(raw, 10);
+    let img = sharp(buffer);
+    if (b.maxX >= 0 && (b.maxX - b.minX + 1 < raw.width || b.maxY - b.minY + 1 < raw.height)) {
+      img = img.extract({
+        left: b.minX,
+        top: b.minY,
+        width: b.maxX - b.minX + 1,
+        height: b.maxY - b.minY + 1,
+      });
+    }
+    return await img.flatten({ background: IMAGE_BG }).png().toBuffer();
+  } catch {
+    return buffer;
+  }
+}
+
+async function loadItemImage(req, image) {
+  if (!image) return null;
+
+  // 1) local file in the frontend public/ folder
+  if (image.local) {
+    const filePath = path.join(PUBLIC_DIR, image.local);
+    if (filePath.startsWith(PUBLIC_DIR) && fs.existsSync(filePath)) {
+      try {
+        return await prepareForPdf(await fs.promises.readFile(filePath));
+      } catch (err) {
+        console.warn(`[PDF] Local image failed (${image.local}):`, err.message);
+      }
+    }
+  }
+
+  // 2) a ready-to-use URL the frontend already sent
+  if (image.url) {
+    try {
+      return await prepareForPdf(await fetchBuffer(image.url));
+    } catch (err) {
+      console.warn(`[PDF] Layer URL failed (${urlPathKey(image.url)}):`, err.message);
+    }
+  }
+
+  // 3) S3 via the presign endpoint — try each candidate key in order
+  const keys = image.keys || (image.key ? [image.key] : []);
+  for (const key of keys) {
+    const url = await presignKey(req, key);
+    if (!url) continue;
+    try {
+      return await prepareForPdf(await fetchBuffer(url));
+    } catch (err) {
+      console.warn(`[PDF] S3 image failed (${key}):`, err.message);
+    }
+  }
+
+  console.warn(`[PDF] No image found for: ${JSON.stringify(image)}`);
+  return null;
+}
+
+// ─── Page chrome for the configuration pages ──────────────────────────────
+function drawCompactHeader(doc, { kicker, title, jobName, designName }) {
+  drawBrandHeader(doc);
+
+  if (kicker) {
+    doc
+      .font("Helvetica")
+      .fontSize(6.5)
+      .fillColor(COLORS.label)
+      .text(kicker, MARGIN, 108, { characterSpacing: 1.5, lineBreak: false });
+  }
+
+  doc
+    .font("Helvetica")
+    .fontSize(18)
+    .fillColor(COLORS.ink)
+    .text(title, MARGIN, 120, { characterSpacing: 4.5, lineBreak: false });
+
+  const label = [jobName, designName].filter(Boolean).join(" - ");
+  if (label) {
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(9)
+      .fillColor(COLORS.ink)
+      .text(label, MARGIN, 128, { width: CONTENT_W, align: "right", lineBreak: false, ellipsis: true });
+  }
+
+  doc
+    .moveTo(MARGIN, 152)
+    .lineTo(MARGIN + CONTENT_W, 152)
+    .lineWidth(0.6)
+    .strokeColor(COLORS.rule)
+    .stroke();
+}
+
+// Cut a single line of text so it fits `width` (font + size must already be set)
+function fitLine(doc, text, width) {
+  let t = String(text);
+  if (doc.widthOfString(t) <= width) return t;
+  while (t.length > 1 && doc.widthOfString(`${t}…`) > width) t = t.slice(0, -1);
+  return `${t}…`;
+}
+
+function drawImageBox(doc, buffer, x, y, w, h, { placeholderText = true } = {}) {
+  doc.rect(x, y, w, h).fillColor(IMAGE_BG).fill();
+  if (buffer) {
+    try {
+      doc.image(buffer, x, y, { fit: [w, h], align: "center", valign: "center" });
+      doc.rect(x, y, w, h).lineWidth(0.5).strokeColor("#d9d5c9").stroke();
+      return;
+    } catch (err) {
+      console.warn("[PDF] Image render failed:", err.message);
+    }
+  }
+  doc.rect(x, y, w, h).lineWidth(0.5).strokeColor("#d9d5c9").stroke();
+  if (placeholderText) {
+    doc
+      .font("Helvetica")
+      .fontSize(7)
+      .fillColor(COLORS.label)
+      .text("Image not available", x, y + h / 2 - 4, { width: w, align: "center", lineBreak: false });
+  }
+}
+
+// ─── Configuration Overview: lettered swatches + the model ────────────────
+async function drawOverviewPages(doc, { sections, modelBuffer, header, designId }) {
+  const COLS = 3;
+  const GAP = 12;
+  const CELL_W = 72;
+  const ROW_H = 126;
+
+  let y = CONTENT_TOP;
+  let first = true;
+
+  const finishPage = () => drawFooter(doc, { designId });
+
+  const newPage = async () => {
+    doc.addPage({ size: "LETTER", margin: 0 });
+    drawCompactHeader(doc, { title: "CONFIGURATION OVERVIEW", ...header });
+    y = CONTENT_TOP;
+
+    if (first && modelBuffer) {
+      const meta = await sharp(modelBuffer).metadata();
+      const boxX = 300;
+      const boxW = MARGIN + CONTENT_W - boxX;
+      const boxH = CONTENT_BOTTOM - CONTENT_TOP;
+      const scale = Math.min(boxW / meta.width, boxH / meta.height);
+      doc.image(modelBuffer, boxX, CONTENT_TOP, {
+        width: meta.width * scale,
+        height: meta.height * scale,
+      });
+    }
+    first = false;
+  };
+
+  const drawCell = (item, x, top) => {
+    doc.font("Helvetica-Bold").fontSize(6.5).fillColor(COLORS.ink);
+    doc.text(fitLine(doc, `${item.letter} : ${item.shortRef}`, CELL_W), x, top, { lineBreak: false });
+
+    const imgY = top + 11;
+    drawImageBox(doc, item.buffer, x, imgY, CELL_W, CELL_W, { placeholderText: false });
+
+    // big letter on the swatch
+    doc.save();
+    doc.fillOpacity(0.55).circle(x + CELL_W / 2, imgY + CELL_W / 2, 16).fill("#000000");
+    doc.restore();
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(item.letter.length > 1 ? 15 : 20)
+      .fillColor("#ffffff")
+      .text(item.letter, x, imgY + CELL_W / 2 - (item.letter.length > 1 ? 8 : 11), {
+        width: CELL_W,
+        align: "center",
+        lineBreak: false,
+      });
+
+    let ly = imgY + CELL_W + 4;
+    doc.font("Helvetica").fontSize(6.5).fillColor(COLORS.ink);
+    item.lines.slice(0, 4).forEach((line) => {
+      doc.text(fitLine(doc, line, CELL_W), x, ly, { lineBreak: false });
+      ly += 8;
+    });
+  };
+
+  const drawGroup = async (label, items) => {
+    if (!items.length) return;
+    if (y + 16 + ROW_H > CONTENT_BOTTOM) {
+      finishPage();
+      await newPage();
+    }
+    doc.font("Helvetica-Bold").fontSize(10).fillColor(COLORS.ink).text(label, MARGIN, y, { lineBreak: false });
+    y += 16;
+
+    for (let r = 0; r * COLS < items.length; r++) {
+      if (y + ROW_H > CONTENT_BOTTOM) {
+        finishPage();
+        await newPage();
+      }
+      for (let c = 0; c < COLS; c++) {
+        const item = items[r * COLS + c];
+        if (!item) break;
+        drawCell(item, MARGIN + c * (CELL_W + GAP), y);
+      }
+      y += ROW_H;
+    }
+    y += 6;
+  };
+
+  const panelSection = sections.find((s) => s.title === "WALL PANELS");
+  const otherItems = sections.filter((s) => s !== panelSection).flatMap((s) => s.items);
+
+  await newPage();
+  await drawGroup("PANELS", panelSection ? panelSection.items : []);
+  await drawGroup("OTHER ELEMENTS", otherItems);
+  finishPage();
+}
+
+// ─── One section: details on the left, big image on the right ─────────────
+function drawSectionPages(doc, { section, header, designId }) {
+  const ROWS_PER_PAGE = 3;
+  const ROW_H = 174;
+  const IMG_W = 232;
+  const IMG_H = 160;
+  const imgX = MARGIN + CONTENT_W - IMG_W;
+  const textW = imgX - MARGIN - 20;
+
+  for (let i = 0; i < section.items.length; i += ROWS_PER_PAGE) {
+    doc.addPage({ size: "LETTER", margin: 0 });
+    drawCompactHeader(doc, { kicker: "CONFIGURATION OVERVIEW", title: section.title, ...header });
+
+    section.items.slice(i, i + ROWS_PER_PAGE).forEach((item, r) => {
+      const top = CONTENT_TOP + r * ROW_H;
+
+      doc
+        .font("Helvetica-Bold")
+        .fontSize(10)
+        .fillColor(COLORS.ink)
+        .text(`${item.letter} : ${item.heading}`, MARGIN, top, { width: textW });
+
+      let ly = doc.y + 4;
+      item.lines.forEach((line) => {
+        doc
+          .font("Helvetica")
+          .fontSize(8.5)
+          .fillColor(COLORS.ink)
+          .text(line, MARGIN, ly, { width: textW });
+        ly = doc.y + 2;
+      });
+
+      drawImageBox(doc, item.buffer, imgX, top, IMG_W, IMG_H);
+    });
+
+    drawFooter(doc, { designId });
+  }
+}
+
+async function drawConfigurationPages(doc, { req, selections, layerUrls, modelBuffer, header, designId }) {
+  const sections = buildSections(selections, layerUrls);
+  if (!sections.length) return;
+
+  // load every picture up front (in parallel)
+  const allItems = sections.flatMap((s) => s.items);
+  await Promise.all(
+    allItems.map(async (item) => {
+      item.buffer = await loadItemImage(req, item.image);
+    })
+  );
+
+  await drawOverviewPages(doc, { sections, modelBuffer, header, designId });
+  sections.forEach((section) => drawSectionPages(doc, { section, header, designId }));
+}
+
+// ══════════════════════════════════════════════════════════════════════════
 // Main handler
 // ══════════════════════════════════════════════════════════════════════════
 export const generateModelPDF = async (req, res) => {
+  const startedAt = Date.now();
   try {
     const {
       imageUrlsGroups,
@@ -483,6 +1052,16 @@ export const generateModelPDF = async (req, res) => {
       quantity,
       comments,
       designId,
+      // selections used by the configuration pages
+      appliedMaterials = {},
+      appliedHandrail,
+      appliedSubHandrail,
+      appliedFrontHandrail,
+      appliedSideHandrail,
+      appliedCeiling,
+      appliedFloor,
+      appliedLight,
+      appliedDoor,
     } = req.body;
 
     if (!imageUrlsGroups || imageUrlsGroups.length === 0) {
@@ -494,16 +1073,29 @@ export const generateModelPDF = async (req, res) => {
     // Composite the layered renders for each view, then fit the model inside that
     // page's dimension frame (front.png / straight.png / back.png).
     const compositeImages = [];
+    const plainModels = []; // model only (no dimension frame) — used on the overview page
     for (let i = 0; i < viewGroups.length; i++) {
       const results = await Promise.allSettled(viewGroups[i].map((url) => fetchBuffer(url)));
       const buffers = results.filter((r) => r.status === "fulfilled").map((r) => r.value);
 
+      const failed = results
+        .map((r, idx) => ({ r, idx }))
+        .filter(({ r }) => r.status === "rejected");
+      if (failed.length) {
+        console.warn(`[PDF] View ${i + 1}: ${failed.length} of ${results.length} layers could not be loaded`);
+        failed.slice(0, 10).forEach(({ r, idx }) =>
+          console.warn(`[PDF]   layer ${idx}: ${String(viewGroups[i][idx]).slice(0, 110)} → ${r.reason?.message}`)
+        );
+      }
+
       if (!buffers.length) {
         compositeImages.push(null);
+        plainModels.push(null);
         continue;
       }
 
       const modelImage = await compositeBuffers(buffers);
+      plainModels.push(modelImage);
       const dimensionOverlay = await loadDimensionOverlay(i);
 
       if (!dimensionOverlay) {
@@ -520,12 +1112,15 @@ export const generateModelPDF = async (req, res) => {
     }
 
     const doc = new PDFDocument({ autoFirstPage: false, size: "LETTER" });
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${(modelName || "Elevator-Design").replace(/[^a-z0-9\-_]/gi, "_")}.pdf"`
-    );
-    doc.pipe(res);
+
+    // Collect the PDF in memory and send it only when it is complete. If anything
+    // fails, the browser gets a clear error instead of a half-finished download.
+    const chunks = [];
+    doc.on("data", (chunk) => chunks.push(chunk));
+    const pdfFinished = new Promise((resolve, reject) => {
+      doc.on("end", resolve);
+      doc.on("error", reject);
+    });
 
     for (let i = 0; i < viewGroups.length; i++) {
       const openingOption = OPENING_LABELS[selectedView] || OPENING_LABELS[i + 1] || "Front";
@@ -550,7 +1145,42 @@ export const generateModelPDF = async (req, res) => {
       });
     }
 
+    // ── Extra pages: configuration overview + every selected material ──
+    try {
+      await drawConfigurationPages(doc, {
+        req,
+        selections: {
+          appliedMaterials,
+          appliedHandrail,
+          appliedSubHandrail,
+          appliedFrontHandrail,
+          appliedSideHandrail,
+          appliedCeiling,
+          appliedFloor,
+          appliedLight,
+          appliedDoor,
+        },
+        layerUrls: viewGroups[0] || [],
+        modelBuffer: plainModels[0] || null,
+        header: { jobName: projectName || "", designName: designName || modelName || "" },
+        designId: designId || "",
+      });
+    } catch (err) {
+      console.error("[PDF] Configuration pages failed (first pages are unaffected):", err);
+    }
+
     doc.end();
+    await pdfFinished;
+
+    const pdfBuffer = Buffer.concat(chunks);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${(modelName || "Elevator-Design").replace(/[^a-z0-9\-_]/gi, "_")}.pdf"`
+    );
+    res.setHeader("Content-Length", pdfBuffer.length);
+    res.end(pdfBuffer);
+    console.log(`[PDF] Sent ${(pdfBuffer.length / 1024).toFixed(0)} KB in ${Date.now() - startedAt} ms`);
   } catch (error) {
     console.error("[PDF] Generation error:", error);
     if (!res.headersSent) {

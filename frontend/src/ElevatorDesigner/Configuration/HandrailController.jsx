@@ -927,7 +927,7 @@ const HandrailController = ({
             >
               <div className="hrc-btn-glaze" />
               <div className="hrc-tab-content">
-                <div className="hrc-btn-text">Secondary Perimeter Guard</div>
+                <div className="hrc-btn-text">Bumper Handrail</div>
                 {renderStatus(subHandrailEnabled)}
               </div>
             </div>

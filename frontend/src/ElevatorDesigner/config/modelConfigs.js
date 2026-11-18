@@ -132,22 +132,22 @@ export const modelConfigs = {
     // V1: A1→L1, A2→L2, A3→L3, A4→L4, B1→L5, B2→L6, C1→L7, C2→L8, D1→L9, D2→L10, E1→L11, E2→L12, F1→L13
     panelMap: {
       A: [
-        { layerId: 1, panelNum: 1, top: "50%", left: "19%" },
+        { layerId: 1, panelNum: 1, top: "50%", left: "18%" },
         { layerId: 2, panelNum: 2, top: "50%", left: "56%" },
-        { layerId: 3, panelNum: 3, top: "50%", left: "64%" },
-        { layerId: 4, panelNum: 4, top: "50%", left: "85%" },
+        { layerId: 3, panelNum: 3, top: "50%", left: "64.5%" },
+        { layerId: 4, panelNum: 4, top: "50%", left: "87%" },
       ],
       B: [
         { layerId: 5, panelNum: 1, top: "30%", left: "38%" },
-        { layerId: 6, panelNum: 2, top: "30%", left: "72%" },
+        { layerId: 6, panelNum: 2, top: "30%", left: "74%" },
       ],
       C: [
         { layerId: 7, panelNum: 1, top: "50%", left: "38%" },
-        { layerId: 8, panelNum: 2, top: "50%", left: "72%" },
+        { layerId: 8, panelNum: 2, top: "50%", left: "74%" },
       ],
       D: [
         { layerId: 9, panelNum: 1, top: "70%", left: "38%" },
-        { layerId: 10, panelNum: 2, top: "70%", left: "72%" },
+        { layerId: 10, panelNum: 2, top: "70%", left: "74%" },
       ],
       E: [
         { layerId: 13, panelNum: 1, top: "24%", left: "60%" },
@@ -264,7 +264,7 @@ export const modelConfigs = {
         { layerId: 7, panelNum: 1, top: "25%", left: "61%" },
         { layerId: 8, panelNum: 2, top: "77%", left: "61%" },
       ],
-      E: [{ layerId: 9, panelNum: 1, top: "50%", left: "50%" }],
+      E: [{ layerId: 9, panelNum: 1, top: "50%", left: "61%" }],
     },
   },
   // ────────────────────────────────────────────────
@@ -354,7 +354,7 @@ export const modelConfigs = {
         { layerId: 2, panelNum: 2, top: "50%", left: "68%" },
       ],
       B: [
-        { layerId: 3, panelNum: 1, top: "33%", left: "29%" },
+        { layerId: 3, panelNum: 1, top: "33%", left: "28%" },
         { layerId: 4, panelNum: 2, top: "33%", left: "82%" },
       ],
       C: [{ layerId: 5, panelNum: 1, top: "50%", left: "50%" }],
@@ -452,7 +452,7 @@ export const modelConfigs = {
     // V3 introduces E2 (layer 6 reused — keep as-is from layerToPanelByView)
     panelMap: {
       A: [
-        { layerId: 1, panelNum: 1, top: "50%", left: "18%" },
+        { layerId: 1, panelNum: 1, top: "50%", left: "16%" },
         { layerId: 2, panelNum: 2, top: "50%", left: "68%" },
       ],
       B: [
@@ -860,26 +860,26 @@ export const modelConfigs = {
     panelMap: {
       A: [
         { layerId: 1, panelNum: 1, top: "28%", left: "28%" },
-        { layerId: 2, panelNum: 2, top: "30%", left: "57.5%" },
-        { layerId: 3, panelNum: 3, top: "30%", left: "64%" },
+        { layerId: 2, panelNum: 2, top: "30%", left: "58%" },
+        { layerId: 3, panelNum: 3, top: "30%", left: "65%" },
         { layerId: 4, panelNum: 4, top: "28%", left: "82%" },
       ],
       B: [
         { layerId: 5, panelNum: 1, top: "42%", left: "28%" },
-        { layerId: 6, panelNum: 2, top: "44%", left: "57.5%" },
-        { layerId: 7, panelNum: 3, top: "44%", left: "64%" },
+        { layerId: 6, panelNum: 2, top: "44%", left: "58%" },
+        { layerId: 7, panelNum: 3, top: "44%", left: "65%" },
         { layerId: 8, panelNum: 4, top: "42%", left: "82%" },
       ],
       C: [
         { layerId: 9, panelNum: 1, top: "55%", left: "28%" },
-        { layerId: 10, panelNum: 2, top: "56%", left: "57.5%" },
-        { layerId: 11, panelNum: 3, top: "56%", left: "64%" },
+        { layerId: 10, panelNum: 2, top: "56%", left: "58%" },
+        { layerId: 11, panelNum: 3, top: "56%", left: "65%" },
         { layerId: 12, panelNum: 4, top: "55%", left: "82%" },
       ],
       D: [
         { layerId: 13, panelNum: 1, top: "70%", left: "28%" },
-        { layerId: 14, panelNum: 2, top: "72%", left: "57.5%" },
-        { layerId: 15, panelNum: 3, top: "72%", left: "64%" },
+        { layerId: 14, panelNum: 2, top: "72%", left: "58%" },
+        { layerId: 15, panelNum: 3, top: "72%", left: "65%" },
         { layerId: 16, panelNum: 4, top: "70%", left: "82%" },
       ],
       E: [
@@ -1058,8 +1058,8 @@ export const modelConfigs = {
       A: [
         { layerId: 1, panelNum: 1, top: "30%", left: "18%" },
         { layerId: 2, panelNum: 2, top: "30%", left: "31.5%" },
-        { layerId: 3, panelNum: 3, top: "30%", left: "64.2%" },
-        { layerId: 4, panelNum: 4, top: "30%", left: "70.6%" },
+        { layerId: 3, panelNum: 3, top: "30%", left: "64.5%" },
+        { layerId: 4, panelNum: 4, top: "30%", left: "71%" },
       ],
       B: [
         { layerId: 5, panelNum: 1, top: "45%", left: "39.6%" },
@@ -1070,8 +1070,8 @@ export const modelConfigs = {
       C: [
         { layerId: 9, panelNum: 1, top: "65%", left: "18%" },
         { layerId: 10, panelNum: 2, top: "65%", left: "31.5%" },
-        { layerId: 11, panelNum: 3, top: "65%", left: "64%" },
-        { layerId: 12, panelNum: 4, top: "65%", left: "70%" },
+        { layerId: 11, panelNum: 3, top: "65%", left: "64.5%" },
+        { layerId: 12, panelNum: 4, top: "65%", left: "71.5%" },
       ],
       D: [
         { layerId: 13, panelNum: 1, top: "70%", left: "39.6%" },
